@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block navbar %}{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ISSI-cellen monospace, groter, meer tussenruimte */
+td.issi {
+    font-family: monospace;
+    font-size: 1.2em;
+    letter-spacing: 0.1em;
+}
+
+.radio-table td:first-child {
+    width: 50%; /* linkerkolom: linknaam */
+}
+
+.radio-table td:last-child {
+    width: 50%; /* rechterkolom: ISSI */
+}
+
+/* Kopjes kleiner en sans-serif */
+h2, h3, h4 {
+    margin-top: 0.5em;
+    margin-bottom: 0.3em;
+    font-family: sans-serif;
+    font-weight: normal;
+}
+
+/* Tabellen mooi compact */
+.radio-table th, .radio-table td {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.card-img-top {
+    padding-top: 0.5rem;      /* bovenkant van afbeelding */
+    object-fit: contain;
+    height: 120px;
+}
+
+.card-body {
+    padding-top: 0.5rem;      /* ruimte tussen afbeelding en tekst */
+    padding-bottom: 0.5rem;   /* onderkant van card-body */
+}
+
+@media print {
+    .row {
+        display: flex;
+        flex-direction: row;
+        gap: 1em;
+    }
+    .col-md-6 {
+        flex: 1;
+        width: 50%;
+    }
+
+    /* Zorg dat tables niet te groot worden */
+    table {
+        page-break-inside: avoid;
+    }
+
+    /* Cards in handleiding netjes per kolom */
+    .card {
+        page-break-inside: avoid;
+    }
+
+    .child-block {
+        page-break-inside: avoid;
+    }
+}
+</style>
+{% endblock %}
+
+
+
+{% block body %}
+
+<div class="container mt-4">
+
+    <div class="row">
+        <!-- Linkerzijde: tabel -->
+        <div class="col-md-6">
+            {% for child in post.children.all %}
+              <div class="child-block">
+                <h4>{{ child }}</h4>
+                <table class="table table-sm table-bordered radio-table">
+                    <tbody>
+                        {% for link in child.radio_links.all %}
+                            {% if link.radio %}
+                                <tr>
+                                    <td>{{ link.name }}</td>
+                                    <td class="issi">{{ link.radio.ISSI }}</td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+              </div>
+            {% endfor %}
+        </div>
+
+        <!-- Rechterzijde: handleiding -->
+        <div class="col-md-6">
+            <h4>Handleiding - Manuel</h4>
+            <div class="d-flex flex-column gap-4">
+
+                <div class="card text-center">
+                    <img src="{% static 'pictures/issi/1.png' %}" class="card-img-top mx-auto" style="max-height: 300px;" alt="Stap 1">
+                    <div class="card-body">
+                        <p class="card-text">Druk op menu<br>Appuyez sur menu</p>
+                    </div>
+                </div>
+
+                <div class="card text-center">
+                    <img src="{% static 'pictures/issi/2.png' %}" class="card-img-top mx-auto" style="max-height: 300px;" alt="Stap 1">
+                    <div class="card-body">
+                        <p class="card-text">Ga naar contacten<br>Allez vers contacts</p>
+                    </div>
+                </div>
+
+                <div class="card text-center">
+                    <img src="{% static 'pictures/issi/3.png' %}" class="card-img-top mx-auto" style="max-height: 300px;" alt="Stap 1">
+                    <div class="card-body">
+                        <p class="card-text">Ga naar terminal info<br>Allez vers info terminal</p>
+                    </div>
+                </div>
+
+                <div class="card text-center">
+                    <img src="{% static 'pictures/issi/4.png' %}" class="card-img-top mx-auto" style="max-height: 300px;" alt="Stap 1">
+                    <div class="card-body">
+                        <p class="card-text">ISSI-nummer<br>Numéro ISSI</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

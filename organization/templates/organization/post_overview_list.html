@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Post overview{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+
+    <h1 class="h3">Kies post</h1>
+
+    <div class="list-group my-4">
+      {% for post in posts %}
+        {% if post.children.all %}
+        <a href="{% url 'organization:list_detail' post.id %}" class="list-group-item list-group-item-action }" >{{ post.name }}</a>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+  </div>
+{% endblock %}

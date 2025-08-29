@@ -75,3 +75,14 @@ class RadioContainerLinkSubmitView(View):
             messages.success(request, f"{radio} toegevoegd aan {link.container} - {link.name}.")
 
         return HttpResponseRedirect(reverse('organization:rcl_list', args=[link.container.id]))
+
+
+class OverviewPostListView(ListView):
+    model = Post
+    template_name = 'organization/post_overview_list.html'
+    context_object_name = 'posts'
+
+class OverviewPostDetailView(DetailView):
+    model = Post
+    template_name = 'organization/post_overview_detail.html'
+    context_object_name = 'post'

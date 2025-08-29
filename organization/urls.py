@@ -9,4 +9,7 @@ urlpatterns = [
     path('radiocontainerlink/list/<int:container_id>/', RadioContainerLinkListView.as_view(), name='rcl_list'),
     path('radiocontainerlink/<int:pk>/', RadioContainerLinkDetailView.as_view(), name='rcl_detail'),
     path('radiocontainerlink/submit/', RadioContainerLinkSubmitView.as_view(), name='rcl_submit'),
+
+    path('list/', OverviewPostListView.as_view(), name='list_posts'),
+    path('list/<int:pk>/', OverviewPostDetailView.as_view(), name='list_detail'),
 ]
