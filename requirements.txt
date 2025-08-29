@@ -16,6 +16,7 @@ idna==3.10
 MarkupSafe==3.0.2
 packaging==25.0
 psycopg==3.2.9
+psycopg-binary==3.2.9
 pycparser==2.22
 pyOpenSSL==25.1.0
 requests==2.32.4
