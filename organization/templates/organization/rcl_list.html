@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ container }}{% endblock %}
+
+
+{% block content %}
+
+  <div class="container mt-4">
+
+    <h1 class="h3">Pas radiocontainer aan</h1>
+    <h2 class="h5 text-muted">{{ container }}</h2>
+
+    <div class="list-group my-4">
+      {% for rcl in container.radio_links.all %}
+        <a href="{% url 'organization:rcl_detail' rcl.pk %}" 
+           class="list-group-item list-group-item-action d-flex flex-column align-items-center text-center">
+          {{ rcl.name }}
+          <br>
+          {% if rcl.radio %}
+            <div class="radio-card" data-tei="{{ rcl.radio.TEI|stringformat:'014d' }}">
+              <div class="spinner-border m-3" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          {% else %}
+            <div class="card d-inline-block m-2 shadow text-center fst-italic text-muted p-4" 
+                 style="min-width: 18rem; min-height: 3rem; display: flex; align-items: center; justify-content: center;">
+              No radio
+            </div>
+          {% endif %}
+        </a>
+      {% endfor %}
+    </div>
+
+    <a href="{% url 'organization:container_list' container.parent.id %}" class="btn btn-secondary mb-3">
+      <i class="bi bi-chevron-left"></i>
+      {{ container.parent }} 
+    </a>
+    
+  </div>
+
+{% endblock %}
+
+
+{% block extra_script %}
+
+  <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
+  <script src="{% static 'js/radio_card.js' %}"></script>
+
+{% endblock %}

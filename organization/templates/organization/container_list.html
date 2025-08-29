@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}{{ container }}{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+
+    <h1 class="h3">Pas radiocontainers aan</h1>
+    {% if container %}
+      <h2 class="h5 text-muted">{{ container }}</h2>
+    {% endif %}
+
+    <div class="list-group my-4">
+      {% for container in children %}
+        {% if container.children.exists %}
+          <a href="{% url 'organization:container_list' container.id %}" 
+             class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            {{ container.name }}
+          </a>
+        {% else %}
+          <a href="{% url 'organization:rcl_list' container.id %}" 
+             class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            {{ container.name }}
+          </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if container.parent %}
+      <a href="{% url 'organization:container_list' container.parent.id %}" class="btn btn-secondary mb-3">
+        <i class="bi bi-chevron-left"></i>
+        {{ container.parent }} 
+      </a>
+    {% elif container %}
+      <a href="{% url 'organization:container_root_list' %}" class="btn btn-secondary mb-3">
+        <i class="bi bi-chevron-left"></i> Overzicht
+      </a>
+    {% endif %}
+
+    
+  </div>
+{% endblock %}

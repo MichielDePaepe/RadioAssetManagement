@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Radio card example{% endblock %}
+
+{% block extra_head %}
+
+
+{% endblock %}
+
+{% block content %}
+
+
+<div class="container">
+
+  <div class="row g-4">
+
+    <!-- Groep 1 -->
+    <div class="col">
+
+      <div class="border rounded p-2 h-100 d-flex flex-column position-relative">
+
+        <span class="position-absolute top-0 end-0 badge bg-success rounded-circle p-0"
+              style="transform: translate(+50%, -50%); z-index: 1;">
+          <i class="bi bi-check text-light fs-4"></i>
+        </span>
+
+        <h5 class="text-center mb-3">Discipline A</h5>
+        <div class="overflow-auto text-center">
+          <div class="radio-cards" data-tei="00035306001734">
+            <div class="spinner-border m-3" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="col">
+      <div class="border rounded p-2 h-100 d-flex flex-column position-relative">
+
+        <span class="position-absolute top-0 end-0 badge bg-warning rounded-circle p-0"
+              title="Gevalideerd"
+              style="transform: translate(+50%, -50%); z-index: 1;">
+          <i class="bi bi-exclamation text-dark fs-4"></i>
+        </span>
+
+        <h5 class="text-center mb-3">Discipline B</h5>
+        <div class="overflow-auto text-center">
+          <div class="radio-card" data-tei="00035306001734">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+    
+
+    <div class="col">
+
+      <div class="border rounded p-2 h-100 d-flex flex-column position-relative">
+
+        <span class="position-absolute top-0 end-0 badge bg-success rounded-circle p-0"
+              title="Gevalideerd"
+              style="transform: translate(+50%, -50%); z-index: 1;">
+          <i class="bi bi-check text-light fs-4"></i>
+        </span>
+
+        <h5 class="text-center mb-3">Discipline A</h5>
+        <div class="overflow-auto text-center">
+          <div class="radio-card" data-tei="00075190064743">Loading...</div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="col">
+
+      <div class="border rounded p-2 h-100 d-flex flex-column position-relative">
+
+        <span class="position-absolute top-0 end-0 badge bg-success rounded-circle p-0"
+              title="Gevalideerd"
+              style="transform: translate(+50%, -50%); z-index: 1;">
+          <i class="bi bi-check text-light fs-4"></i>
+        </span>
+
+        <h5 class="text-center mb-3">Discipline A</h5>
+        <div class="overflow-auto text-center">
+          <div class="radio-card" data-tei="00020106096281">Loading...</div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="col">
+
+      <div class="border rounded p-2 h-100 d-flex flex-column position-relative">
+
+        <span class="position-absolute top-0 end-0 badge bg-success rounded-circle p-0"
+              title="Gevalideerd"
+              style="transform: translate(+50%, -50%); z-index: 1;">
+          <i class="bi bi-check text-light fs-4"></i>
+        </span>
+
+        <h5 class="text-center mb-3">Discipline A</h5>
+        <div class="overflow-auto text-center">
+          <div class="radio-card" data-tei="00009806105047">Loading...</div>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="col">
+
+      <div class="border rounded p-2 h-100 d-flex flex-column position-relative">
+
+        <span class="position-absolute top-0 end-0 badge bg-success rounded-circle p-0"
+              title="Gevalideerd"
+              style="transform: translate(+50%, -50%); z-index: 1;">
+          <i class="bi bi-check text-light fs-4"></i>
+        </span>
+
+        <h5 class="text-center mb-3">Discipline A</h5>
+        <div class="overflow-auto text-center">
+          <div class="radio-card" data-tei="00020106082358">Loading...</div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<br>
+style="filter: grayscale(100%);"
+  
+{% endblock %}
+
+
+{% block extra_script %}
+
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
+
+<script>
+  
+
+
+  // MutationObserver om nieuwe timeago elementen te detecteren
+  const observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType === 1) { // element node
+          if (node.classList.contains('timeago')) {
+            timeago.render(node, 'nl');
+          }
+          // check ook kinderen van het toegevoegde element
+          node.querySelectorAll?.('.timeago').forEach(el => {
+            timeago.render(el, 'nl');
+          });
+        }
+      }
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  
+
+
+  function renderRadioCards(elements) {
+    elements.forEach(el => {
+      const tei = el.dataset.tei;
+      if (!tei) return;
+      fetch(`/radio/${tei}/card/`)
+        .then(r => r.text())
+        .then(html => {
+          el.outerHTML = html;
+        });
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // initial load
+    renderRadioCards(document.querySelectorAll('.radio-card'));
+
+    // observer voor dynamisch toegevoegde elementen
+    const observer = new MutationObserver(mutations => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach(node => {
+          if (node.nodeType === 1) {
+            if (node.classList.contains('radio-card')) {
+              renderRadioCards([node]);
+            }
+            node.querySelectorAll?.('.radio-card').forEach(inner => {
+              renderRadioCards([inner]);
+            });
+          }
+        });
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+
+</script>
+
+{% endblock %}

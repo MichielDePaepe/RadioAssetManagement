@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ link }}{% endblock %}
+
+
+{% block content %}
+
+  <div class="container mt-4">
+
+    <h1 class="h3">Pas radiocontainer aan</h1>
+    <h2 class="h5 text-muted">{{ link.container }} - {{ link.name }}</h2>
+
+    <div 
+      class="border rounded p-2 h-100 d-flex flex-column position-relative" 
+      data-radio-link-id="{{ radio_link.id }}" 
+      data-forseen-tei="{{radio_link.radio.TEI|stringformat:'014d'}}"
+      data-scanned="false"> 
+
+      <h5 class="text-center mb-3">{{ radio_link.name }}</h5>
+
+      <div class="overflow-auto text-center">
+
+        {% if link.radio %}
+        <div class="radio-card" data-tei="{{link.radio.TEI|stringformat:'014d'}}">
+          <div class="spinner-border m-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+        {% else %}
+        <div class="card d-inline-block m-2 shadow text-center fst-italic text-muted p-4" 
+             style="min-width: 18rem; min-height: 3rem; display: flex; align-items: center; justify-content: center;">
+          No radio
+        </div>
+        {% endif %}
+
+      </div>
+
+    </div>
+
+    <form id="submit-form" method="post" action="{% url 'organization:rcl_submit' %}">
+      {% csrf_token %}
+      <input type="hidden" name="tei" id="tei-input">
+      <input type="hidden" name="remove" id="remove-input" value="false">
+      <input type="hidden" name="link_id" value="{{ link.id }}">
+
+      <div class="row mt-3">
+        <div class="col">
+          <button type="submit" class="btn btn-primary btn-lg w-100">
+            <i class="bi bi-send me-2"></i>
+            Verzend
+          </button>
+        </div>
+        <div class="col">
+          <button type="button" id="remove-btn" class="btn btn-danger btn-lg w-100">
+            <i class="bi bi-trash me-2"></i>
+            Verwijder radio
+          </button>
+        </div>
+      </div>
+
+    </form>
+
+    {% if link.container.radio_links.count > 1 %}
+    <a href="{% url 'organization:rcl_list' link.container.id %}" class="btn btn-secondary mb-3 my-4">
+      <i class="bi bi-chevron-left"></i>
+      {{ link.container }} 
+    </a>
+    {% else %}
+    <a href="{% url 'organization:container_list' link.container.parent.id %}" class="btn btn-secondary mb-3 my-4">
+      <i class="bi bi-chevron-left"></i>
+      {{ link.container.parent }} 
+    </a>
+    {% endif %}
+
+    <input type="text" id="scanner-input" autofocus>
+
+  </div>
+
+{% endblock %}
+
+
+{% block extra_script %}
+
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
+<script src="{% static 'js/radio_card.js' %}"></script>
+
+<script>
+  
+  document.addEventListener('DOMContentLoaded', function () {
+    
+    const input = document.getElementById('scanner-input');
+
+    function focusInput() {
+      input.focus();
+    }
+
+    document.addEventListener('click', focusInput);
+    document.addEventListener('keydown', focusInput);
+    window.addEventListener('blur', () => setTimeout(focusInput, 100)); // bij alt-tab
+
+    input.style.position = 'absolute';
+    input.style.left = '-9999px';
+    input.style.opacity = '0'; // extra veiligheid
+    focusInput();
+
+
+    input.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const scanned_line = input.value.trim();
+        input.value = '';
+
+        if (scanned_line === '') return;
+
+        fetch("{% url 'inventory:scan' %}", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scanned_line }),
+        })
+          .then(res => res.json())
+          .then(data => {
+            handleScanResponse(data);
+          });
+      }
+    });
+  });
+
+
+function handleScanResponse(data) {
+  console.log(data);
+
+  if (!data?.TEI) return;
+
+  radioCard = document.querySelector('.card');
+
+
+  radioCard.setAttribute('data-tei', data.TEI);
+
+  // trigger her-render via radio_card.js
+  renderRadioCards([radioCard]);
+}
+
+
+
+
+document.getElementById('submit-form').addEventListener('submit', function(e) {
+  const radioCard = document.querySelector('.card');
+  const tei = radioCard?.dataset?.tei;
+
+  document.getElementById('tei-input').value = tei;
+});
+
+const removeBtn = document.getElementById('remove-btn');
+if (removeBtn) {
+  removeBtn.addEventListener('click', function () {
+    document.getElementById('tei-input').value = '';
+    document.getElementById('remove-input').value = 'true';
+    document.getElementById('submit-form').submit();
+  });
+}
+
+
+</script>
+
+{% endblock %}

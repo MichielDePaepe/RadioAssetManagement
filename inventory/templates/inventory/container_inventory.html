@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{container}}{% endblock %}
+
+{% block extra_head %}
+
+
+{% endblock %}
+
+{% block content %}
+
+
+<div class="container">
+
+  <div class="row g-4">
+
+    {% for radio_link in container.radio_links.all %}
+    <div class="col">
+
+      <div 
+        class="border rounded p-2 h-100 d-flex flex-column position-relative" 
+        data-radio-link-id="{{ radio_link.id }}" 
+        data-forseen-tei="{{radio_link.radio.TEI|stringformat:'014d'}}"
+        data-scanned="false"
+      > 
+
+        <h5 class="text-center mb-3">{{ radio_link.name }}</h5>
+
+        <div class="overflow-auto text-center">
+
+          {% if radio_link.radio %}
+          <div class="radio-card" data-tei="{{radio_link.radio.TEI|stringformat:'014d'}}">
+            <div class="spinner-border m-3" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+          {% else %}
+          <div class="card d-inline-block m-2 shadow text-center fst-italic text-muted p-4" 
+               style="min-width: 18rem; min-height: 3rem; display: flex; align-items: center; justify-content: center;">
+            No radio
+          </div>
+          {% endif %}
+
+        </div>
+
+      </div>
+
+    </div>
+    {% endfor %}
+
+  </div>
+
+  <form id="submit-form" method="post" action="{% url 'inventory:submit' %}">
+    {% csrf_token %}
+    <input type="hidden" name="assignments" id="assignments-input">
+    <input type="hidden" name="container" value="{{ container.id }}">
+
+    <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">Verzend</button>
+  </form>
+
+  <input type="text" id="scanner-input" autofocus>
+
+</div>
+
+
+<div class="modal fade" id="teiModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Ongekende TEI</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>De TEI <strong id="unknown-tei"></strong> werd niet herkend. Kies een locatie om toe te wijzen:</p>
+        <div id="tei-assign-buttons" class="d-grid gap-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
+{% endblock %}
+
+
+{% block extra_script %}
+
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
+<script>window.radio_cards_gray_on_load = true</script>
+<script src="{% static 'js/radio_card.js' %}"></script>
+
+<script>
+
+let teiModal;
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  const input = document.getElementById('scanner-input');
+  teiModal = new bootstrap.Modal(document.getElementById('teiModal'));
+
+  function focusInput() {
+    input.focus();
+  }
+
+  document.addEventListener('click', focusInput);
+  document.addEventListener('keydown', focusInput);
+  window.addEventListener('blur', () => setTimeout(focusInput, 100)); // bij alt-tab
+
+  input.style.position = 'absolute';
+  input.style.left = '-9999px';
+
+  focusInput();
+
+  input.addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const scanned_line = input.value.trim();
+      input.value = '';
+
+      if (scanned_line === '') return;
+
+      fetch("{% url 'inventory:scan' %}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scanned_line }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          handleScanResponse(data);
+        });
+    }
+  });
+});
+
+
+window.handleScanResponse = (data) => {
+  console.log(data);
+  const tei = data.TEI.toString().padStart(14, '0');
+
+  let radioCard = document.querySelector(`.card[data-tei="${tei}"]`);
+  console.log(radioCard);
+
+  const container = document.querySelector(`.border[data-forseen-tei="${tei}"]`);
+  console.log(container);
+
+  if (container) {
+    radioCard = container.querySelector(".card");
+    console.log(radioCard);
+
+    // Vervang kaart altijd
+    const placeholder = document.createElement('div');
+    placeholder.className = 'radio-card';
+    placeholder.dataset.tei = tei;
+    radioCard?.replaceWith(placeholder);
+
+    container.dataset.scanned = 'true';
+    renderRadioCards([placeholder]);
+    addValidationBadge(container, 'success');
+  } else {
+    // Check hoeveel niet-gescande containers er nog zijn
+    const notScanned = Array.from(document.querySelectorAll('[data-radio-link-id][data-scanned="false"]'));
+
+    if (notScanned.length === 1) {
+      // Voeg de card direct toe aan de enige overblijvende container
+      const el = notScanned[0];
+      assignTeiToSlot(el, tei);
+    } else {
+      // TEI onbekend → toon modal
+      showTeiModal(tei);
+    }
+  }
+}
+ 
+
+function showTeiModal(tei) {
+  document.getElementById('unknown-tei').textContent = tei;
+
+  const container = document.getElementById('tei-assign-buttons');
+  container.innerHTML = '';
+
+  document.querySelectorAll('[data-radio-link-id][data-scanned="false"]').forEach(el => {
+    const linkId = el.dataset.radioLinkId;
+    const naam = el.querySelector('h5')?.textContent || `Link ${linkId}`;
+
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-outline-primary';
+    btn.textContent = naam;
+    btn.onclick = () => assignTeiToSlot(el, tei);
+
+    container.appendChild(btn);
+  });
+
+  teiModal.show();
+}
+
+function assignTeiToSlot(el, tei) {
+  const placeholder = document.createElement('div');
+  placeholder.className = 'radio-card';
+  placeholder.dataset.tei = tei;
+  el.querySelector('.card')?.replaceWith(placeholder);
+  el.dataset.scanned = 'true';
+  renderRadioCards([placeholder]);
+
+  // Gele badge bij manuele toewijzing
+  addValidationBadge(el, 'warning');
+
+  teiModal.hide();
+}
+
+function addValidationBadge(container, variant = 'success') {
+  container.querySelector('.validation-badge')?.remove();
+
+  const span = document.createElement('span');
+  span.className = `position-absolute top-0 end-0 badge bg-${variant} rounded-circle p-0 validation-badge`;
+  span.style.transform = 'translate(+50%, -50%)';
+  span.style.zIndex = '1';
+
+  if (variant === 'success') {
+    span.innerHTML = `<i class="bi bi-check text-light fs-4"></i>`;
+  } else {
+    span.title = 'Gevalideerd';
+    span.innerHTML = `<i class="bi bi-exclamation text-dark fs-4"></i>`;
+  }
+
+  container.appendChild(span);
+}
+
+document.getElementById('submit-form').addEventListener('submit', function(e) {
+  const all = document.querySelectorAll('[data-radio-link-id]');
+  const scanned = document.querySelectorAll('[data-radio-link-id][data-scanned="true"]');
+  const assignments = [];
+
+  scanned.forEach(el => {
+    const linkId = el.dataset.radioLinkId;
+    const card = el.querySelector('.card');
+    const tei = card?.dataset.tei;
+    if (tei) {
+      assignments.push({ link_id: linkId, tei: tei });
+    }
+  });
+
+  if (assignments.length < all.length) {
+    const confirmed = confirm("Niet alle radios zijn gescand. Toch verzenden?");
+    if (!confirmed) {
+      e.preventDefault();
+      return;
+    }
+  }
+
+  document.getElementById('assignments-input').value = JSON.stringify(assignments);
+});
+
+</script>
+
+
+{% endblock %}

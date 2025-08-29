@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load bootstrap5 %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>Nieuwe radio toevoegen</h2>
+  <form method="post">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <button type="submit" class="btn btn-primary">Opslaan</button>
+  </form>
+</div>
+{% endblock %}

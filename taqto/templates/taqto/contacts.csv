@@ -1,0 +1,23 @@
+#SYSTEM; SYSTEM VERSION
+SV;4
+#VERSION; FILE FORMAT VERSION
+V;31
+#TYPE; TERMINAL TYPE
+TT;RC-46
+#TYPE;FIRMWARE NAME;FIRMWARE VERSION
+FW;8.90-7 006 RC-46 380-430MHz 1.8W TEA2;8-90-7_006
+FW;Language pack O;8-90-7_006_O
+#TYPE;DESCRIPTION
+D;
+GRP;Contact information
+N;phoneBook/ContactsWithFolders;phoneBookFolders;
+# TYPE
+# I = Info;
+# FC = FolderContact;
+#######
+# Contacts
+#######
+# TYPE;Name;Locked;Name;Primary Number;Number;Number;Number;Number;Number type;Number type;Number type;Number type;Number type;Speed;Speed;Speed;Speed;Speed;Text;Text type;Text;Text type;Caller group;
+I;Max. length: 16, encoding: UTF-8;Boolean;Max. length: 16, encoding: UTF-8;Max. Length:  32, Only "0-9*+pw#" characters allowed;Max. Length:  32, Only "0-9*+pw#" characters allowed;Max. Length:  32, Only "0-9*+pw#" characters allowed;Max. Length:  32, Only "0-9*+pw#" characters allowed;Max. Length:  32, Only "0-9*+pw#" characters allowed;12 = Private, 13 = Abbreviated, 14 = Phone, 15 = Office Ext.;12 = Private, 13 = Abbreviated, 14 = Phone, 15 = Office Ext.;12 = Private, 13 = Abbreviated, 14 = Phone, 15 = Office Ext.;12 = Private, 13 = Abbreviated, 14 = Phone, 15 = Office Ext.;12 = Private, 13 = Abbreviated, 14 = Phone, 15 = Office Ext.;Number 0 or numbers in range 2-9;Number 0 or numbers in range 2-9;Number 0 or numbers in range 2-9;Number 0 or numbers in range 2-9;Number 0 or numbers in range 2-9;Max. length: 59, encoding: UTF-8;8 = E-mail, 9 = Address, 10 = Note;Max. length: 59, encoding: UTF-8;8 = E-mail, 9 = Address, 10 = Note;1 = Family, 2 = V.I.P., 3 = Friends, 4 = Business, 5 = Other, 6 = No Group;
+{% for issi in issi_list %}FC;;false;{{issi.alias}};{{issi.number}};;;;;12;;;;;;;;;;;;;;6;
+{% endfor %}

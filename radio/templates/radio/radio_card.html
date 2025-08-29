@@ -1,0 +1,64 @@
+{% load static %}
+
+
+<div class="card d-inline-block m-2 shadow" style="min-width: 18rem;" data-tei="{{ radio.TEI|stringformat:'014d' }}">
+
+  <div class="card-header {{ radio.subscription.issi.discipline.bootstrap_class}}  d-flex justify-content-between align-items-center">
+
+    <strong>
+      {% if radio.subscription %}
+        {% if radio.alias %}
+          {{ radio.alias }}
+        {% else %}
+          <i class="bi bi-question-circle"></i> {{ radio.model.name }}
+        {% endif %}
+      {% else %}
+        {{ radio.model.name }}
+      {% endif %}
+    </strong>
+
+    <div>
+      {% if radio.model.is_atex %}
+        <img src="{% static 'atex.svg' %}" alt="atex" style="height: 1em;" class="me-2">
+      {% endif %}
+
+      {% if radio.ISSI %}
+        <span class="badge {% if radio.is_active %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ radio.ISSI }}</span>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <div class="card-body text-center">
+
+    {% if not radio.is_active %}
+      <span class="badge bg-warning text-dark">Niet actief</span>
+    {% endif %}
+    
+{% if radio.inventory_entries.all %}
+  <div class="text-muted small mb-2 text-center">
+    Laatst gezien:
+    {% if radio.inventory_entries.last.container != radio.container_link.first.container %}
+      <span class="badge bg-danger">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        {{ radio.inventory_entries.last.container }}
+      </span>
+      <br>
+    {% endif %}
+    <time class="timeago" datetime="{{ radio.inventory_entries.last.timestamp|date:'c' }}"></time>
+  </div>
+{% else %}
+  <div class="text-muted small mb-2 text-center">Nog niet gescand</div>
+{% endif %}
+
+
+    <hr>
+
+    <div class="text-muted small">
+      TEI: {{ radio.TEI|stringformat:"014d" }}
+    </div>
+
+  </div>
+
+
+</div>
