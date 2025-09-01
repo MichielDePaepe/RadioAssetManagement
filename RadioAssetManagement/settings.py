@@ -12,8 +12,14 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+import dj_database_url
+
 from django.templatetags.static import static
 
+from environ import Env
+env = Env()
+Env.read_env()
+ENVIRONMENT = env('ENVIRONMENT', default="prod")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,12 +29,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-q8za0=*2-iph6@u@-2j=-7vncn2+ma_o887o_+2mn=0s(ctz%)'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = (ENVIRONMENT == "dev")
 
-ALLOWED_HOSTS = ["*"]
+
+ALLOWED_PROD_HOST = env('ALLOWED_PROD_HOST', default=None)
+
+ALLOWED_HOSTS = ["localhost", "172.0.0.1"]
+
+if ALLOWED_PROD_HOST:
+    ALLOWED_HOSTS += ALLOWED_PROD_HOST
+    CSRF_TRUSTED_ORIGINS = ["https://" + ALLOWED_PROD_HOST]
+
 
 
 # Application definition
@@ -52,6 +66,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -105,6 +120,9 @@ else:
         }
     }
 
+POSTGRES_LOCALLY = True
+if ENVIRONMENT == "prod" or POSTGRES_LOCALLY == True:
+    DATABASES['default'] = dj_database_url.parse(env('DATABASE_URL'))
 
 
 # Password validation
@@ -142,7 +160,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / "static"]  # als BASE_DIR Path object is
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
+
 
 
 # Default primary key field type

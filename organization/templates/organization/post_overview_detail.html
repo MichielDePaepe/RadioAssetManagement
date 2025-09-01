@@ -83,6 +83,7 @@ h2, h3, h4 {
         <!-- Linkerzijde: tabel -->
         <div class="col-md-6">
             {% for child in post.children.all %}
+              {% if child.show_in_listing %}
               <div class="child-block">
                 <h4>{{ child }}</h4>
                 <table class="table table-sm table-bordered radio-table">
@@ -98,6 +99,7 @@ h2, h3, h4 {
                     </tbody>
                 </table>
               </div>
+              {% endif %}
             {% endfor %}
         </div>
 
