@@ -89,47 +89,16 @@
 <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
 <script>window.radio_cards_gray_on_load = true</script>
 <script src="{% static 'js/radio_card.js' %}"></script>
+<script src="{% static 'js/scanner.js' %}"></script>
 
 <script>
 
 let teiModal;
 
-
-document.addEventListener('DOMContentLoaded', function () {
-  const input = document.getElementById('scanner-input');
-  teiModal = new bootstrap.Modal(document.getElementById('teiModal'));
-
-  function focusInput() {
-    input.focus();
-  }
-
-  document.addEventListener('click', focusInput);
-  document.addEventListener('keydown', focusInput);
-  window.addEventListener('blur', () => setTimeout(focusInput, 100)); // bij alt-tab
-
-  input.style.position = 'absolute';
-  input.style.left = '-9999px';
-
-  focusInput();
-
-  input.addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const scanned_line = input.value.trim();
-      input.value = '';
-
-      if (scanned_line === '') return;
-
-      fetch("{% url 'inventory:scan' %}", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scanned_line }),
-      })
-        .then(res => res.json())
-        .then(data => {
-          handleScanResponse(data);
-        });
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  new Scanner({
+    inputId: "scanner-input",
+    onScan: handleScanResponse
   });
 });
 

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4">
+  <div class="row g-3">
+
+<!-- Card ISSI -->
+<div class="col-md-4">
+  <div class="card h-100 shadow-sm">
+    <div class="card-body text-center d-flex flex-column">
+      <h5 class="card-title">Zoek via ISSI</h5>
+      <form method="post" action="{% url 'radio:find' %}">
+      	{% csrf_token %}
+      	<input type="text" name="issi" class="form-control my-3" id="issiInput" placeholder="Geef ISSI nummer in">
+      	<button class="btn btn-primary mt-auto">
+          <i class="bi bi-search"></i> Zoek
+      	</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Card TEI -->
+<div class="col-md-4">
+  <div class="card h-100 shadow-sm">
+    <div class="card-body text-center d-flex flex-column">
+      <h5 class="card-title">Zoek via TEI</h5>
+      <form method="post" action="{% url 'radio:find' %}">
+      	{% csrf_token %}
+      	<input type="text" name="tei" class="form-control my-3" id="teiInput" placeholder="Geef TEI nummer in">
+        <button class="btn btn-primary mt-auto">
+          <i class="bi bi-search"></i> Zoek
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Card QR -->
+<div class="col-md-4">
+  <div class="card h-100 shadow-sm">
+    <div class="card-body text-center d-flex flex-column">
+      <h5 class="card-title">Scan QR</h5>
+      <p class="card-text flex-grow-1">Gebruik de QR-scanner om snel een radio te vinden.</p>
+      <button class="btn btn-success mt-auto" data-bs-toggle="modal" data-bs-target="#qrModal">
+        <i class="bi bi-qr-code-scan"></i> Start scan
+      </button>
+    </div>
+  </div>
+</div>
+
+
+  </div>
+</div>
+
+<!-- Modal QR -->
+<div class="modal fade" id="qrModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Scan QR-code</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>Richt de scanner naar de QR-code...</p>
+        <input type="text" id="qrInput" autocomplete="off" class="form-control">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Annuleren</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+let scanner = null;
+
+const qrModal = document.getElementById('qrModal');
+qrModal.addEventListener('shown.bs.modal', () => {
+  scanner = new Scanner({
+    inputId: "qrInput",
+    onScan: (data) => {
+      console.log("Scanned:", data);
+      if(data.status == "ok") {
+      	bootstrap.Modal.getInstance(qrModal).hide(); // sluit modal na scan
+
+      	const urlTemplate = "{% url 'radio:detail' pk=0 %}"; // dummy pk=0
+      	const url = urlTemplate.replace('0', data.TEI);
+      	window.location.href = url;
+      }
+    }
+  });
+});
+
+qrModal.addEventListener('hidden.bs.modal', () => {
+  document.activeElement.blur();
+  if (scanner) {
+    scanner.destroy();
+    scanner = null;
+  }
+});
+</script>
+
+
+{% endblock %}
+
+
+
+{% block extra_head %}
+
+<script src="{% static 'js/scanner.js' %}"></script>
+
+{% endblock %}

@@ -118,29 +118,4 @@ class ScanSubmitView(View):
         return HttpResponseRedirect(reverse('inventory:container_list', args=[container.parent.id]))
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class ScanCodeView(View):
-    def post(self, request, *args, **kwargs):
-        try:
-            data = json.loads(request.body)
-            scanned_line = data.get("scanned_line")
-
-            match = re.search(r"https://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)", scanned_line)
-            
-            if match:
-                fireplan_id = int(match.group("fireplan_id"))
-                radio = Radio.objects.get(fireplan_id=fireplan_id)
-
-                return JsonResponse({
-                    "status": "ok", 
-                    "TEI": radio.TEI, 
-                    "ISSI": radio.ISSI, 
-                    "alias": radio.alias,
-                    "radio": str(radio)
-                })
-
-            return JsonResponse({"status": "error", "message": "TIE not found"}, status=400)
-
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
 

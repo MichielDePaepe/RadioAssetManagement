@@ -1,12 +1,17 @@
 from django.views import View
 from django.views.generic import TemplateView
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.template.loader import render_to_string
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.edit import CreateView
 from django.views.generic.detail import DetailView
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
+
+import json
+import re
 
 from .models import *
 from .forms import *
@@ -34,3 +39,74 @@ class RadioCreateView(CreateView):
         messages.success(self.request, f"{self.object.model} with TEI {self.object.TEI} added successfully!")
         return response
 
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ScanQRCodeView(View):
+    def post(self, request, *args, **kwargs):
+        if True:
+            data = json.loads(request.body)
+            scanned_line = data.get("scanned_line")
+
+            match = re.search(r"https://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)", scanned_line)
+            
+            if match:
+                fireplan_id = int(match.group("fireplan_id"))
+                radio = Radio.objects.get(fireplan_id=fireplan_id)
+
+                res = {
+                    "status": "ok", 
+                    "TEI": radio.TEI, 
+                    "ISSI": radio.ISSI, 
+                    "alias": radio.alias,
+                    "fireplan_id": fireplan_id,
+                    "radio": str(radio)
+                }
+
+                return JsonResponse(res)
+
+            return JsonResponse({"status": "error", "message": "TIE not found"}, status=404)
+
+        # except Exception as e:
+        #     return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+class FindRadioView(TemplateView):
+    template_name = "radio/find.html"
+
+    def post(self, request, *args, **kwargs):
+        issi_value = request.POST.get("issi")
+        tei_value = request.POST.get("tei")
+        radio = None
+
+        if issi_value:
+            try:
+                issi_int = int(issi_value)
+                issi = ISSI.objects.get(number=issi_int)
+                radio = issi.subscription.radio
+            except ValueError:
+                messages.error(request, f"{issi_value} is geen geldig ISSI nummer")
+            except ISSI.DoesNotExist:
+                messages.error(request, f"ISSI {issi_value} niet gevonden")
+            except ISSI.subscription.RelatedObjectDoesNotExist:
+                messages.error(request, f"Geen radio met ISSI {issi_value}")
+
+
+        elif tei_value:
+            if len(tei_value) == 15 and int(tei_value[-1]) == 0:
+                tei_value = tei_value[:-1]
+            try:
+                radio = Radio.objects.get(pk=tei_value)
+            except Radio.DoesNotExist:
+                messages.error(request, f"Radio met dit TEI {tie_value} nummer niet gevonden")
+
+        if radio:
+            return redirect("radio:detail", pk=radio.pk)
+
+        return render(request, self.template_name)
+
+
+
+class RadioDetailView(DetailView):
+    model = Radio
+    template_name = 'radio/detail.html'
+    context_object_name = 'radio'
