@@ -102,7 +102,12 @@ class RadioAdmin(admin.ModelAdmin):
         'subscription__issi__number',
         'subscription__issi__alias'
     )
-    list_filter = ('model', RadioOwnerFilter, HasSubscriptionFilter,)
+    list_filter = (
+        'model', 
+        'subscription__issi__customer',
+        RadioOwnerFilter, 
+        HasSubscriptionFilter,
+    )
     readonly_fields = ('model', )
 
     def get_tei(self, obj):
