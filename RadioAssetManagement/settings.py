@@ -18,7 +18,9 @@ from django.templatetags.static import static
 
 from environ import Env
 env = Env()
-Env.read_env()
+if os.path.exists(".env"):
+    env.read_env(".env")
+
 ENVIRONMENT = env('ENVIRONMENT', default="prod")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
