@@ -10,4 +10,7 @@ urlpatterns = [
     path('<int:tei>/card/', RadioCardView.as_view(), name='card'),
     path('example/card/', RadioCardExampleView.as_view(), name='example_card'),
     path('scan/', ScanQRCodeView.as_view(), name='scan'),
+    path('subscritpions/upload', UploadSubscriptionsView.as_view(), name='upload_subscriptions'),
+
+
 ]

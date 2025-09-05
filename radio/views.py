@@ -9,7 +9,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
+from django.db import transaction
 
+
+import openpyxl
 import json
 import re
 import logging
@@ -65,9 +68,9 @@ class ScanQRCodeView(View):
             if match:
                 fireplan_id = int(match.group("fireplan_id"))
                 logger.debug(f"fireplan id: {fireplan_id}")
+
                 radio = Radio.objects.get(fireplan_id=fireplan_id)
                 logger.debug(f"radio: {radio}")
-
 
                 res = {
                     "status": "ok", 
@@ -126,3 +129,92 @@ class RadioDetailView(DetailView):
     model = Radio
     template_name = 'radio/detail.html'
     context_object_name = 'radio'
+
+
+
+class UploadSubscriptionsView(TemplateView):
+    template_name = "radio/upload_subscriptions.html"
+
+    def post(self, request):
+        if True:
+            excel_file = request.FILES["excelFile"]
+
+            wb = openpyxl.load_workbook(excel_file, data_only=True)
+            ws = wb.active
+
+            header = [cell.value for cell in next(ws.iter_rows(min_row=1, max_row=1))]
+            col = {name: idx for idx, name in enumerate(header)}
+
+            with transaction.atomic():
+                excel_subs = set()
+                existing_subs = set(Subscription.objects.values_list('radio__TEI', 'issi__number'))
+
+                for row in ws.iter_rows(min_row=2):
+                    tei_cell = row[col['TEI']].value
+                    issi_cell = row[col['ISSI']].value
+                    alias_cell = row[col['CICAlias']].value
+                    model_type_cell = row[col['ModelType']].value
+
+                    if tei_cell is None or issi_cell is None:
+                        continue
+
+                    if model_type_cell == "Spare subscription":
+                        continue
+
+                    try:
+                        tei_str = str(tei_cell).strip()
+                        if len(tei_str) == 15 and tei_str[-1] == "0":
+                            tei_str = tei_str[0:-1]
+                        tei = int(tei_str)
+                        issi_number = int(str(issi_cell).strip())
+                    except ValueError:
+                        messages.error(request, f"Onjuiste waarde TEI={tei_cell}, ISSI={issi_cell}")
+                        continue
+
+                    alias = str(alias_cell).strip() if alias_cell else ""
+
+                    try:
+                        radio, _ = Radio.objects.get_or_create(TEI=tei)
+                    except ValueError as e:
+                        messages.error(request, f"{e}")
+                        continue
+
+                    issi, _ = ISSI.objects.get_or_create(number=issi_number)
+
+                    print(f"{tei_cell} - {issi_cell}")
+
+                    if (tei, issi_number) not in existing_subs:
+                        # if issi existis in another subscription, delete that subscription
+                        other_subscirption_with_issi = Subscription.objects.filter(issi=issi)
+                        if other_subscirption_with_issi:
+                            other_subscirption_with_issi.delete()
+
+                        Subscription.objects.create(
+                            radio=radio,
+                            issi=issi,
+                            astrid_alias=alias
+                        )
+                    else:
+                        sub = Subscription.objects.get(radio=radio, issi=issi_number)
+                        if sub.astrid_alias != alias:
+                            sub.astrid_alias = alias
+                            sub.save()
+
+                    excel_subs.add((tei, issi_number))
+
+                # Verwijder alle records die niet meer in Excel zitten
+                to_delete = existing_subs - excel_subs
+                for tei_del, issi_del in to_delete:
+                    subscription_to_delete = Subscription.objects.filter(radio__TEI=tei_del, issi__number=issi_del)
+                    logger.info(f"Delete subscripton: {subscription_to_delete}")
+                    subscription_to_delete.delete()
+
+            messages.success(request, f"Succesvol verwerkt. {len(excel_subs)} abonnomenten geregistreerd, {len(to_delete)} abonnomenten verwijderd.")
+        try:
+            pass
+        except KeyError as e:
+            messages.error(request, f"Kolom ontbreekt in Excel: {e}")
+        except Exception as e:
+            messages.error(request, f"Er is een fout opgetreden: {e} (ISSI: {issi_cell}, TEI: {tei_cell})")
+
+        return self.get(request)
