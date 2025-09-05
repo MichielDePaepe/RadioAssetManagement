@@ -12,6 +12,8 @@ from django.contrib import messages
 
 import json
 import re
+import logging
+logger = logging.getLogger(__name__)
 
 from .models import *
 from .forms import *
@@ -47,6 +49,8 @@ class ScanQRCodeView(View):
             data = json.loads(request.body)
             scanned_line = data.get("scanned_line")
 
+            logger.debug(f"QR code input: {scanned_line}")
+
             pattern = re.compile(r"https://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)")
 
             match = pattern.match(scanned_line)
@@ -54,11 +58,16 @@ class ScanQRCodeView(View):
             if not match:
                 # scanner is set to qwerty, try converting if input was on an azerty system
                 mapping = str.maketrans({'a': 'q', 'A': 'Q', 'z': 'w', 'Z': 'W', 'q': 'a', 'Q': 'A', 'm': ';', 'M': ':', 'w': 'z', 'W': 'Z', '&': '1', 'é': '2', '"': '3', '\'': '4', '’': '4', '(': '5', '§': '6', 'è': '7', '!': '8', 'ç': '9', 'à': '0', '=': '/', ':': '.', '+': '?', '-': '=', ';': ','})
-                match = pattern.match(scanned_line.translate(mapping))
+                translated_scanned_line = scanned_line.translate(mapping)
+                logger.debug(f"Try AZERTY to QWERTY translation. Result: {scanned_line}")
+                match = pattern.match(translated_scanned_line)
 
             if match:
                 fireplan_id = int(match.group("fireplan_id"))
+                logger.debug(f"fireplan id: {fireplan_id}")
                 radio = Radio.objects.get(fireplan_id=fireplan_id)
+                logger.debug(f"radio: {radio}")
+
 
                 res = {
                     "status": "ok", 
