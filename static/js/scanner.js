@@ -12,6 +12,10 @@ class Scanner {
   }
 
   _init() {
+    this.input.setAttribute('autocomplete', 'off');
+    this.input.setAttribute('autocorrect', 'off');
+    this.input.setAttribute('autocapitalize', 'off');
+    
     // bind handlers zodat we ze later kunnen verwijderen
     this._focusInput = () => this.input.focus();
     this._blurHandler = () => setTimeout(this._focusInput, 100);
