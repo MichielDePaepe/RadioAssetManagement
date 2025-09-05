@@ -13,7 +13,7 @@
       <h5 class="card-title">Zoek via ISSI</h5>
       <form method="post" action="{% url 'radio:find' %}">
       	{% csrf_token %}
-      	<input type="text" name="issi" class="form-control my-3" id="issiInput" placeholder="Geef ISSI nummer in">
+      	<input type="text" name="issi" class="form-control my-3" id="issiInput" placeholder="Geef ISSI nummer in" inputmode="numeric" pattern="[0-9]{7}">
       	<button class="btn btn-primary mt-auto">
           <i class="bi bi-search"></i> Zoek
       	</button>
@@ -29,7 +29,7 @@
       <h5 class="card-title">Zoek via TEI</h5>
       <form method="post" action="{% url 'radio:find' %}">
       	{% csrf_token %}
-      	<input type="text" name="tei" class="form-control my-3" id="teiInput" placeholder="Geef TEI nummer in">
+      	<input type="text" name="tei" class="form-control my-3" id="teiInput" placeholder="Geef TEI nummer in" inputmode="numeric" pattern="[0-9]*">
         <button class="btn btn-primary mt-auto">
           <i class="bi bi-search"></i> Zoek
         </button>
