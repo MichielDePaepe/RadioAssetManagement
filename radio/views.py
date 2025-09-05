@@ -43,12 +43,19 @@ class RadioCreateView(CreateView):
 @method_decorator(csrf_exempt, name='dispatch')
 class ScanQRCodeView(View):
     def post(self, request, *args, **kwargs):
-        if True:
+        try:
             data = json.loads(request.body)
             scanned_line = data.get("scanned_line")
 
-            match = re.search(r"https://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)", scanned_line)
-            
+            pattern = re.compile(r"https://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)")
+
+            match = pattern.match(scanned_line)
+
+            if not match:
+                # scanner is set to qwerty, try converting if input was on an azerty system
+                mapping = str.maketrans({'a': 'q', 'A': 'Q', 'z': 'w', 'Z': 'W', 'q': 'a', 'Q': 'A', 'm': ';', 'M': ':', 'w': 'z', 'W': 'Z', '&': '1', 'é': '2', '"': '3', '\'': '4', '’': '4', '(': '5', '§': '6', 'è': '7', '!': '8', 'ç': '9', 'à': '0', '=': '/', ':': '.', '+': '?', '-': '=', ';': ','})
+                match = pattern.match(scanned_line.translate(mapping))
+
             if match:
                 fireplan_id = int(match.group("fireplan_id"))
                 radio = Radio.objects.get(fireplan_id=fireplan_id)
@@ -66,8 +73,8 @@ class ScanQRCodeView(View):
 
             return JsonResponse({"status": "error", "message": "TIE not found"}, status=404)
 
-        # except Exception as e:
-        #     return JsonResponse({"status": "error", "message": str(e)}, status=500)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
 class FindRadioView(TemplateView):

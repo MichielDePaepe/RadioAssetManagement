@@ -28,11 +28,21 @@ function renderRadioCards(elements, callback) {
     fetch(`/radio/${tei}/card/`)
       .then(r => r.text())
       .then(html => {
-        el.outerHTML = html;
-        if (callback) callback(el); // callback na elke fetch, met element
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = html.trim();
+        const newEl = wrapper.firstChild;
+
+        if (el.parentNode) {
+          el.replaceWith(newEl);
+        } else {
+          console.warn('Element heeft geen parent, kan niet vervangen worden:', el);
+        }
+
+        if (callback) callback(newEl);
       });
   });
 }
+
 
 
 

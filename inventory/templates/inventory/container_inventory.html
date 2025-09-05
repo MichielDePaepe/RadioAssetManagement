@@ -96,6 +96,8 @@
 let teiModal;
 
 document.addEventListener("DOMContentLoaded", () => {
+  teiModal = new bootstrap.Modal(document.getElementById('teiModal'));
+
   new Scanner({
     inputId: "scanner-input",
     onScan: handleScanResponse

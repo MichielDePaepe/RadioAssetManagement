@@ -10,6 +10,10 @@ class Radio(models.Model):
         return self.subscription.issi.number if hasattr(self, 'subscription') else None
 
     @property
+    def tei_str(self):
+        return f"{self.TEI:014d}"
+
+    @property
     def alias(self):
         return self.subscription.issi.alias if hasattr(self, 'subscription') else None
 
@@ -25,7 +29,7 @@ class Radio(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        tei = str(self.TEI).zfill(14)
+        tei = f"{self.TEI:014d}"
         if hasattr(self, 'subscription'):
             return "%s - %s" % (tei, str(self.subscription.issi))
         return tei

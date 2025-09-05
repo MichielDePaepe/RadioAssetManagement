@@ -1,7 +1,65 @@
 {% extends 'base.html' %}
 
+{% block extra_script %}
+
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    timeago.render(document.querySelectorAll('.timeago'), 'nl');
+  });
+</script>
+
+{% endblock %}
+
 {% block content %}
 
-<h1>{{ radio }}</h1>
+<h1>Radio info</h1>
+<hr>
+
+
+  <table class="table table-bordered w-auto">
+    <tbody>
+      <tr>
+        <th scope="row" class="bg-light">Type</th>
+        <td>{{ radio.model }}</td>
+      </tr>
+      <tr>
+        <th scope="row" class="bg-light">TEI</th>
+        <td>{{ radio.tei_str }}</td>
+      </tr>
+      <tr>
+        <th scope="row" class="bg-light">ISSI</th>
+        <td>{{ radio.ISSI }}</td>
+      </tr>
+      <tr>
+        <th scope="row" class="bg-light">Alias</th>
+        <td>{{ radio.alias }}</td>
+      </tr>
+      <tr>
+        <th scope="row" class="bg-light">Status</th>
+        <td>
+        	{% if radio.is_active %}
+        		<span class="badge bg-success">Actief</span>
+        	{% else %}
+        		<span class="badge bg-danger">Niet actief</span>
+        	{% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th scope="row" class="bg-light">Voorziene plaats</th>
+        <td>{{ radio.container_link.container }}: {{ radio.container_link.name }}</td>
+      </tr>
+      <tr>
+        <th scope="row" class="bg-light">Laatst gezien</th>
+        <td>
+        	{{ radio.inventory_entries.latest.container }} <br>
+        	<time class="timeago" datetime="{{ radio.inventory_entries.latest.timestamp|date:'c' }}"></time>
+        </td>
+      </tr>
+      
+    </tbody>
+  </table>
 
 {% endblock %}
