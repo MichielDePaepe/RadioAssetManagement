@@ -26,4 +26,5 @@ urlpatterns = [
     path('radio/', include('radio.urls', namespace='radio')),
     path('organization/', include('organization.urls', namespace='organization')),
     path('taqto/', include('taqto.urls')),
+    path('printer/', include('printer.urls')),
 ]

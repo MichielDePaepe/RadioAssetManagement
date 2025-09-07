@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 from .models import *
 from .forms import *
+from printer.models import *
 
 
 class RadioCardView(View):
@@ -31,6 +32,31 @@ class RadioCardView(View):
 
 class RadioCardExampleView(TemplateView):
     template_name = "radio/radio_card_example.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['printers'] = Printer.objects.all()  # pass printers to template
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Handle QR print request without using forms"""
+        self.object = self.get_object()
+        printer_id = request.POST.get('printer_id')
+        copies = request.POST.get('copies', 2)
+
+        try:
+            printer = Printer.objects.get(id=printer_id)
+            copies = int(copies)
+            url = f"https://infoscan.firebru.brussels?data={self.object.id}"  # example QR content
+            printer.print_qr(url, copies=copies)
+            messages.success(request, f"QR-code sent to printer {printer.name}.")
+        except Printer.DoesNotExist:
+            messages.error(request, "Selected printer does not exist.")
+        except Exception as e:
+            messages.error(request, f"Printing failed: {str(e)}")
+
+        return redirect('radio:detail', pk=self.object.pk)
+
 
 
 class RadioCreateView(CreateView):
@@ -129,6 +155,36 @@ class RadioDetailView(DetailView):
     model = Radio
     template_name = 'radio/detail.html'
     context_object_name = 'radio'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['printers'] = Printer.objects.all()  # pass printers to template
+        return context
+
+    def post(self, request, *args, **kwargs):
+        """Handle QR print request without using forms"""
+        radio = self.get_object()
+
+        printer_id = request.POST.get('printer_id')
+        copies = request.POST.get('copies', 2)
+        action = request.POST.get("action")
+
+        try:
+            printer = Printer.objects.get(id=printer_id)
+            if action == "qr":
+                res = radio.print_qr(printer, copies)
+            elif action == "tei":
+                res = radio.print_tei(printer)
+            else:
+                raise Exception("No action selected")
+            messages.success(request, res)
+        except Printer.DoesNotExist:
+            messages.error(request, "Selected printer does not exist.")
+        except Exception as e:
+            messages.error(request, f"Printing failed: {str(e)}")
+
+        return redirect('radio:detail', pk=radio.pk)
+
 
 
 

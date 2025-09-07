@@ -18,8 +18,10 @@
 <h1>Radio info</h1>
 <hr>
 
+<div class="d-flex flex-column align-items-center mt-3">
 
-  <table class="table table-bordered w-auto">
+  <!-- Tabel -->
+  <table class="table table-bordered w-auto text-center">
     <tbody>
       <tr>
         <th scope="row" class="bg-light">Type</th>
@@ -40,11 +42,11 @@
       <tr>
         <th scope="row" class="bg-light">Status</th>
         <td>
-        	{% if radio.is_active %}
-        		<span class="badge bg-success">Actief</span>
-        	{% else %}
-        		<span class="badge bg-danger">Niet actief</span>
-        	{% endif %}
+          {% if radio.is_active %}
+            <span class="badge bg-success">Actief</span>
+          {% else %}
+            <span class="badge bg-danger">Niet actief</span>
+          {% endif %}
         </td>
       </tr>
       <tr>
@@ -54,12 +56,52 @@
       <tr>
         <th scope="row" class="bg-light">Laatst gezien</th>
         <td>
-        	{{ radio.inventory_entries.latest.container }} <br>
-        	<time class="timeago" datetime="{{ radio.inventory_entries.latest.timestamp|date:'c' }}"></time>
+          {{ radio.inventory_entries.latest.container }} <br>
+          <time class="timeago" datetime="{{ radio.inventory_entries.latest.timestamp|date:'c' }}"></time>
         </td>
       </tr>
-      
     </tbody>
   </table>
+
+
+
+<div class="card mt-3">
+  <div class="card-header bg-primary text-white">
+    Print
+  </div>
+  <div class="card-body">
+    <form method="post" class="d-flex align-items-end gap-2">
+      {% csrf_token %}
+
+      <div class="flex-grow-1">
+        <label for="printer" class="form-label mb-0">Printer</label>
+        <select name="printer_id" id="printer" class="form-select form-select-sm">
+          {% for p in printers %}
+            <option value="{{ p.id }}">{{ p.name }} ({{ p.device }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="copies" class="form-label mb-0">Kopies</label>
+        <input type="number" name="copies" id="copies" value="2" min="1" max="10" class="form-control form-control-sm" style="width: 60px;">
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" name="action" value="qr" class="btn btn-success btn-sm">
+          <i class="bi bi-printer-fill"></i> Print QR
+        </button>
+        <button type="submit" name="action" value="tei" class="btn btn-primary btn-sm">
+          <i class="bi bi-printer-fill"></i> Print TEI
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</div>
+
+
+
 
 {% endblock %}

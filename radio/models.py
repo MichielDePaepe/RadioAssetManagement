@@ -1,9 +1,16 @@
 from django.db import models
+from PIL import Image
+import qrcode
+import barcode
+from barcode.writer import ImageWriter
+
 
 class Radio(models.Model):
     TEI = models.BigIntegerField(primary_key=True)
     fireplan_id = models.IntegerField(null=True, blank=True)
     model = models.ForeignKey('RadioModel', null=True, blank=True, on_delete=models.PROTECT)
+
+    dpi = 360
 
     @property
     def ISSI(self):
@@ -12,6 +19,10 @@ class Radio(models.Model):
     @property
     def tei_str(self):
         return f"{self.TEI:014d}"
+
+    @property
+    def tei_15_str(self):
+        return f"{self.TEI:014d}0"
 
     @property
     def alias(self):
@@ -27,6 +38,68 @@ class Radio(models.Model):
             raise ValueError(f"Geen RadioModel gevonden voor TEI {self.TEI}")
         self.model = matching_range.model
         super().save(*args, **kwargs)
+
+    def print_qr(self, printer, copies=1):
+        mm_to_px = lambda mm: int(mm * self.dpi / 25.4)
+        if not self.fireplan_id:
+                raise Exception(f"Radio with TEI {self.TEI} has no Fireplan ID") 
+
+        url = f"https://infoscan.firebru.brussels?data=1,1,{self.fireplan_id},1010"
+        qr = qrcode.QRCode(version=4, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=70, border=0)
+        qr.add_data(url)
+        qr.make(fit=True)
+
+        tape_px = mm_to_px(18-2)
+        img_qr = qr.make_image(fill_color="black", back_color="white").convert("RGB").resize((tape_px, tape_px))
+
+        printer.print(type="18", images=[img_qr] * int(copies))
+
+        return f"{copies} QR code(s) sent to printer {printer.name}."
+
+    def print_tei(self, printer):
+        mm_to_px = lambda mm: int(mm * self.dpi / 25.4)
+        mm_to_pt = lambda mm: mm * 72 / 25.4
+
+        label_w_px = mm_to_px(30-2)
+        label_h_px = 150
+
+        logo_img = Image.open("logo.png").convert("L")
+        aspect_ratio = logo_img.width / logo_img.height
+        logo_h_px = int(label_h_px / 2)
+        logo_w_px = int(logo_h_px * aspect_ratio)
+        logo_img = logo_img.resize((logo_w_px, logo_h_px))
+
+        tei = self.tei_15_str
+        code128 = barcode.get("code128", tei, writer=ImageWriter())
+        barcode_img = code128.render(writer_options={
+            "module_height": 2.75,
+            "module_width": 25 / len(tei) / 8.932,
+            "quiet_zone": 0,
+            "font_size": mm_to_pt(2.5),
+            "text_distance": 2.75,
+            "dpi": self.dpi
+        }).convert("L")        
+
+        # logo position
+        logo_x = int((label_w_px - logo_img.width) / 2)
+        logo_y = 0
+
+        # barcode position
+        barcode_x = int((label_w_px - barcode_img.width) / 2)
+        barcode_y = logo_y + logo_img.height - mm_to_px(1)
+
+        # create image
+        label_img = Image.new("L", (label_w_px, label_h_px), color=255)
+        label_img.paste(barcode_img, (barcode_x, barcode_y))
+        label_img.paste(logo_img, (logo_x, logo_y))
+
+        #label_img.show()
+
+        printer.print(type="12", images=[label_img.rotate(90, expand=True)])
+
+        return f"TEI label has been send to printer {printer.name}."
+
+
 
     def __str__(self):
         tei = f"{self.TEI:014d}"
