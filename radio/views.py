@@ -158,11 +158,10 @@ class RadioDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['printers'] = Printer.objects.all()  # pass printers to template
+        context['printers'] = Printer.objects.all()
         return context
 
     def post(self, request, *args, **kwargs):
-        """Handle QR print request without using forms"""
         radio = self.get_object()
 
         printer_id = request.POST.get('printer_id')

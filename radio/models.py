@@ -10,8 +10,6 @@ class Radio(models.Model):
     fireplan_id = models.IntegerField(null=True, blank=True)
     model = models.ForeignKey('RadioModel', null=True, blank=True, on_delete=models.PROTECT)
 
-    dpi = 360
-
     @property
     def ISSI(self):
         return self.subscription.issi.number if hasattr(self, 'subscription') else None
@@ -22,7 +20,7 @@ class Radio(models.Model):
 
     @property
     def tei_15_str(self):
-        return f"{self.TEI:014d}0"
+        return f"{self.tei_str}0"
 
     @property
     def alias(self):
@@ -40,7 +38,7 @@ class Radio(models.Model):
         super().save(*args, **kwargs)
 
     def print_qr(self, printer, copies=1):
-        mm_to_px = lambda mm: int(mm * self.dpi / 25.4)
+        mm_to_px = lambda mm: int(mm * printer.dpi / 25.4)
         if not self.fireplan_id:
                 raise Exception(f"Radio with TEI {self.TEI} has no Fireplan ID") 
 
@@ -57,7 +55,7 @@ class Radio(models.Model):
         return f"{copies} QR code(s) sent to printer {printer.name}."
 
     def print_tei(self, printer):
-        mm_to_px = lambda mm: int(mm * self.dpi / 25.4)
+        mm_to_px = lambda mm: int(mm * printer.dpi / 25.4)
         mm_to_pt = lambda mm: mm * 72 / 25.4
 
         label_w_px = mm_to_px(30-2)
@@ -77,7 +75,7 @@ class Radio(models.Model):
             "quiet_zone": 0,
             "font_size": mm_to_pt(2.5),
             "text_distance": 2.75,
-            "dpi": self.dpi
+            "dpi": printer.dpi
         }).convert("L")        
 
         # logo position
@@ -92,8 +90,6 @@ class Radio(models.Model):
         label_img = Image.new("L", (label_w_px, label_h_px), color=255)
         label_img.paste(barcode_img, (barcode_x, barcode_y))
         label_img.paste(logo_img, (logo_x, logo_y))
-
-        #label_img.show()
 
         printer.print(type="12", images=[label_img.rotate(90, expand=True)])
 

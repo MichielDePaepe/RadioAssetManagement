@@ -14,6 +14,9 @@ class Printer(models.Model):
     location = models.CharField(max_length=200, blank=True)
     ip = models.GenericIPAddressField(protocol='both', unpack_ipv4=False)
 
+    dpi = models.PositiveIntegerField(help_text="Dots per inch (DPI)", default=360)
+
+
     BACKEND_CHOICES = [
         ('network', 'Network'),
         ('linux_kernel', 'Linux Kernel'),
