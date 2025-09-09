@@ -36,3 +36,4 @@ MANIFEST
 # Django
 logs/
 staticfiles/
+*.sqlite3
