@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block navbar %}
+{% endblock %}
+
+{% block body %}
+<div class="vh-100 d-flex justify-content-center align-items-center" style="background-color: #e0e0e0;">
+  <div class="card p-4 shadow" style="width: 350px;">
+<h3 class="d-flex align-items-center justify-content-center mb-4">
+  <img src="{% static 'icon.svg' %}" alt="Logo" height="60"> <!-- 2 lijnen hoog -->
+  <div class="ms-3">
+    <div>Radio Asset</div>
+    <div>Management</div>
+  </div>
+</h3>
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+
+      <!-- Username input -->
+      <div class="form-outline mb-4">
+        <input type="text" id="username" name="username" class="form-control" placeholder="Username" required />
+      </div>
+
+      <!-- Password input -->
+      <div class="form-outline mb-4">
+        <input type="password" id="password" name="password" class="form-control" placeholder="Password" required />
+      </div>
+
+      <!-- Submit button -->
+      <button type="submit" class="btn btn-primary w-100">Login</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

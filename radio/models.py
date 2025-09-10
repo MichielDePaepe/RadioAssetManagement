@@ -189,5 +189,9 @@ class Subscription(models.Model):
 
     class Meta:
         unique_together = ('radio', 'issi')
+        permissions = [
+            ("can_upload_subscriptions", "Can upload a subscriptions export from Astrid"),
+        ]
+
 
 

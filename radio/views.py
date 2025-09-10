@@ -10,6 +10,8 @@ from django.utils.decorators import method_decorator
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from django.db import transaction
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+
 
 
 import openpyxl
@@ -187,7 +189,8 @@ class RadioDetailView(DetailView):
 
 
 
-class UploadSubscriptionsView(TemplateView):
+class UploadSubscriptionsView(LoginRequiredMixin, PermissionRequiredMixin, TemplateView):
+    permission_required = 'radio.can_upload_subscriptions'
     template_name = "radio/upload_subscriptions.html"
 
     def post(self, request):

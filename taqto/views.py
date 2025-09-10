@@ -1,12 +1,15 @@
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+
 
 from radio.models import *
 
-class ContactsDownloadView(View):
-    def get(self, request, *args, **kwargs):
+class ContactsDownloadView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'taqto.can_download_contacts'
 
+    def get(self, request, *args, **kwargs):
         context = dict()
         context["issi_list"] = ISSI.objects.exclude(alias__isnull=True).exclude(alias__exact='')
 
