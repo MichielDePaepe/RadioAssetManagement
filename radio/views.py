@@ -175,9 +175,9 @@ class RadioDetailView(DetailView):
             if action == "qr":
                 res = radio.print_qr(printer, copies)
             elif action == "tei":
-                res = radio.print_tei(printer)
+                res = radio.print_tei(printer, copies)
             elif action == "label":
-                res = radio.print_mobile_label(printer)
+                res = radio.print_mobile_label(printer, copies)
             else:
                 raise Exception("No action selected")
             messages.success(request, res)

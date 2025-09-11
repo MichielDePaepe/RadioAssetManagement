@@ -54,7 +54,7 @@ class Radio(models.Model):
 
         return f"{copies} QR code(s) sent to printer {printer.name}."
 
-    def print_tei(self, printer):
+    def print_tei(self, printer, copies=1):
         mm_to_px = lambda mm: int(mm * printer.dpi / 25.4)
         mm_to_pt = lambda mm: mm * 72 / 25.4
 
@@ -91,11 +91,11 @@ class Radio(models.Model):
         label_img.paste(barcode_img, (barcode_x, barcode_y))
         label_img.paste(logo_img, (logo_x, logo_y))
 
-        printer.print(type="12", images=[label_img.rotate(90, expand=True)])
+        printer.print(type="12", images=[label_img.rotate(90, expand=True)] * int(copies))
 
         return f"TEI label has been send to printer {printer.name}."
 
-    def print_mobile_label(self, printer):
+    def print_mobile_label(self, printer, copies=1):
         mm_to_px = lambda mm: int(mm * printer.dpi / 25.4)
         mm_to_pt = lambda mm: mm * 72 / 25.4
 
@@ -131,7 +131,7 @@ class Radio(models.Model):
         draw.text((text_x, text_y), issi, font=font, fill=0)
         draw.text((text_x, int(label_h_px/2)), alias, font=font, fill=0)
 
-        printer.print(type="12", images=[label_img.rotate(90, expand=True)])
+        printer.print(type="12", images=[label_img.rotate(90, expand=True)] * int(copies))
 
         return f"Mobile radio label has been send to printer {printer.name}."
 
