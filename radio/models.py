@@ -1,5 +1,5 @@
 from django.db import models
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 import qrcode
 import barcode
 from barcode.writer import ImageWriter
@@ -40,7 +40,7 @@ class Radio(models.Model):
     def print_qr(self, printer, copies=1):
         mm_to_px = lambda mm: int(mm * printer.dpi / 25.4)
         if not self.fireplan_id:
-                raise Exception(f"Radio with TEI {self.TEI} has no Fireplan ID") 
+            raise Exception(f"Radio with TEI {self.TEI} has no Fireplan ID") 
 
         url = f"https://infoscan.firebru.brussels?data=1,1,{self.fireplan_id},1010"
         qr = qrcode.QRCode(version=4, error_correction=qrcode.constants.ERROR_CORRECT_M, box_size=70, border=0)
@@ -95,6 +95,45 @@ class Radio(models.Model):
 
         return f"TEI label has been send to printer {printer.name}."
 
+    def print_mobile_label(self, printer):
+        mm_to_px = lambda mm: int(mm * printer.dpi / 25.4)
+        mm_to_pt = lambda mm: mm * 72 / 25.4
+
+        label_w_px = mm_to_px(70-2)
+        label_h_px = 150 # 12mm label
+
+        # logo links, volle hoogte
+        logo_img = Image.open("logo.png").convert("L")
+        aspect_ratio = logo_img.width / logo_img.height
+        logo_h_px = label_h_px
+        logo_w_px = int(logo_h_px * aspect_ratio)
+        logo_img = logo_img.resize((logo_w_px, logo_h_px))
+
+        # teksten
+        issi = f"ISSI: {self.ISSI}"
+        alias = f"Alias: {self.alias}"
+
+        # nieuwe lege label
+        label_img = Image.new("L", (label_w_px, label_h_px), color=255)
+        draw = ImageDraw.Draw(label_img)
+
+        # logo links plakken
+        label_img.paste(logo_img, (0, 0))
+
+        # font
+        font = ImageFont.truetype("fonts/Barlow-Bold.ttf", mm_to_px(4.5))
+
+
+        # tekst links naast logo
+        text_x = logo_img.width + mm_to_px(3)
+        text_y = 0
+
+        draw.text((text_x, text_y), issi, font=font, fill=0)
+        draw.text((text_x, int(label_h_px/2)), alias, font=font, fill=0)
+
+        printer.print(type="12", images=[label_img.rotate(90, expand=True)])
+
+        return f"Mobile radio label has been send to printer {printer.name}."
 
 
     def __str__(self):

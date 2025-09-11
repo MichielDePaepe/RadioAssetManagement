@@ -170,15 +170,19 @@ class RadioDetailView(DetailView):
         copies = request.POST.get('copies', 2)
         action = request.POST.get("action")
 
-        try:
+        if True:
             printer = Printer.objects.get(id=printer_id)
             if action == "qr":
                 res = radio.print_qr(printer, copies)
             elif action == "tei":
                 res = radio.print_tei(printer)
+            elif action == "label":
+                res = radio.print_mobile_label(printer)
             else:
                 raise Exception("No action selected")
             messages.success(request, res)
+        try:
+            pass
         except Printer.DoesNotExist:
             messages.error(request, "Selected printer does not exist.")
         except Exception as e:
