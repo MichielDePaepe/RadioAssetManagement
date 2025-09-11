@@ -276,3 +276,67 @@ class UploadSubscriptionsView(LoginRequiredMixin, PermissionRequiredMixin, Templ
             messages.error(request, f"Er is een fout opgetreden: {e} (ISSI: {issi_cell}, TEI: {tei_cell})")
 
         return self.get(request)
+
+
+
+class RadioLookupView(View):
+
+    def post(self, request, *args, **kwargs):
+        try:
+            lookup_type = request.POST.get('type')
+            value = request.POST.get('value')
+
+            if not lookup_type or not value:
+                return HttpResponseBadRequest('type and value required')
+
+            radio = None
+
+            if lookup_type == 'issi':
+                try:
+                    issi_value = int(value)
+                    issi = ISSI.objects.get(number=int(issi_value))
+                    radio = issi.subscription.radio
+                except ValueError:
+                    return JsonResponse({"status": "error", "message": f"{issi_value} is geen geldig ISSI nummer"}, status=500)
+                except ISSI.DoesNotExist:
+                    return JsonResponse({"status": "error", "message": f"ISSI {issi_value} niet gevonden"}, status=404)
+                except ISSI.subscription.RelatedObjectDoesNotExist:
+                    return JsonResponse({"status": "error", "message": f"Geen radio met ISSI {issi_value}"}, status=404)
+
+            elif lookup_type == 'tei':
+                tei_value = value
+                if len(tei_value) == 15 and tei_value[-1] == "0":
+                    tei_value = tei_value[:-1]
+                try:
+                    radio = Radio.objects.get(pk=tei_value)
+                except Radio.DoesNotExist:
+                    messages.error(request, )
+                    return JsonResponse({"status": "error", "message": f"Radio met dit TEI {tie_value} nummer niet gevonden"}, status=404)
+
+            elif lookup_type in ('qr', 'serial'):
+                logger.debug(value)
+
+            else:
+                return HttpResponseBadRequest('invalid lookup type')
+
+            is_htmx = request.headers.get('HX-Request') == 'true'
+            
+            if is_htmx:
+                return render(request, 'radio/radio_result.html', {'radio': radio})
+
+            else:
+                if radio:
+                    data = {
+                        "status": "ok", 
+                        "TEI": radio.TEI, 
+                        "ISSI": radio.ISSI, 
+                        "alias": radio.alias,
+                        "fireplan_id": fireplan_id,
+                        "radio": str(radio)
+                    }
+                    return JsonResponse(data)
+                else:
+                    return JsonResponse({"status": "error", "message": "Radio not found"}, status=404)
+
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)

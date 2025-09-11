@@ -12,5 +12,7 @@ urlpatterns = [
     path('scan/', ScanQRCodeView.as_view(), name='scan'),
     path('subscritpions/upload', UploadSubscriptionsView.as_view(), name='upload_subscriptions'),
 
+    path('radio-lookup/', RadioLookupView.as_view(), name='radio_lookup'),
+
 
 ]

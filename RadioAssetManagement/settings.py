@@ -37,15 +37,15 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = env.bool('DEBUG', default=False)
 
 
-ALLOWED_PROD_HOST = env('ALLOWED_PROD_HOST', default=None)
+ALLOWED_PROD_HOSTS = env.list("ALLOWED_PROD_HOST", default=[])
 
 ALLOWED_HOSTS = ["localhost", "172.0.0.1"]
+CSRF_TRUSTED_ORIGINS = []
 
-CSRF_TRUSTED_ORIGINS=[]
+for host in ALLOWED_PROD_HOSTS:
+    ALLOWED_HOSTS.append(host)
+    CSRF_TRUSTED_ORIGINS.append("https://" + host)
 
-if ALLOWED_PROD_HOST:
-    ALLOWED_HOSTS.append(ALLOWED_PROD_HOST)
-    CSRF_TRUSTED_ORIGINS.append("https://" + ALLOWED_PROD_HOST)
 
 
 

@@ -1,0 +1,60 @@
+<div id="radio-selector-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+  <div class="bg-white p-6 rounded-2xl shadow-lg w-96">
+    <h2 class="text-xl font-bold mb-4">Selecteer een radio</h2>
+
+    <!-- ISSI -->
+    <div class="mb-3">
+      <label class="block text-sm font-medium">ISSI</label>
+      <input type="text" id="radio-issi" class="border rounded w-full p-2" />
+      <button class="mt-1 bg-blue-600 text-white px-3 py-1 rounded"
+              hx-post="{% url 'radio_lookup' %}"
+              hx-vals="js:{ type: 'issi', value: document.getElementById('radio-issi').value }"
+              hx-target="#radio-result"
+              hx-swap="innerHTML">Zoek</button>
+    </div>
+
+    <!-- TEI -->
+    <div class="mb-3">
+      <label class="block text-sm font-medium">TEI</label>
+      <input type="text" id="radio-tei" class="border rounded w-full p-2" />
+      <button class="mt-1 bg-blue-600 text-white px-3 py-1 rounded"
+              hx-post="{% url 'radio_lookup' %}"
+              hx-vals="js:{ type: 'tei', value: document.getElementById('radio-tei').value }"
+              hx-target="#radio-result"
+              hx-swap="innerHTML">Zoek</button>
+    </div>
+
+    <!-- QR code (placeholder, hier komt scanner) -->
+    <div class="mb-3">
+      <button class="bg-green-600 text-white px-3 py-1 rounded"
+              onclick="startQrScan()">Scan QR</button>
+    </div>
+
+    <!-- Resultaat -->
+    <div id="radio-result" class="mt-4"></div>
+
+    <div class="flex justify-end mt-4">
+      <button onclick="closeRadioModal()" class="px-3 py-1 rounded bg-gray-400 text-white">Annuleer</button>
+    </div>
+    
+  </div>
+</div>
+
+<script>
+let radioModalContext = null;
+
+function openRadioModal(context) {
+    radioModalContext = context; // bv. {action: 'assignToTicket', ticketId: 42}
+    document.getElementById("radio-selector-modal").classList.remove("hidden");
+}
+
+function closeRadioModal() {
+    document.getElementById("radio-selector-modal").classList.add("hidden");
+    radioModalContext = null;
+}
+
+// QR scanner voorbeeld (js library nodig)
+function startQrScan() {
+  alert("Hier komt de QR-code scan logica");
+}
+</script>
