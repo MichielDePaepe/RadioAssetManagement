@@ -50,7 +50,9 @@ class Radio(models.Model):
         tape_px = mm_to_px(18-2)
         img_qr = qr.make_image(fill_color="black", back_color="white").convert("RGB").resize((tape_px, tape_px))
 
-        printer.print(type="18", images=[img_qr] * int(copies))
+        img_qr.show()
+
+        #printer.print(type="18", images=[img_qr] * int(copies))
 
         return f"{copies} QR code(s) sent to printer {printer.name}."
 
@@ -129,7 +131,8 @@ class Radio(models.Model):
         text_y = 0
 
         draw.text((text_x, text_y), issi, font=font, fill=0)
-        draw.text((text_x, int(label_h_px/2)), alias, font=font, fill=0)
+        if alias:
+            draw.text((text_x, int(label_h_px/2)), alias, font=font, fill=0)
 
         printer.print(type="12", images=[label_img.rotate(90, expand=True)] * int(copies))
 
