@@ -50,9 +50,7 @@ class Radio(models.Model):
         tape_px = mm_to_px(18-2)
         img_qr = qr.make_image(fill_color="black", back_color="white").convert("RGB").resize((tape_px, tape_px))
 
-        img_qr.show()
-
-        #printer.print(type="18", images=[img_qr] * int(copies))
+        printer.print(type="18", images=[img_qr] * int(copies))
 
         return f"{copies} QR code(s) sent to printer {printer.name}."
 
