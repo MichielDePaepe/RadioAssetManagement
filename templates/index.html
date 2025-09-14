@@ -1,13 +1,13 @@
 {% extends "base.html" %}
+{% load i18n%}
 
 {% block title %}Home{% endblock %}
 
 {% block content %}
 
 <div class="container mt-5 text-center">
-  <h1>Welkom bij Radio Asset Management</h1>
-  <p>Start hier met beheren van radio’s, abonnementen en inventaris.</p>
+  <h1>{% trans "Welkom bij Radio Asset Management" %}</h1>
+  <p>{% trans "Start hier met beheren van de radio’s van Brandweer Brussel" %}</p>
 </div>
-
 
 {% endblock %}

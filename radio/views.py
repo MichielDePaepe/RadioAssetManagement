@@ -12,8 +12,6 @@ from django.contrib import messages
 from django.db import transaction
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
-
-
 import openpyxl
 import json
 import re
@@ -23,6 +21,7 @@ logger = logging.getLogger(__name__)
 from .models import *
 from .forms import *
 from printer.models import *
+from .services.printing import RadioPrintingService
 
 
 class RadioCardView(View):
@@ -39,26 +38,6 @@ class RadioCardExampleView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['printers'] = Printer.objects.all()  # pass printers to template
         return context
-
-    def post(self, request, *args, **kwargs):
-        """Handle QR print request without using forms"""
-        self.object = self.get_object()
-        printer_id = request.POST.get('printer_id')
-        copies = request.POST.get('copies', 2)
-
-        try:
-            printer = Printer.objects.get(id=printer_id)
-            copies = int(copies)
-            url = f"https://infoscan.firebru.brussels?data={self.object.id}"  # example QR content
-            printer.print_qr(url, copies=copies)
-            messages.success(request, f"QR-code sent to printer {printer.name}.")
-        except Printer.DoesNotExist:
-            messages.error(request, "Selected printer does not exist.")
-        except Exception as e:
-            messages.error(request, f"Printing failed: {str(e)}")
-
-        return redirect('radio:detail', pk=self.object.pk)
-
 
 
 class RadioCreateView(CreateView):
@@ -170,19 +149,19 @@ class RadioDetailView(DetailView):
         copies = request.POST.get('copies', 2)
         action = request.POST.get("action")
 
-        if True:
+        try:
             printer = Printer.objects.get(id=printer_id)
+            print_service = RadioPrintingService(radio, printer)
             if action == "qr":
-                res = radio.print_qr(printer, copies)
+                res = print_service.print_qr(copies)
             elif action == "tei":
-                res = radio.print_tei(printer, copies)
+                res = print_service.print_tei(copies)
             elif action == "label":
-                res = radio.print_mobile_label(printer, copies)
+                res = print_service.print_mobile_label(copies)
             else:
                 raise Exception("No action selected")
             messages.success(request, res)
-        try:
-            pass
+
         except Printer.DoesNotExist:
             messages.error(request, "Selected printer does not exist.")
         except Exception as e:

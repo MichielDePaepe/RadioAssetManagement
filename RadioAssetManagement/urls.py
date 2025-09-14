@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from django.urls import path, include
 from RadioAssetManagement.views import index
@@ -21,6 +22,10 @@ from django.contrib.auth import views as auth_views
 
 
 urlpatterns = [
+    path('i18n/', include('django.conf.urls.i18n')),  # voor taalwissel
+]
+
+urlpatterns += i18n_patterns(
     path("login/", auth_views.LoginView.as_view(template_name="login.html"), name="login"),
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
 
@@ -32,4 +37,4 @@ urlpatterns = [
     path('organization/', include('organization.urls', namespace='organization')),
     path('taqto/', include('taqto.urls')),
     path('printer/', include('printer.urls')),
-]
+)

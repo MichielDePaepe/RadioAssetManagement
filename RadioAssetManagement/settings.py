@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'rangefilter',
     'whitenoise.runserver_nostatic',    
+    'modeltranslation',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -74,6 +75,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -155,7 +157,19 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+LANGUAGES = (
+    ('nl', 'Nederlands'),
+    ('fr', 'Français'),
+    ('en', 'English'),
+)
+
+LOCALE_PATHS = [
+    BASE_DIR / "locale",
+]
+
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'en'
+
+TIME_ZONE = "Europe/Brussels"
 
 USE_I18N = True
 
