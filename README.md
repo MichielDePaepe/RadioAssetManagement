@@ -130,7 +130,8 @@ sudo apt install postgresql postgresql-contrib libpq-dev
 
 ```bash
 sudo -u postgres psql
-# In de psql prompt:
+```
+```sql
 CREATE DATABASE radio_db;
 CREATE USER django WITH PASSWORD '<pg password>';
 ALTER ROLE django SET client_encoding TO 'utf8';
