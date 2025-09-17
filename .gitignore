@@ -13,6 +13,7 @@ ENV/
 env.bak/
 venv.bak/
 .env
+.envrc
 
 # Distribution / packaging
 .Python
@@ -37,3 +38,4 @@ MANIFEST
 logs/
 staticfiles/
 *.sqlite3
+*.sqlite3-journal
