@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Open Tickets{% endblock %}
+
+{% block content %}
+<h2>Open Tickets</h2>
+
+<a href="{% url 'helpdesk:ticket_create' %}" class="btn btn-primary mb-3">
+  <i class="bi bi-plus-circle"></i> Nieuw ticket
+</a>
+
+<ul class="list-group">
+  {% for ticket in tickets %}
+    <li class="list-group-item">
+      <a href="{% url 'helpdesk:ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a><br>
+      <small>Status: {{ ticket.status }} | Radio: {{ ticket.radio }}</small>
+    </li>
+  {% empty %}
+    <li class="list-group-item">Geen openstaande tickets.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

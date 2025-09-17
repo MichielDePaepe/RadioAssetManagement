@@ -113,8 +113,6 @@ server {
 sudo ln -s /etc/nginx/sites-available/django /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
-go
-Code kopiëren
 ```
 
 ## PostgreSQL Setup voor Django

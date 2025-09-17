@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'helpdesk',
     'taqto',
     'printer',
+    'traca',
 ]
 
 MIDDLEWARE = [

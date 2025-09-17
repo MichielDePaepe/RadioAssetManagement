@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Ticket zoeken{% endblock %}
+{% block content %}
+<h2>Zoek een ticket</h2>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary" type="submit">Zoeken</button></form>
+{% if results != None %}
+  <hr>
+  <h4>Resultaten</h4>
+  <ul class="list-group">
+    {% for ticket in results %}
+      <li class="list-group-item"><a href="{% url 'helpdesk:ticket_detail' ticket.id %}">#{{ ticket.id }} - {{ ticket.title }}</a></li>
+    {% empty %}<li class="list-group-item">Geen tickets gevonden.</li>{% endfor %}
+  </ul>
+{% endif %}
+{% endblock %}

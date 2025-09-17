@@ -110,6 +110,19 @@ class RadioAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('model', )
 
+    def get_search_results(self, request, queryset, search_term):
+        # strip leading zeros voor TEI
+        stripped_term = search_term.lstrip("0")
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+
+        if search_term.isdigit() and len(search_term) == 15 and search_term[-1] == "0":
+            stripped_term = search_term[:-1]
+
+        if stripped_term.isdigit():
+            queryset |= self.model.objects.filter(TEI=int(stripped_term))
+
+        return queryset, use_distinct
+
     def get_tei(self, obj):
         return format_html('<span style="font-family: monospace;">{}</span>', str(obj.TEI).zfill(14))
     get_tei.short_description = 'TEI'
