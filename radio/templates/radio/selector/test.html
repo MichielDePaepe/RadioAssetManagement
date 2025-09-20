@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load radio_selector_tags %}
+
+{% block content %}
+<h1>Radio selector</h1>
+
+
+<div class="radio-widget d-flex align-items-center gap-2 mt-2">
+  <input type="text" class="form-control radio-issi" readonly placeholder="ISSI">
+  <input type="text" class="form-control radio-tei" readonly placeholder="TEI">
+  <input type="text" class="form-control radio-alias" readonly placeholder="Alias">
+  {% radio_selector_button%}
+</div>
+
+<div class="radio-widget d-flex align-items-center gap-2 mt-2">
+  <input type="text" class="form-control radio-issi" readonly placeholder="ISSI">
+  <input type="text" class="form-control radio-tei" readonly placeholder="TEI">
+  <input type="text" class="form-control radio-alias" readonly placeholder="Alias">
+  {% radio_selector_button%}
+</div>
+
+
+{% radio_selector_modal %}
+
+<script>
+
+  function radio_selector_callback(btn, data){
+    const widget = btn.parentElement;  
+    widget.querySelector(".radio-issi").value = data.issi
+    widget.querySelector(".radio-tei").value = data.tei
+    widget.querySelector(".radio-alias").value = data.alias
+  }
+
+</script>
+
+
+{% endblock %}

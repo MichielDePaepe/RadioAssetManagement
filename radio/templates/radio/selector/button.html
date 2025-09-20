@@ -1,0 +1,13 @@
+<button 
+    class="btn {{btn_type}} open-radio-modal {{extra_class}}" 
+    data-bs-toggle="modal" 
+    data-bs-target="#radioSelectorModal"
+    {% if callback %}data-callback="{{ callback }}"{% endif %}
+    {% for key, value in extra_data.items %}
+        data-{{ key }}="{{ value }}"
+    {% endfor %}
+>
+
+    <i class="bi bi-search"></i>
+
+</button>

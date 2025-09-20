@@ -1,6 +1,6 @@
 from django.views import View
 from django.views.generic import TemplateView
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponseBadRequest
 from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.edit import CreateView
@@ -262,12 +262,12 @@ class UploadSubscriptionsView(LoginRequiredMixin, PermissionRequiredMixin, Templ
 
 
 
-class RadioLookupView(View):
+class LookupView(View):
 
     def post(self, request, *args, **kwargs):
-        try:
+        if True:
             lookup_type = request.POST.get('type')
-            value = request.POST.get('value')
+            value = request.POST.get('value').strip()
 
             if not lookup_type or not value:
                 return HttpResponseBadRequest('type and value required')
@@ -277,14 +277,16 @@ class RadioLookupView(View):
             if lookup_type == 'issi':
                 try:
                     issi_value = int(value)
+                    if len(str(issi_value)) != 7:
+                        return JsonResponse({"status": "error", "message": f"Lengte van een ISSI-nummer moet 7 digits zijn"}, status=500)
                     issi = ISSI.objects.get(number=int(issi_value))
                     radio = issi.subscription.radio
                 except ValueError:
-                    return JsonResponse({"status": "error", "message": f"{issi_value} is geen geldig ISSI nummer"}, status=500)
+                    return JsonResponse({"status": "error", "message": f"ISSI-nummer mag enkel uit cijfers bestaan"}, status=500)
                 except ISSI.DoesNotExist:
-                    return JsonResponse({"status": "error", "message": f"ISSI {issi_value} niet gevonden"}, status=404)
+                    return JsonResponse({"status": "error", "message": f"ISSI-nummer niet gevonden"}, status=404)
                 except ISSI.subscription.RelatedObjectDoesNotExist:
-                    return JsonResponse({"status": "error", "message": f"Geen radio met ISSI {issi_value}"}, status=404)
+                    return JsonResponse({"status": "error", "message": f"Geen radio gevonden met dit ISSI-nummer"}, status=404)
 
             elif lookup_type == 'tei':
                 tei_value = value
@@ -293,8 +295,7 @@ class RadioLookupView(View):
                 try:
                     radio = Radio.objects.get(pk=tei_value)
                 except Radio.DoesNotExist:
-                    messages.error(request, )
-                    return JsonResponse({"status": "error", "message": f"Radio met dit TEI {tie_value} nummer niet gevonden"}, status=404)
+                    return JsonResponse({"status": "error", "message": f"Radio met dit TEI {tei_value.zfill(14)} nummer niet gevonden"}, status=404)
 
             elif lookup_type in ('qr', 'serial'):
                 logger.debug(value)
@@ -302,24 +303,21 @@ class RadioLookupView(View):
             else:
                 return HttpResponseBadRequest('invalid lookup type')
 
-            is_htmx = request.headers.get('HX-Request') == 'true'
-            
-            if is_htmx:
-                return render(request, 'radio/radio_result.html', {'radio': radio})
-
+            if radio:
+                data = {
+                    "status": "success", 
+                    "TEI": radio.TEI, 
+                    "tei_str": radio.tei_str, 
+                    "ISSI": radio.ISSI, 
+                    "alias": radio.alias,
+                    "fireplan_id": radio.fireplan_id,
+                    "radio": str(radio)
+                }
+                return JsonResponse(data)
             else:
-                if radio:
-                    data = {
-                        "status": "ok", 
-                        "TEI": radio.TEI, 
-                        "ISSI": radio.ISSI, 
-                        "alias": radio.alias,
-                        "fireplan_id": fireplan_id,
-                        "radio": str(radio)
-                    }
-                    return JsonResponse(data)
-                else:
-                    return JsonResponse({"status": "error", "message": "Radio not found"}, status=404)
-
+                return JsonResponse({"status": "error", "message": "Radio not found"}, status=404)
+                
+        try:
+            pass
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)

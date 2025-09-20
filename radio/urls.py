@@ -1,5 +1,7 @@
 from django.urls import path
+from django.views.generic import TemplateView
 from .views import *
+
 
 app_name = 'radio'
 
@@ -12,7 +14,6 @@ urlpatterns = [
     path('scan/', ScanQRCodeView.as_view(), name='scan'),
     path('subscritpions/upload', UploadSubscriptionsView.as_view(), name='upload_subscriptions'),
 
-    path('radio-lookup/', RadioLookupView.as_view(), name='radio_lookup'),
-
-
+    path('lookup/', LookupView.as_view(), name='lookup'),
+    path('selector/test', TemplateView.as_view(template_name="radio/selector/test.html"), name='radio_selector_test'),
 ]

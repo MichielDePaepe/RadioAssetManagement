@@ -3,7 +3,6 @@ from modeltranslation.admin import TranslationAdmin
 from .models import *
 
 
-
 class TicketLogInline(admin.TabularInline):
     model = TicketLog
     extra = 0

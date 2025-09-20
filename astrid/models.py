@@ -1,0 +1,112 @@
+from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
+from helpdesk.models import Ticket, TicketType, TicketLog, TicketStatus
+
+
+class Request(Ticket):
+    class RequestType(models.TextChoices):
+        VTEI = "VTEI", _("VTEI")
+        VISSI = "VISSI", _("VISSI")
+        VISSI_VTEI = "VISSI & VTEI", _("VISSI & VTEI")
+
+    radio_old = models.ForeignKey("radio.Radio", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_old")
+    issi_old = models.ForeignKey("radio.ISSI", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_old")
+    issi_new = models.ForeignKey("radio.ISSI", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_new")
+    request_type = models.CharField(max_length=20, choices=RequestType.choices)
+
+    @property
+    def radio_new(self):
+        return self.radio
+
+    def __str__(self):
+        if self.request_type == self.RequestType.VTEI:
+            return f"VTEI – from {self.radio_old} to {self.radio_new}"
+        elif self.request_type == self.RequestType.VISSI:
+            return f"VISSI – from {self.issi_old} to {self.issi_new} on {self.radio_new}"
+        elif self.request_type == self.RequestType.VISSI_VTEI:
+            return (
+                f"VISSI & VTEI – from {self.issi_old} / {self.radio_old} "
+                f"to {self.issi_new} / {self.radio_new}"
+            )
+        return str(self.request_type)
+
+    def save(self, *args, **kwargs):
+        astrid_type, created = TicketType.objects.get_or_create(
+            code="ASTRID_REQUEST",
+            defaults={"name": "Astrid Request"},
+        )
+        self.ticket_type = astrid_type
+        self.title = str(self)
+
+        super().save(*args, **kwargs)
+
+
+    def clean(self):
+        errors = {}
+
+        if self.request_type == self.RequestType.VTEI:
+            if not self.radio_old or not self.radio_new:
+                errors["radio_old"] = _("Both old and new radio must be set for VTEI.")
+
+        elif self.request_type == self.RequestType.VISSI:
+            if not self.issi_old or not self.issi_new or not self.radio_new:
+                errors["issi_old"] = _("ISSI old, ISSI new and radio must be set for VISSI.")
+
+        elif self.request_type == self.RequestType.VISSI_VTEI:
+            if not (self.radio_old and self.radio_new and self.issi_old and self.issi_new):
+                errors["radio_old"] = _("All radio and ISSI fields must be set for VISSI & VTEI.")
+
+        if errors:
+            raise ValidationError(errors)
+
+    def start_execution(self, user=None):
+        in_progress, created = TicketStatus.objects.get_or_create(
+            code="IN_PROGRESS",
+            defaults={"name": "In progress"},
+        )
+        TicketLog.objects.create(
+            ticket=self,
+            user=user,
+            status_after=in_progress,
+            note=_("Execution started"),
+        )
+
+    def mark_waiting_verification(self, user=None):
+        waiting, created = TicketStatus.objects.get_or_create(
+            code="WAITING_VERIFICATION",
+            defaults={"name": "Waiting for verification"},
+        )
+        TicketLog.objects.create(
+            ticket=self,
+            user=user,
+            status_after=waiting,
+            note=_("Waiting for verification"),
+        )
+
+    def mark_verified(self, user=None):
+        closed, created = TicketStatus.objects.get_or_create(
+            code="CLOSED",
+            defaults={"name": "Closed"},
+        )
+        raise Exception("To do: ISSI overplaatsen naar nieuwe")
+        TicketLog.objects.create(
+            ticket=self,
+            user=user,
+            status_after=closed,
+            note=_("Request verified and closed"),
+        )
+        issi = self.radio_old.subscription.issi
+
+    def mark_done(self, user=None):
+        closed, created = TicketStatus.objects.get_or_create(
+            code="CLOSED",
+            defaults={"name": "Closed"},
+        )
+        TicketLog.objects.create(
+            ticket=self,
+            user=user,
+            status_after=closed,
+            note=_("Request verified and closed"),
+        )
+
