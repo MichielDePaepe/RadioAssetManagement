@@ -27,11 +27,50 @@
           </a>
         </li>
 
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'radio:find' %}">
-            <i class="bi bi-search"></i> {% trans "Find" %}
-          </a>
-        </li>
+
+        {% if user.is_authenticated %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+              <i class="fa fa-walkie-talkie"></i> Radio
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              {% if perms.radio.add_radio %}
+              <li><a class="dropdown-item" href="{% url 'radio:create' %}"><i class="bi bi-plus-circle"></i> {% trans "Add radio" %}</a></li>
+              {% endif %}
+              <li><a class="dropdown-item" href="{% url 'radio:find' %}"><i class="bi bi-search"></i> {% trans "Find" %}</a></li>
+            </ul>
+          </li>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+              <span class="svg-icon align-top">
+                {% include "svg/astrid_logo.svg" %}
+              </span> Astrid
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              {% if perms.radio.can_upload_subscriptions %}
+              <li><a class="dropdown-item" href="{% url 'radio:upload_subscriptions' %}"><i class="bi bi-cloud-upload"></i> {% trans "Upload subscriptions" %}</a></li>
+              {% endif %}
+            </ul>
+          </li>
+        {% endif %}
+
+        {% if perms.taqto.tacto_user %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+              <span class="svg-icon align-top">
+                {% include "svg/airbus_logo.svg" %}
+              </span> Taqto
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              {% if perms.taqto.can_download_contacts %}
+              <li><a class="dropdown-item" href="{% url 'taqto:contacts_download' %}"><i class="bi bi-person-lines-fill"></i> {% trans "Download contacts" %}</a></li>
+              {% endif %}
+            </ul>
+          </li>
+        {% endif %}
 
         {% if user.is_authenticated %}
           <li class="nav-item dropdown">
@@ -39,13 +78,6 @@
               <i class="bi bi-person-circle"></i> {{ user.username }}
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-              {% if perms.taqto.can_download_contacts %}
-                <li><a class="dropdown-item" href="{% url 'taqto:contacts_download' %}"><i class="bi bi-person-lines-fill"></i> {% trans "Download contacts" %}</a></li>
-              {% endif %}
-              {% if perms.radio.can_upload_subscriptions %}
-              <li><a class="dropdown-item" href="{% url 'radio:upload_subscriptions' %}"><i class="bi bi-cloud-upload"></i> {% trans "Upload subscriptions" %}</a></li>
-              {% endif %}
-              <li><hr class="dropdown-divider"></li>
               {% language 'en' %}
               <li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-speedometer2"></i> {% trans "Admin" %}</a></li>
               {% endlanguage %}

@@ -43,8 +43,11 @@ class RadioCardExampleView(TemplateView):
 class RadioCreateView(CreateView):
     model = Radio
     form_class = RadioForm
-    template_name = 'radio/radio_form.html'
+    template_name = 'radio/radio_create.html'
     success_url = reverse_lazy('radio:create')
+
+    def get_success_url(self):
+        return reverse('radio:detail', kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -316,7 +319,7 @@ class LookupView(View):
                 return JsonResponse(data)
             else:
                 return JsonResponse({"status": "error", "message": "Radio not found"}, status=404)
-                
+
         try:
             pass
         except Exception as e:

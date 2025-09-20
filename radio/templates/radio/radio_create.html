@@ -6,7 +6,7 @@
   <h2>Nieuwe radio toevoegen</h2>
   <form method="post">
     {% csrf_token %}
-    {% bootstrap_form form %}
+    {% bootstrap_form form layout='horizontal' %}
     <button type="submit" class="btn btn-primary">Opslaan</button>
   </form>
 </div>
