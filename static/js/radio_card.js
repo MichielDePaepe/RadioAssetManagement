@@ -47,31 +47,47 @@ function renderRadioCards(elements, callback) {
 
 
 
-  document.addEventListener("DOMContentLoaded", () => {
-    // initial load
-    renderRadioCards(document.querySelectorAll('.radio-card'), () => {
-      document.querySelectorAll('.card').forEach(el => {
-        if(window.radio_cards_gray_on_load){
-          el.style.filter = 'grayscale(100%)';
-        }        
-      });
+document.addEventListener("DOMContentLoaded", () => {
+  // initial load
+  renderRadioCards(document.querySelectorAll('.radio-card'), () => {
+    document.querySelectorAll('.card').forEach(el => {
+      if(window.radio_cards_gray_on_load){
+        el.style.filter = 'grayscale(100%)';
+      }        
     });
-
-    // observer voor dynamisch toegevoegde elementen
-    const observer = new MutationObserver(mutations => {
-      for (const mutation of mutations) {
-        mutation.addedNodes.forEach(node => {
-          if (node.nodeType === 1) {
-            if (node.classList.contains('radio-card')) {
-              renderRadioCards([node]);
-            }
-            node.querySelectorAll?.('.card').forEach(inner => {
-              renderRadioCards([inner]);
-            });
-          }
-        });
-      }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
   });
+
+  // observer voor dynamisch toegevoegde elementen
+  const observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach(node => {
+        if (node.nodeType === 1) {
+          if (node.classList.contains('radio-card')) {
+            renderRadioCards([node]);
+            // observeer data-tei veranderingen op nieuwe card
+            teiObserver.observe(node, { attributes: true, attributeFilter: ['data-tei'] });
+          }
+          node.querySelectorAll?.('.card').forEach(inner => {
+            renderRadioCards([inner]);
+          });
+        }
+      });
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // observer voor data-tei wijzigingen
+  const teiObserver = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'data-tei') {
+        renderRadioCards([mutation.target]);
+      }
+    }
+  });
+
+  // observeer bestaande radio-cards
+  document.querySelectorAll('.radio-card').forEach(el => {
+    teiObserver.observe(el, { attributes: true, attributeFilter: ['data-tei'] });
+  });
+});

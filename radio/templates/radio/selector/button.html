@@ -1,5 +1,6 @@
 <button 
-    class="btn {{btn_type}} open-radio-modal {{extra_class}}" 
+    type="button"
+    class="btn {{btn_type}} open-radio-selector-modal {{extra_class}}" 
     data-bs-toggle="modal" 
     data-bs-target="#radioSelectorModal"
     {% if callback %}data-callback="{{ callback }}"{% endif %}

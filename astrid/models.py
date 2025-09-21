@@ -10,24 +10,24 @@ class Request(Ticket):
         VISSI = "VISSI", _("VISSI")
         VISSI_VTEI = "VISSI & VTEI", _("VISSI & VTEI")
 
-    radio_old = models.ForeignKey("radio.Radio", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_old")
-    issi_old = models.ForeignKey("radio.ISSI", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_old")
-    issi_new = models.ForeignKey("radio.ISSI", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_new")
+    old_radio = models.ForeignKey("radio.Radio", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_old")
+    old_issi = models.ForeignKey("radio.ISSI", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_old")
+    new_issi = models.ForeignKey("radio.ISSI", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_new")
     request_type = models.CharField(max_length=20, choices=RequestType.choices)
 
     @property
-    def radio_new(self):
+    def new_radio(self):
         return self.radio
 
     def __str__(self):
         if self.request_type == self.RequestType.VTEI:
-            return f"VTEI – from {self.radio_old} to {self.radio_new}"
+            return f"VTEI – from {self.old_radio} to {self.new_radio}"
         elif self.request_type == self.RequestType.VISSI:
-            return f"VISSI – from {self.issi_old} to {self.issi_new} on {self.radio_new}"
+            return f"VISSI – from {self.issi_old} to {self.issi_new} on {self.new_radio}"
         elif self.request_type == self.RequestType.VISSI_VTEI:
             return (
-                f"VISSI & VTEI – from {self.issi_old} / {self.radio_old} "
-                f"to {self.issi_new} / {self.radio_new}"
+                f"VISSI & VTEI – from {self.issi_old} / {self.old_radio} "
+                f"to {self.issi_new} / {self.new_radio}"
             )
         return str(self.request_type)
 
@@ -46,16 +46,16 @@ class Request(Ticket):
         errors = {}
 
         if self.request_type == self.RequestType.VTEI:
-            if not self.radio_old or not self.radio_new:
-                errors["radio_old"] = _("Both old and new radio must be set for VTEI.")
+            if not self.old_radio or not self.new_radio:
+                errors["old_radio"] = _("Both old and new radio must be set for VTEI.")
 
         elif self.request_type == self.RequestType.VISSI:
-            if not self.issi_old or not self.issi_new or not self.radio_new:
-                errors["issi_old"] = _("ISSI old, ISSI new and radio must be set for VISSI.")
+            if not self.issi_old or not self.issi_new or not self.new_radio:
+                errors["old_radio"] = _("ISSI old, ISSI new and radio must be set for VISSI.")
 
         elif self.request_type == self.RequestType.VISSI_VTEI:
-            if not (self.radio_old and self.radio_new and self.issi_old and self.issi_new):
-                errors["radio_old"] = _("All radio and ISSI fields must be set for VISSI & VTEI.")
+            if not (self.radio_old and self.new_radio and self.issi_old and self.issi_new):
+                errors["old_radio"] = _("All radio and ISSI fields must be set for VISSI & VTEI.")
 
         if errors:
             raise ValidationError(errors)
@@ -96,7 +96,7 @@ class Request(Ticket):
             status_after=closed,
             note=_("Request verified and closed"),
         )
-        issi = self.radio_old.subscription.issi
+        issi = self.old_radio.subscription.issi
 
     def mark_done(self, user=None):
         closed, created = TicketStatus.objects.get_or_create(

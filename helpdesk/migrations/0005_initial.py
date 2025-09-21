@@ -8,14 +8,15 @@ import helpdesk.models
 def create_ticket_statuses(apps, schema_editor):
     TicketStatus = apps.get_model('helpdesk', 'TicketStatus')
     statuses = [
-        {"code": "new", "name_nl": "Nieuw", "name_fr": "Nouveau", "name_en": "New", "order": 0, "default": True},
-        {"code": "awaiting_pickup", "name_nl": "Wacht op ophalen", "name_fr": "En attente de ramassage", "name_en": "Awaiting Pickup", "order": 10, "default": False},
-        {"code": "arrived_lab", "name_nl": "Aangekomen in labo", "name_fr": "Arrivé au labo", "name_en": "Arrived at Lab", "order": 20, "default": False},
-        {"code": "under_investigation", "name_nl": "Onderzoek", "name_fr": "En cours d'investigation", "name_en": "Under Investigation", "order": 30, "default": False},
-        {"code": "maintenance", "name_nl": "Onderhoud", "name_fr": "Maintenance", "name_en": "Maintenance", "order": 40, "default": False},
-        {"code": "update", "name_nl": "Update", "name_fr": "Mise à jour", "name_en": "Update", "order": 50, "default": False},
-        {"code": "testing", "name_nl": "Testen", "name_fr": "Test", "name_en": "Testing", "order": 60, "default": False},
-        {"code": "completed", "name_nl": "Klaar", "name_fr": "Terminé", "name_en": "Completed", "order": 70, "default": False},
+        {"code": "NEW", "name_nl": "Nieuw", "name_fr": "Nouveau", "name_en": "New", "order": 0, "default": True},
+        {"code": "AWAITING_PICKUP", "name_nl": "Wacht op ophalen", "name_fr": "En attente de ramassage", "name_en": "Awaiting Pickup", "order": 10, "default": False},
+        {"code": "ARRIVED_LAB", "name_nl": "Aangekomen in labo", "name_fr": "Arrivé au labo", "name_en": "Arrived at Lab", "order": 20, "default": False},
+        {"code": "UNDER_INVESTIGATION", "name_nl": "Onderzoek", "name_fr": "En cours d'investigation", "name_en": "Under Investigation", "order": 30, "default": False},
+        {"code": "MAINTENANCE", "name_nl": "Onderhoud", "name_fr": "Maintenance", "name_en": "Maintenance", "order": 40, "default": False},
+        {"code": "UPDATE", "name_nl": "Update", "name_fr": "Mise à jour", "name_en": "Update", "order": 50, "default": False},
+        {"code": "TESTING", "name_nl": "Testen", "name_fr": "Test", "name_en": "Testing", "order": 60, "default": False},
+        {"code": "COMPLETED", "name_nl": "Klaar", "name_fr": "Terminé", "name_en": "Completed", "order": 70, "default": False},
+        {"code": "CLOSED", "name_nl": "Gesloten", "name_fr": "Fermé", "name_en": "Closed", "order": 80, "default": False},
     ]
 
     for s in statuses:

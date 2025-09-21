@@ -1,13 +1,12 @@
 {% extends 'base.html' %}
-{% load bootstrap5 %}
+{% load bootstrap5 i18n %}
 
 {% block content %}
-<div class="container mt-4">
-  <h2>Nieuwe radio toevoegen</h2>
+  <h2 class="mb-3">{% trans "Nieuwe radio toevoegen" %}</h2>
   <form method="post">
     {% csrf_token %}
     {% bootstrap_form form layout='horizontal' %}
-    <button type="submit" class="btn btn-primary">Opslaan</button>
+    <button type="submit" class="btn btn-primary">{% trans "Toevoegen" %}</button>
   </form>
-</div>
+
 {% endblock %}

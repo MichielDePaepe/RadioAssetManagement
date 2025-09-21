@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block content %}
+
+<h1 class="mb-3">{% trans "Overzicht van Astrid aanvragen" %}</h1>
+
+{% if requests %}
+    <div class="table-responsive">
+    <table class="table table-striped mb-0">
+        <thead>
+            <tr>
+                <th scope="col">{% trans "ID" %}</th>
+                <th scope="col">{% trans "type" %}</th>
+                <th scope="col">{% trans "Oude TEI" %}</th>
+                <th scope="col">{% trans "Oude ISSI" %}</th>
+                <th scope="col">{% trans "Nieuwe TEI" %}</th>
+                <th scope="col">{% trans "Nieuwe ISSI" %}</th>
+                <th scope="col">{% trans "Status" %}</th>
+                <th scope="col">{% trans "Aangemaakt op" %}</th>
+                <th scope="col">{% trans "Acties" %}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for request in requests %}
+            <tr class="{% if request.status.code == 'NEW' %}table-success{% endif %}">
+                <td>{{ request.id }}</td>
+                <td>{{ request.request_type }}</td>
+                <td>
+                    {% if request.old_radio %}
+                        <a href="{% url 'radio:detail' pk=request.old_radio.pk %}">{{ request.old_radio.tei_str }}</a>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ request.old_issi|default_if_none:"-" }}</td>
+                <td>
+                    {% if request.old_radio %}
+                        <a href="{% url 'radio:detail' pk=request.new_radio.pk %}">{{ request.new_radio.tei_str }}</a>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ request.new_issi|default_if_none:"-" }}</td>
+                <td>{{ request.status }}</td>
+                <td>{{ request.created_at|date:"d/m/Y" }}</td>
+                <td>
+                    <a href="" class="btn btn-sm btn-primary">{% trans "Bekijk" %}</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>   
+
+{% else %}
+    <p class="p-3 mb-0">{% trans "Geen openstaande tickets." %}</p>
+{% endif %}
+
+{% endblock %}
+

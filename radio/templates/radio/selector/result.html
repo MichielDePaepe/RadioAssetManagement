@@ -1,0 +1,25 @@
+<p><strong>ISSI:</strong>{{radio.ISSI}}</p>
+<p><strong>TEI:</strong> {{radio.tei_str}}</p>
+<p><strong>Alias:</strong> {{radio.alias}}</p>
+
+<div class="d-flex justify-content-end">
+
+    <button 
+      class="btn btn-secondary me-2" 
+      id="cancel-radio"
+    >
+      Annuleer
+    </button>
+
+    <button 
+      class="btn btn-success" 
+      id="confirm-radio" 
+      data-tei="{{radio.tei_str}}"
+      data-issi="{{radio.ISSI}}"
+      data-alias="{{radio.alias}}"
+      data-str="{{radio}}"
+    >
+      Selecteren
+    </button>
+
+</div>

@@ -1,4 +1,5 @@
 <!-- radio/search/modal.html -->
+{% load static i18n %}
 
 <div class="modal fade" id="radioSelectorModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -19,7 +20,7 @@
           <div class="mb-3">
             <div class="input-group">
               <input type="text" id="radio-issi" class="form-control" placeholder="ISSI">
-              <button class="btn btn-primary search-btn" id="search-issi-btn" data-type="issi">Zoek</button>
+              <button type="button" class="btn btn-primary search-btn" id="search-issi-btn" data-type="issi">Zoek</button>
             </div>
             <div class="form-text text-danger" id="error-issi"></div>
           </div>
@@ -27,9 +28,15 @@
           <div class="mb-3">
             <div class="input-group">
               <input type="text" id="radio-tei" class="form-control" placeholder="TEI">
-              <button class="btn btn-primary search-btn" id="search-tei-btn" data-type="tei">Zoek</button>
+              <button type="button" class="btn btn-primary search-btn" id="search-tei-btn" data-type="tei">Zoek</button>
             </div>
             <div class="form-text text-danger" id="error-tei"></div>
+          </div>
+
+          <div class="mb-3">
+            <input type="text" id="radio-selector-scanner-input">
+            <button type="button" class="btn btn-success w-100" id="scan-btn" data-type="qr"><i class="bi bi-qr-code"></i> Start scanner</button>
+            <div class="form-text text-danger" id="error-qr"></div>
           </div>
 
         </div>
@@ -44,116 +51,180 @@
 </div>
 
 
+<script src="{% static 'js/scanner.js' %}"></script>
 
 <script>
 
-  const modalElement = document.getElementById("radioSelectorModal");
-  const inputsDiv = document.getElementById("modal-inputs");
-  const resultDiv = document.getElementById("modal-result");
+// The scanner
+const scanner = new Scanner({
+  inputId: "radio-selector-scanner-input",
+  onScan: handleScanResponse
+});
 
-  let currentBtn = null;
-  let currentCallback = null;
+// The radio selector modal
+const modalElement = document.getElementById("radioSelectorModal");
+const radioSelectorModal = new bootstrap.Modal(modalElement);
 
-  document.querySelectorAll(".open-radio-modal").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const cbName = btn.dataset.callback;
-      if (cbName && window[cbName]) {
-        currentCallback = window[cbName];
-      } else if (window.radio_selector_callback) {
-        currentCallback = window.radio_selector_callback;
-      } else {
-        console.error("no callback function was found");
-        currentCallback = null;
-      }
-      currentBtn = btn;
-    });
+// The 2 pages in the modal
+const inputsDiv = document.getElementById("modal-inputs");
+const resultDiv = document.getElementById("modal-result");
+
+let currentButton = null;
+let currentCallback = null;
+
+// When clicked on a open-radio-selector-modal button, currentButton and currentCallback will be set
+document.querySelectorAll(".open-radio-selector-modal").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const callbackName = btn.dataset.callback;
+    if (callbackName && window[callbackName]) {
+      currentCallback = window[callbackName];
+    } else if (window.radio_selector_callback) {
+      currentCallback = window.radio_selector_callback;
+    } else {
+      console.error("no callback function was found");
+      currentCallback = null;
+    }
+    currentButton = btn;
   });
+});
 
-  function resertToInputs() {
-    inputsDiv.style.display = "block";
-    resultDiv.style.display = "none";
+// Fundtion to reset the modal to an empty input page
+function resertToInputs() {
+  inputsDiv.style.display = "block";
+  resultDiv.style.display = "none";
+  resultDiv.innerHTML = "";
+  document.getElementById("radio-issi").value = "";
+  document.getElementById("radio-tei").value = "";
+  document.getElementById("error-issi").textContent = "";
+  document.getElementById("error-tei").textContent = "";
+  document.getElementById("error-qr").textContent = "";
+}
+
+
+// When the modal is closed, reset the modal to the input page
+modalElement.addEventListener('shown.bs.modal', () => {
+  resertToInputs();
+  stop_scanning();
+});
+
+modalElement.addEventListener('hidden.bs.modal', () => {
+  resertToInputs();
+  stop_scanning();
+});
+
+
+function loadSelectorResult(data) {
+  const resultUrlTemplate = "{% url 'radio:selector_result' pk=0 %}";
+  const resultUrl = resultUrlTemplate.replace('0', data.TEI);
+
+  inputsDiv.style.display = "none";
+  resultDiv.style.display = "block";
+
+  fetch(resultUrl)
+  .then(res => res.text())
+  .then(html => resultDiv.innerHTML = html)
+  .catch(err => console.error("Fetch error:", err));
+}
+
+// process ISSI or TEI when clicked on the search button
+document.querySelectorAll(".search-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const type = btn.dataset.type;
+    const input = document.getElementById(`radio-${type}`);
+    const errorDiv = document.getElementById(`error-${type}`);
+
+    errorDiv.textContent = "";
     resultDiv.innerHTML = "";
-    document.getElementById("radio-issi").value = "";
-    document.getElementById("radio-tei").value = "";
-    document.getElementById("error-issi").textContent = "";
-    document.getElementById("error-tei").textContent = "";
+
+    const value = input.value.trim();
+    if (!value) {
+        errorDiv.textContent = "{% trans 'Vul een waarde in.' %}";
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("type", type);
+    formData.append("value", value);
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    try {
+      const res = await fetch("{% url 'radio:lookup' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": csrfToken },
+          body: formData
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        // switch to the result page
+        loadSelectorResult(data);
+
+      } else {
+        errorDiv.textContent = data.message;
+      }
+    } catch (err) {
+      errorDiv.textContent = "{% trans 'Er is een fout opgetreden bij het zoeken.' %}";
+      console.error(err);
+    }
+  });
+});
+
+function start_scanning() {
+  const btn = document.getElementById("scan-btn");
+  btn.classList.remove("btn-success")
+  btn.classList.add("btn-danger")
+  btn.innerHTML = '<i class="bi bi-record-circle"></i> Scanning';
+  scanner.start();
+}
+
+function stop_scanning() {
+  const btn = document.getElementById("scan-btn");
+  btn.classList.remove("btn-danger")
+  btn.classList.add("btn-success")
+  btn.innerHTML = '<i class="bi bi-qr-code"></i> Start scanner';
+  scanner.stop();
+}
+
+document.getElementById("scan-btn").addEventListener("click", e => {
+  if (!scanner.is_scanning) {
+    start_scanning();
+  }
+  else {
+    stop_scanning();
+  }
+});
+
+
+// Process the response after scanning
+function handleScanResponse(data) {
+  stop_scanning();
+  console.log(data);
+  if (data.status === "ok") {
+    console.log(data);
+    loadSelectorResult(data);
+  }
+  else {
+    document.getElementById("error-qr").textContent = data.message;
   }
 
-  modalElement.addEventListener('hidden.bs.modal', resertToInputs);
 
 
-  document.querySelectorAll(".search-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const type = btn.dataset.type;
-      const input = document.getElementById(`radio-${type}`);
-      const errorDiv = document.getElementById(`error-${type}`);
+}
 
-      errorDiv.textContent = "";
-      resultDiv.innerHTML = "";
-
-      const value = input.value.trim();
-      if (!value) {
-          errorDiv.textContent = "Vul een waarde in.";
-          return;
-      }
-
-      const formData = new FormData();
-      formData.append("type", type);
-      formData.append("value", value);
-
-      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-      try {
-        const res = await fetch("{% url 'radio:lookup' %}", {
-            method: "POST",
-            headers: { "X-CSRFToken": csrfToken },
-            body: formData
-        });
-        const data = await res.json();
-
-        if (data.status == "success") {
-
-          inputsDiv.style.display = "none";
-
-          resultDiv.style.display = "block";
-          resultDiv.innerHTML = `
-              <p><strong>ISSI:</strong> ${data.ISSI}</p>
-              <p><strong>TEI:</strong> ${data.tei_str}</p>
-              <p><strong>Alias:</strong> ${data.alias}</p>
-              <div class="d-flex justify-content-end">
-                  <button class="btn btn-secondary me-2" id="cancel-radio">Annuleer</button>
-                  <button 
-                    class="btn btn-success" 
-                    id="confirm-radio" 
-                    data-tei="${data.tei_str}"
-                    data-issi="${data.ISSI}"
-                    data-alias="${data.alias}"
-                    data-str="${data.radio}"
-                  >
-                    Selecteren
-                  </button>
-              </div>
-          `;
-        } else {
-          errorDiv.textContent = data.message;
-        }
-      } catch (err) {
-        errorDiv.textContent = "Er is een fout opgetreden bij het zoeken.";
-        console.error(err);
-      }
-    });
-  });
-
+// Add event listeners to the 2 result buttons that may not yet exist
 resultDiv.addEventListener("click", e => {
+
   if (e.target.id === "cancel-radio") {
     resertToInputs();
-  } else if (e.target.id === "confirm-radio") {
-    const data = e.target.dataset;
+  } 
+  else if (e.target.id === "confirm-radio") {
     if (currentCallback) {
-      currentCallback(currentBtn, data);
+      currentCallback(currentButton, e.target.dataset);
     }
-    bootstrap.Modal.getInstance(modalElement).hide();
+    radioSelectorModal.hide();
   }
+
 });
 
 </script>

@@ -24,23 +24,25 @@ class RequestAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "request_type",
-        "radio_old",
+        "old_radio",
         "radio",
-        "issi_old",
-        "issi_new",
+        "old_issi",
+        "new_issi",
         "status",
         "created_at",
         "updated_at",
     )
     list_filter = ("request_type", "status", "priority")
     search_fields = (
-        "radio__tei",      # als je TEI veld in Radio hebt
-        "radio__alias",    # als je alias hebt
-        "issi_old__issi",
-        "issi_new__issi",
+        "radio__tei",
+        "old_radio__tei",
+        "radio__alias",
+        "old_radio__alias",
+        "new_issi__issi",
+        "old_issi__issi",
         "external_reference",
     )
-    raw_id_fields = ("radio", "radio_old", "issi_new", "issi_old")
+    raw_id_fields = ("radio", "old_radio", "new_issi", "old_issi")
 
     inlines = [TicketLogInline]
 

@@ -46,7 +46,8 @@ for host in ALLOWED_PROD_HOSTS:
     ALLOWED_HOSTS.append(host)
     CSRF_TRUSTED_ORIGINS.append("https://" + host)
 
-
+if DEBUG:
+    ALLOWED_HOSTS = ["*"]
 
 
 # Application definition

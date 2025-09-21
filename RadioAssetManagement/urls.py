@@ -37,4 +37,5 @@ urlpatterns += i18n_patterns(
     path('organization/', include('organization.urls', namespace='organization')),
     path('taqto/', include('taqto.urls')),
     path('printer/', include('printer.urls')),
+    path('astrid/', include('astrid.urls')),
 )

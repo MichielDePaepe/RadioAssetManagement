@@ -98,10 +98,11 @@ let teiModal;
 document.addEventListener("DOMContentLoaded", () => {
   teiModal = new bootstrap.Modal(document.getElementById('teiModal'));
 
-  new Scanner({
+  const scanner = new Scanner({
     inputId: "scanner-input",
     onScan: handleScanResponse
   });
+  scanner.start()
 });
 
 

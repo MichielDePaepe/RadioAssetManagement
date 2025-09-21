@@ -17,12 +17,12 @@
 {% block body %}
 
 {% block navbar %}
-  {% include 'navbar.html' %}.
+  {% include 'navbar.html' %}
 {% endblock %}
 
 {% block container %}
 
-  <div class="container mt-4">
+  <div class="container-fluid container-md mt-4">
     {% autoescape off %}{% bootstrap_messages %}{% endautoescape %}
     {% block before_content %}{% endblock %}
     {% block content %} CONTENT {% endblock %}

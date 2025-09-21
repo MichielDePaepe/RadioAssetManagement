@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-14 16:45+0200\n"
+"POT-Creation-Date: 2025-09-21 12:10+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,13 +18,126 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: templates/index.html:8
-msgid "Welkom bij Radio Asset Management"
-msgstr "Welkom bij Radio Asset Management"
+#: astrid/models.py:9
+msgid "VTEI"
+msgstr "VTEI"
+
+#: astrid/models.py:10
+msgid "VISSI"
+msgstr "VISSI"
+
+#: astrid/models.py:11
+msgid "VISSI & VTEI"
+msgstr "VISSI & VTEI"
+
+#: astrid/models.py:50
+msgid "Both old and new radio must be set for VTEI."
+msgstr "Zowel de oude als nieuwe radio moeten ingesteld zijn voor VTEI."
+
+#: astrid/models.py:54
+msgid "ISSI old, ISSI new and radio must be set for VISSI."
+msgstr "Oude ISSI, nieuwe ISSI en radio moeten ingesteld zijn voor VISSI."
+
+#: astrid/models.py:58
+msgid "All radio and ISSI fields must be set for VISSI & VTEI."
+msgstr "Alle radio- en ISSI-velden moeten ingesteld zijn voor VISSI & VTEI."
+
+#: astrid/models.py:72
+msgid "Execution started"
+msgstr "Uitvoering gestart"
+
+#: astrid/models.py:84
+msgid "Waiting for verification"
+msgstr "Wachten op verificatie"
+
+#: astrid/models.py:97 astrid/models.py:110
+msgid "Request verified and closed"
+msgstr "Aanvraag geverifieerd en afgesloten"
+
+#: astrid/templates/astrid/vtei_request.html:6
+msgid "VTEI aanvragen"
+msgstr ""
+
+#: astrid/templates/astrid/vtei_request.html:10
+msgid ""
+"\n"
+"    VTEI is een aanvraag om het abonnement van een radio over te zetten op "
+"een nieuwe radio met behoud van het ISSI op de nieuwe radio.\n"
+"    "
+msgstr ""
+
+#: radio/forms.py:16
+msgid "TEI must contain only digits."
+msgstr "TEI mag alleen cijfers bevatten."
+
+#: radio/forms.py:19
+msgid "TEI must be 14 or 15 digits long."
+msgstr "TEI moet 14 of 15 cijfers lang zijn."
+
+#: radio/forms.py:24
+msgid "If 15 digits, last digit must be zero."
+msgstr "Als de TEI 15 cijfers is, moet het laatste cijfer nul zijn."
+
+#: radio/forms.py:31
+msgid "TEI is not within known TEI ranges."
+msgstr "TEI valt niet binnen bekende TEI-bereiken."
+
+#: radio/templates/radio/radio_create.html:5
+msgid "Nieuwe radio toevoegen"
+msgstr "Ajouter une nouvelle radio"
+
+#: radio/templates/radio/radio_create.html:9
+msgid "Toevoegen"
+msgstr "Ajouter"
+
+#: radio/templates/radio/selector/modal.html:141
+msgid "Vul een waarde in."
+msgstr "Veuillez entrer une valeur."
+
+#: radio/templates/radio/selector/modal.html:167
+msgid "Er is een fout opgetreden bij het zoeken."
+msgstr "Une erreur s'est produite lors de la recherche."
+
+#: radio/views.py:284
+msgid "type and value required"
+msgstr "type en waarde zijn verplicht"
+
+#: radio/views.py:292
+msgid "Lengte van een ISSI-nummer moet 7 digits zijn"
+msgstr "Lengte van een ISSI-nummer moet 7 cijfers zijn"
+
+#: radio/views.py:296
+msgid "ISSI-nummer mag enkel uit cijfers bestaan"
+msgstr "ISSI-nummer mag alleen uit cijfers bestaan"
+
+#: radio/views.py:298
+msgid "ISSI-nummer niet gevonden"
+msgstr "ISSI-nummer niet gevonden"
+
+#: radio/views.py:300
+msgid "Geen radio gevonden met dit ISSI-nummer"
+msgstr "Geen radio gevonden met dit ISSI-nummer"
+
+#: radio/views.py:309
+#, python-brace-format
+msgid "Radio met dit TEI {tei} nummer niet gevonden"
+msgstr "Radio met TEI-nummer {tei} niet gevonden"
+
+#: radio/views.py:315
+msgid "invalid lookup type"
+msgstr "Ongeldig opzoektype"
+
+#: radio/views.py:330
+msgid "Radio not found"
+msgstr "Radio niet gevonden"
 
 #: templates/index.html:9
+msgid "Welkom bij Radio Asset Management"
+msgstr ""
+
+#: templates/index.html:10
 msgid "Start hier met beheren van de radio’s van Brandweer Brussel"
-msgstr "Start hier met beheren van de radio’s van Brandweer Brussel"
+msgstr ""
 
 #: templates/navbar.html:20
 msgid "Inventory"
@@ -34,26 +147,70 @@ msgstr "Inventaris"
 msgid "Scanner"
 msgstr "Scanner"
 
-#: templates/navbar.html:32
+#: templates/navbar.html:38
+msgid "Add radio"
+msgstr "Radio toevoegen"
+
+#: templates/navbar.html:40
 msgid "Find"
-msgstr "Zoeken"
+msgstr "Zoek"
 
-#: templates/navbar.html:43
-msgid "Download contacts"
-msgstr "Download contacten"
-
-#: templates/navbar.html:46
+#: templates/navbar.html:54
 msgid "Upload subscriptions"
 msgstr "Upload abonnementen"
 
-#: templates/navbar.html:50
+#: templates/navbar.html:57
+msgid "VTEI request"
+msgstr "VTEI-aanvraag"
+
+#: templates/navbar.html:58
+msgid "VTEI & VISSI request"
+msgstr "VTEI & VISSI-aanvraag"
+
+#: templates/navbar.html:59
+msgid "Activation request"
+msgstr "Activatieaanvraag"
+
+#: templates/navbar.html:74
+msgid "Download contacts"
+msgstr "Télécharger les contacts"
+
+#: templates/navbar.html:87
 msgid "Admin"
 msgstr "Admin"
 
-#: templates/navbar.html:53
+#: templates/navbar.html:90
 msgid "Logout"
 msgstr "Logout"
 
-#: templates/navbar.html:58
+#: templates/navbar.html:95
 msgid "Login"
 msgstr "Login"
+
+#: traca/models.py:15
+msgid "Empty"
+msgstr "Leeg"
+
+#: traca/models.py:16
+msgid "Spare radio"
+msgstr "Reserve radio"
+
+#: traca/models.py:17
+msgid "Defecte radio"
+msgstr "Defecte radio"
+
+#: traca/models.py:18
+msgid "In use"
+msgstr "In gebruik"
+
+#: traca/models.py:32
+msgid "Taken"
+msgstr "Uitgeleend"
+
+#: traca/models.py:33
+msgid "Returned"
+msgstr "Teruggebracht"
+
+#: traca/models.py:34
+msgid "Swap"
+msgstr "Wissel"
