@@ -188,6 +188,9 @@
 
 <script>
 
+addEventListener("DOMContentLoaded", (event) => { 
+
+
   function copyInput(input) {
       navigator.clipboard.writeText(input.value)
           .then(() => console.log("Copied:", input.value));
@@ -205,7 +208,9 @@
   document.querySelectorAll('.copy-field').forEach(input => {
       input.addEventListener('click', () => copyInput(input));
   });
-  
+
+})
+
 </script>
 
 
