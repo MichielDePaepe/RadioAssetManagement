@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-21 11:46+0200\n"
+"POT-Creation-Date: 2025-09-23 21:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,46 +18,157 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: astrid/models.py:9
+#: astrid/models.py:10
 msgid "VTEI"
 msgstr "VTEI"
 
-#: astrid/models.py:10
+#: astrid/models.py:11
 msgid "VISSI"
 msgstr "VISSI"
 
-#: astrid/models.py:11
+#: astrid/models.py:12
 msgid "VISSI & VTEI"
 msgstr "VISSI & VTEI"
 
-#: astrid/models.py:50
+#: astrid/models.py:51
 msgid "Both old and new radio must be set for VTEI."
 msgstr "Les radios anciennes et nouvelles doivent être définies pour VTEI."
 
-#: astrid/models.py:54
+#: astrid/models.py:55
 msgid "ISSI old, ISSI new and radio must be set for VISSI."
 msgstr ""
 "L’ISSI ancien, l’ISSI nouveau et la radio doivent être définis pour VISSI."
 
-#: astrid/models.py:58
+#: astrid/models.py:59
 msgid "All radio and ISSI fields must be set for VISSI & VTEI."
 msgstr "Tous les champs radio et ISSI doivent être définis pour VISSI & VTEI."
 
-#: astrid/models.py:72
+#: astrid/models.py:73
 msgid "Execution started"
 msgstr "Exécution démarrée"
 
-#: astrid/models.py:84
+#: astrid/models.py:85
 msgid "Waiting for verification"
 msgstr "En attente de vérification"
 
-#: astrid/models.py:97 astrid/models.py:110
+#: astrid/models.py:107 astrid/models.py:120
 msgid "Request verified and closed"
 msgstr "Demande vérifiée et clôturée"
 
+#: astrid/models.py:125
+msgid "Heeft toegang tot MyAstrid"
+msgstr "A accès à MyAstrid"
+
+#: astrid/models.py:126
+msgid "Kan een aanvraag valideren"
+msgstr "Peut valider une demande"
+
+#: astrid/templates/astrid/request_detail.html:7
+#, python-format
+msgid "\n\t\t%(type)s request #%(id)s\n\t"
+msgstr "\n\t\tDemande %(type)s n°%(id)s\n\t"
+
+#: astrid/templates/astrid/request_detail.html:19
+msgid "Description"
+msgstr "Description"
+
+
+#: astrid/templates/astrid/request_detail.html:28
+msgid "SIAMU ticket"
+msgstr "Ticket SIAMU"
+
+#: astrid/templates/astrid/request_detail.html:39
+msgid "TEI oude radio"
+msgstr "TEI ancien radio"
+
+#: astrid/templates/astrid/request_detail.html:50
+msgid "ISSI oude radio"
+msgstr "ISSI ancien radio"
+
+#: astrid/templates/astrid/request_detail.html:60
+msgid "TEI nieuwe radio"
+msgstr "TEI nouveau radio"
+
+#: astrid/templates/astrid/request_detail.html:78
+msgid "Alias"
+msgstr "Alias"
+
+#: astrid/templates/astrid/request_detail.html:95
+#: astrid/templates/astrid/request_detail.html:111
+msgid "Astrid ticket"
+msgstr "Ticket Astrid"
+
+#: astrid/templates/astrid/request_detail.html:122
+msgid "Bevestig activatie nieuwe radio"
+msgstr "Confirmer l'activation de la nouvelle radio"
+
+#: astrid/templates/astrid/request_detail.html:131
+msgid "Bevestiging"
+msgstr "Confirmation"
+
+#: astrid/templates/astrid/request_detail.html:135
+msgid "Ik bevestig dat de radio actief is."
+msgstr "Je confirme que la radio est active."
+
+#: astrid/templates/astrid/request_detail.html:138
+msgid "Annuleer"
+msgstr "Annuler"
+
+#: astrid/templates/astrid/request_detail.html:139
+msgid "Bevestig"
+msgstr "Confirmer"
+
+#: astrid/templates/astrid/request_overview.html:6
+msgid "Overzicht van Astrid aanvragen"
+msgstr "Vue d'ensemble des demandes Astrid"
+
+#: astrid/templates/astrid/request_overview.html:13
+msgid "ID"
+msgstr "ID"
+
+#: astrid/templates/astrid/request_overview.html:14
+msgid "type"
+msgstr "Type"
+
+#: astrid/templates/astrid/request_overview.html:15
+msgid "Oude TEI"
+msgstr "Ancien TEI"
+
+#: astrid/templates/astrid/request_overview.html:16
+msgid "Oude ISSI"
+msgstr "Ancien ISSI"
+
+#: astrid/templates/astrid/request_overview.html:17
+msgid "Nieuwe TEI"
+msgstr "Nouveau TEI"
+
+#: astrid/templates/astrid/request_overview.html:18
+msgid "Nieuwe ISSI"
+msgstr "Nouveau ISSI"
+
+#: astrid/templates/astrid/request_overview.html:19
+msgid "Status"
+msgstr "Statut"
+
+#: astrid/templates/astrid/request_overview.html:20
+msgid "Aangemaakt op"
+msgstr "Créé le"
+
+#: astrid/templates/astrid/request_overview.html:21
+msgid "Acties"
+msgstr "Actions"
+
+#: astrid/templates/astrid/request_overview.html:48
+msgid "Bekijk"
+msgstr "Voir"
+
+#: astrid/templates/astrid/request_overview.html:57
+msgid "Geen openstaande tickets."
+msgstr "Aucun ticket en attente."
+
 #: astrid/templates/astrid/vtei_request.html:6
 msgid "VTEI aanvragen"
-msgstr ""
+msgstr "Demander un VTEI"
 
 #: astrid/templates/astrid/vtei_request.html:10
 msgid ""
@@ -70,6 +181,53 @@ msgstr ""
 "    VTEI est une demande pour transférer l'abonnement d'une radio vers une "
 "nouvelle radio tout en conservant l'ISSI sur la nouvelle radio.\n"
 "    "
+
+#: astrid/templates/astrid/vtei_request.html:23
+msgid "Oude radio"
+msgstr "Ancienne radio"
+
+#: astrid/templates/astrid/vtei_request.html:35
+msgid "Nieuwe radio"
+msgstr "Nouvelle radio"
+
+#: astrid/templates/astrid/vtei_request.html:49
+msgid "Reden"
+msgstr "Raison"
+
+#: astrid/templates/astrid/vtei_request.html:50
+msgid "Omschrijf hier de reden van de aanvraag"
+msgstr "Décrivez ici la raison de la demande"
+
+#: astrid/views.py:123
+
+msgid "Both an old and a new radio need to be selected."
+msgstr "Il faut sélectionner à la fois une ancienne et une nouvelle radio."
+
+#: astrid/views.py:129
+msgid "The radio selected as old radio has no subscription."
+msgstr "La radio sélectionnée comme ancienne radio n'a pas d'abonnement."
+
+#: astrid/views.py:132
+msgid "The radio selected as new radio already has a subscription."
+msgstr "La radio sélectionnée comme nouvelle radio a déjà un abonnement."
+
+#: astrid/views.py:136
+#, python-brace-format
+msgid "The old radio has an open request ticket: {tickets}"
+msgstr "L'ancienne radio a un ticket de demande ouvert : {tickets}"
+
+#: astrid/views.py:140
+#, python-brace-format
+msgid "The new radio has an open request ticket: {tickets}"
+msgstr "La nouvelle radio a un ticket de demande ouvert : {tickets}"
+
+#: astrid/views.py:152
+msgid "VTEI request successful"
+msgstr "Demande VTEI réussie"
+
+#: astrid/views.py:185
+msgid "Geen astrid ticket nummer opgegeven"
+msgstr "Aucun numéro de ticket Astrid fourni"
 
 #: radio/forms.py:16
 msgid "TEI must contain only digits."
@@ -87,13 +245,29 @@ msgstr "Si le TEI comporte 15 chiffres, le dernier doit être zéro."
 msgid "TEI is not within known TEI ranges."
 msgstr "Le TEI ne se trouve pas dans les plages TEI connues."
 
+#: radio/templates/radio/detail.html:47
+msgid "Actief"
+msgstr "Actif"
+
+#: radio/templates/radio/detail.html:49
+msgid "Decommissioned"
+msgstr "Radié"
+
+#: radio/templates/radio/detail.html:51
+msgid "Niet actief"
+msgstr "Inactif"
+
+#: radio/templates/radio/radio_card.html:62
+msgid "DECOMMISSIONED"
+msgstr "RADIÉ"
+
 #: radio/templates/radio/radio_create.html:5
 msgid "Nieuwe radio toevoegen"
-msgstr ""
+msgstr "Ajouter un nouveau radio"
 
 #: radio/templates/radio/radio_create.html:9
 msgid "Toevoegen"
-msgstr ""
+msgstr "Ajouter"
 
 #: radio/templates/radio/selector/modal.html:141
 msgid "Vul een waarde in."
@@ -103,38 +277,46 @@ msgstr "Veuillez saisir une valeur."
 msgid "Er is een fout opgetreden bij het zoeken."
 msgstr "Une erreur s’est produite lors de la recherche."
 
-#: radio/views.py:284
+#: radio/views.py:196
 msgid "type and value required"
 msgstr "Type et valeur requis"
 
-#: radio/views.py:292
+#: radio/views.py:204
 msgid "Lengte van een ISSI-nummer moet 7 digits zijn"
 msgstr "La longueur d’un numéro ISSI doit être de 7 chiffres"
 
-#: radio/views.py:296
+#: radio/views.py:208
 msgid "ISSI-nummer mag enkel uit cijfers bestaan"
 msgstr "Le numéro ISSI ne doit contenir que des chiffres"
 
-#: radio/views.py:298
+#: radio/views.py:210
 msgid "ISSI-nummer niet gevonden"
 msgstr "Numéro ISSI introuvable"
 
-#: radio/views.py:300
+#: radio/views.py:212
 msgid "Geen radio gevonden met dit ISSI-nummer"
 msgstr "Aucune radio trouvée avec ce numéro ISSI"
 
-#: radio/views.py:309
+#: radio/views.py:221
 #, python-brace-format
 msgid "Radio met dit TEI {tei} nummer niet gevonden"
 msgstr "Radio avec le TEI {tei} non trouvée"
 
-#: radio/views.py:315
+#: radio/views.py:227
 msgid "invalid lookup type"
 msgstr "Type de recherche invalide"
 
-#: radio/views.py:330
+#: radio/views.py:242
 msgid "Radio not found"
 msgstr "Radio non trouvée"
+
+#: templates/403.html:37
+msgid "Geen toegang"
+msgstr "Accès refusé"
+
+#: templates/403.html:38
+msgid "Je hebt geen toestemming om deze pagina te bekijken."
+msgstr "Vous n'avez pas la permission de consulter cette page."
 
 #: templates/index.html:9
 msgid "Welkom bij Radio Asset Management"
@@ -176,19 +358,23 @@ msgstr "Demande VTEI & VISSI"
 msgid "Activation request"
 msgstr "Demande d’activation"
 
-#: templates/navbar.html:74
+#: templates/navbar.html:61
+msgid "Overzicht van aanvragen"
+msgstr "Aperçu des demandes"
+
+#: templates/navbar.html:76
 msgid "Download contacts"
 msgstr "Télécharge contacts"
 
-#: templates/navbar.html:87
+#: templates/navbar.html:89
 msgid "Admin"
 msgstr "Admin"
 
-#: templates/navbar.html:90
+#: templates/navbar.html:92
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: templates/navbar.html:95
+#: templates/navbar.html:97
 msgid "Login"
 msgstr "Connexion"
 

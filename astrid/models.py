@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from helpdesk.models import Ticket, TicketType, TicketLog, TicketStatus
+from django.utils.translation import gettext as _
 
 
 class Request(Ticket):
@@ -89,7 +90,16 @@ class Request(Ticket):
             code="CLOSED",
             defaults={"name": "Closed"},
         )
-        raise Exception("To do: ISSI overplaatsen naar nieuwe")
+        if self.request_type == self.RequestType.VTEI:
+            subscritpion = self.old_radio.subscription
+            subscritpion.radio = self.new_radio
+            subscritpion.save()
+
+        if self.request_type == self.RequestType.VISSI:
+            subscritpion = self.radio.subscription
+            subscritpion.issi = self.new_issi
+            subscritpion.save()
+
         TicketLog.objects.create(
             ticket=self,
             user=user,
@@ -109,4 +119,10 @@ class Request(Ticket):
             status_after=closed,
             note=_("Request verified and closed"),
         )
+
+    class Meta:
+        permissions = [
+            ("has_access_to_myastrid", _("Heeft toegang tot MyAstrid")),
+            ("can_verify_requests", _("Kan een aanvraag valideren")),
+        ]
 

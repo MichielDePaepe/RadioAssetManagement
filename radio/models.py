@@ -5,6 +5,7 @@ class Radio(models.Model):
     TEI = models.BigIntegerField(primary_key=True)
     fireplan_id = models.IntegerField(null=True, blank=True)
     model = models.ForeignKey('RadioModel', null=True, blank=True, on_delete=models.PROTECT)
+    decommissioned = models.BooleanField(default=False)
 
     @property
     def ISSI(self):

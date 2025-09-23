@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load i18n %}
 
 {% block extra_script %}
 
@@ -43,9 +44,12 @@
         <th scope="row" class="bg-light">Status</th>
         <td>
           {% if radio.is_active %}
-            <span class="badge bg-success">Actief</span>
+            <span class="badge bg-success">{% trans "Actief" %}</span>
+          {% elif radio.decommissioned %}
+            <span class="badge bg-warning">{% trans "Decommissioned" %}</span>
           {% else %}
-            <span class="badge bg-danger">Niet actief</span>
+            <span class="badge bg-danger">{% trans "Niet actief" %}</span>
+          }
           {% endif %}
         </td>
       </tr>

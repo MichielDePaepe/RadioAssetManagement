@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block content %}
+
+<h1 class="mb-3">
+	{% blocktrans with type=object.request_type id=object.id %}
+		{{ type }} request #{{ id }}
+	{% endblocktrans %}
+</h1>
+<hr>
+
+
+
+
+<div class="container-fluid" style="max-width: 600px;">
+
+  <div class="mb-2 d-flex align-items-start">
+    <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Description" %}:</strong>
+    <div class="flex-grow-1">
+      {{ object.description }}
+    </div>
+  </div>
+
+  <!-- SIAMU ticket -->
+  {% if object.siamu_ticket %}
+  <div class="mb-2 d-flex align-items-center">
+    <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "SIAMU ticket" %}:</strong>
+    <div class="position-relative flex-grow-1">
+      <input type="text" class="form-control copy-field" value="#{{ object.siamu_ticket }}" readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if "VTEI" in object.request_type %}
+  <!-- TEI oude radio -->
+  <div class="mb-2 d-flex align-items-center">
+    <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "TEI oude radio" %}:</strong>
+    <div class="position-relative flex-grow-1">
+      <input type="text" class="form-control copy-field" value="{{ object.old_radio.tei_str }}" readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if "VISSI" in object.request_type %}
+  <!-- ISSI oude radio -->
+  <div class="mb-2 d-flex align-items-center">
+    <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "ISSI oude radio" %}:</strong>
+    <div class="position-relative flex-grow-1">
+      <input type="text" class="form-control copy-field" value="{{ object.old_issi.number }}" readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- TEI nieuwe radio -->
+  <div class="mb-2 d-flex align-items-center">
+    <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "TEI nieuwe radio" %}:</strong>
+    <div class="position-relative flex-grow-1">
+      <input type="text" class="form-control copy-field" value="{{ object.new_radio.tei_str }}" readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+    </div>
+  </div>
+
+  <!-- ISSI -->
+  <div class="mb-2 d-flex align-items-center">
+    <strong class="me-2 flex-shrink-0" style="width: 40%;">ISSI:</strong>
+    <div class="position-relative flex-grow-1">
+      <input type="text" class="form-control copy-field" value="{{ object.new_issi.number }}" readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+    </div>
+  </div>
+
+  <!-- Alias -->
+  <div class="mb-2 d-flex align-items-center">
+    <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Alias" %}:</strong>
+    <div class="position-relative flex-grow-1">
+      <input type="text" class="form-control copy-field" value="{{ object.new_issi.alias }}" readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+    </div>
+  </div>
+
+  {% if object.status.code == "NEW" and perms.astrid.has_access_to_myastrid %}
+
+    <form method="post" action="">
+
+      {% csrf_token %}
+      <input type="hidden" name="type" value="astrid_request_done">
+
+      <!-- Astrid ticket input -->
+      <div class="mb-2 d-flex flex-column">
+        <div class="d-flex align-items-center mb-2">
+          <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Astrid ticket" %}:</strong>
+          <input type="text" name="astrid_ticket" class="form-control flex-grow-1" placeholder="Ticket nummer">
+        </div>
+      </div>
+
+      <!-- Button -->
+      <div class="mb-2 d-flex flex-column">
+        <button class="btn btn-primary" type="submit">Aanvraag uitgevoerd</button>
+      </div>
+
+    </form>
+
+  {% elif object.status.code == "IN_PROGRESS" and perms.astrid.can_verify_requests%}
+
+
+    <div class="mb-2 d-flex align-items-center">
+      <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Astrid ticket" %}:</strong>
+      <div class="position-relative flex-grow-1">
+        <input type="text" class="form-control copy-field" value="{{ object.external_reference }}" readonly>
+        <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+      </div>
+    </div>
+
+
+
+    <div class="mb-2 d-flex flex-column">
+      <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#confirmModal">
+        {% trans "Bevestig activatie nieuwe radio" %}
+      </button>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content" id="confirmModalContent">
+          <div class="modal-header">
+            <h5 class="modal-title" id="confirmModalLabel">{% trans "Bevestiging" %}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+          </div>
+          <div class="modal-body">
+            {% trans "Ik bevestig dat de radio actief is." %}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Annuleer" %}</button>
+            <button type="button" class="btn btn-primary" id="confirmButton">{% trans "Bevestig" %}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+
+    document.getElementById('confirmButton').addEventListener('click', function() {
+      fetch(window.location.href, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': '{{csrf_token}}'
+        },
+        body: new URLSearchParams({
+          'type': 'validate'
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          window.location.href = "{% url 'astrid:request_overview' %}";
+        } else {
+          setModalError("Vallidatie mislukt", "De vallidatie is niet gelukt. Probeer opnieuw.");
+        }
+      })
+      .catch(() => {
+        setModalError("Netwerkfout", "Kon de server niet bereiken. Controleer je verbinding.");
+      });
+    });
+
+    function setModalError(title, message) {
+      // pas titel aan
+      document.getElementById("confirmModalLabel").textContent = title;
+      // pas body aan
+      document.querySelector("#confirmModal .modal-body").textContent = message;
+      // maak header rood
+      document.querySelector("#confirmModal .modal-header").classList.add("bg-danger", "text-white");
+      // laat modal open
+      const modalEl = document.getElementById("confirmModal");
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    }
+
+    </script>
+
+  {% endif %}
+
+</div>
+
+<script>
+
+  function copyInput(input) {
+      navigator.clipboard.writeText(input.value)
+          .then(() => console.log("Copied:", input.value));
+  }
+
+  // Klik op icon
+  document.querySelectorAll('.fa-copy').forEach(icon => {
+      icon.addEventListener('click', () => {
+          const input = icon.previousElementSibling;
+          copyInput(input);
+      });
+  });
+
+  // Klik op input zelf
+  document.querySelectorAll('.copy-field').forEach(input => {
+      input.addEventListener('click', () => copyInput(input));
+  });
+  
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+{% endblock %}

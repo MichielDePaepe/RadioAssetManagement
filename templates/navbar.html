@@ -51,14 +51,14 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="astridDropdown">
               {% if perms.radio.can_upload_subscriptions %}
-              <li><a class="dropdown-item" href="{% url 'radio:upload_subscriptions' %}"><i class="bi bi-cloud-upload"></i> {% trans "Upload subscriptions" %}</a></li>
+              <li><a class="dropdown-item" href="{% url 'astrid:upload_subscriptions' %}"><i class="bi bi-cloud-upload"></i> {% trans "Upload subscriptions" %}</a></li>
               <li><hr class="dropdown-divider"></li>
               {% endif %}
               <li><a class="dropdown-item" href="{% url 'astrid:vtei_request' %}"><i class="fa-solid fa-repeat"></i> {% trans "VTEI request" %}</a></li>
               <li><a class="dropdown-item" href="{% url 'astrid:vtei_request' %}"><i class="fa-solid fa-shuffle"></i></i> {% trans "VTEI & VISSI request" %}</a></li>
               <li><a class="dropdown-item" href="{% url 'astrid:vtei_request' %}"><i class="fa-solid fa-circle-play"></i></i> {% trans "Activation request" %}</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="{% url 'astrid:requests_overview' %}"><i class="bi bi-list-ul"></i></i> {% trans "Overzicht van aanvragen" %}</a></li>
+              <li><a class="dropdown-item" href="{% url 'astrid:request_overview' %}"><i class="bi bi-list-ul"></i></i> {% trans "Overzicht van aanvragen" %}</a></li>
 
             </ul>
           </li>

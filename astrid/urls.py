@@ -5,6 +5,10 @@ app_name = 'astrid'
 
 urlpatterns = [
     path('request/vtei', VTEIRequestCreateView.as_view(), name='vtei_request'),
-    path('requests', RequestsOverviewView.as_view(), name='requests_overview'),
+    path('request/<int:pk>', RequestDetailView.as_view(), name='request_detail'),
+
+    path('requests', RequestOverviewView.as_view(), name='request_overview'),
+
+    path('subscritpions/upload', UploadSubscriptionsView.as_view(), name='upload_subscriptions'),
 
 ]

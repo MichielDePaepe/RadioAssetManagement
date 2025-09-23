@@ -1,4 +1,4 @@
-{% load static %}
+{% load static i18n %}
 
 
 <div class="card d-inline-block m-2 shadow" style="min-width: 18rem;" data-tei="{{ radio.TEI|stringformat:'014d' }}">
@@ -29,36 +29,51 @@
 
   </div>
 
-  <div class="card-body text-center">
+  {% if not radio.decomissioned %}
 
-    {% if not radio.is_active %}
-      <span class="badge bg-warning text-dark">Niet actief</span>
-    {% endif %}
-    
-{% if radio.inventory_entries.all %}
-  <div class="text-muted small mb-2 text-center">
-    Laatst gezien:
-    {% if radio.inventory_entries.last.container != radio.container_link.first.container %}
-      <span class="badge bg-danger">
-        <i class="bi bi-exclamation-triangle-fill me-1"></i>
-        {{ radio.inventory_entries.last.container }}
-      </span>
-      <br>
-    {% endif %}
-    <time class="timeago" datetime="{{ radio.inventory_entries.last.timestamp|date:'c' }}"></time>
-  </div>
-{% else %}
-  <div class="text-muted small mb-2 text-center">Nog niet gescand</div>
-{% endif %}
+    <div class="card-body text-center">
 
+      {% if not radio.is_active %}
+        <span class="badge bg-warning text-dark">Niet actief</span>
+      {% endif %}
+      
+      {% if radio.inventory_entries.all %}
+        <div class="text-muted small mb-2 text-center">
+          Laatst gezien:
+          {% if radio.inventory_entries.last.container != radio.container_link.first.container %}
+            <span class="badge bg-danger">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>
+              {{ radio.inventory_entries.last.container }}
+            </span>
+            <br>
+          {% endif %}
+          <time class="timeago" datetime="{{ radio.inventory_entries.last.timestamp|date:'c' }}"></time>
+        </div>
+      {% else %}
+        <div class="text-muted small mb-2 text-center">Nog niet gescand</div>
+      {% endif %}
 
-    <hr>
+  {% else %}
 
-    <div class="text-muted small">
-      TEI: {{ radio.TEI|stringformat:"014d" }}
+    <div class="card m-2 shadow" style="background: repeating-linear-gradient(45deg, #ffc107, #ffc107 20px, #000 20px, #000 40px); border: none;">
+      <div class="card-body d-flex justify-content-center align-items-center">
+        <div class="bg-white p-1 border border-4 border-dark">
+          <span style="font-weight:bold; color:black; letter-spacing:1px;">
+            {% trans "DECOMMISSIONED" %}
+          </span>
+        </div>
+      </div>
     </div>
 
-  </div>
+  {% endif %}
+
+<hr>
+
+<div class="text-muted small">
+  TEI: {{ radio.TEI|stringformat:"014d" }}
+</div>
+
+</div>
 
 
 </div>
