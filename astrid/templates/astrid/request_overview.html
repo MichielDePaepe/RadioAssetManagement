@@ -18,7 +18,7 @@
                 <th scope="col">{% trans "Nieuwe ISSI" %}</th>
                 <th scope="col">{% trans "Status" %}</th>
                 <th scope="col">{% trans "Aangemaakt op" %}</th>
-                <th scope="col">{% trans "Acties" %}</th>
+                <th scope="col">{% trans "Astrid ticket" %}</th>
             </tr>
         </thead>
         <tbody>
@@ -47,9 +47,7 @@
                 <td>{{ request.new_issi|default_if_none:"-" }}</td>
                 <td>{{ request.status }}</td>
                 <td>{{ request.created_at|date:"d/m/Y" }}</td>
-                <td>
-                    <a href="" class="btn btn-sm btn-primary">{% trans "Bekijk" %}</a>
-                </td>
+                <td>{{ request.external_reference|default_if_none:"-" }}</td>
             </tr>
         {% endfor %}
         </tbody>
