@@ -33,8 +33,8 @@
   </div>
   {% endif %}
 
-  {% if "VTEI" in object.request_type %}
   <!-- TEI oude radio -->
+  {% if "VTEI" in object.request_type %}
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "TEI oude radio" %}:</strong>
     <div class="position-relative flex-grow-1">
@@ -44,8 +44,8 @@
   </div>
   {% endif %}
 
-  {% if "VISSI" in object.request_type %}
   <!-- ISSI oude radio -->
+  {% if "VISSI" in object.request_type %}
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "ISSI oude radio" %}:</strong>
     <div class="position-relative flex-grow-1">
@@ -82,14 +82,13 @@
     </div>
   </div>
 
-  {% if object.status.code == "NEW" and perms.astrid.has_access_to_myastrid %}
+  <form method="post" action="">
 
-    <form method="post" action="">
+    {% csrf_token %}
 
-      {% csrf_token %}
-      <input type="hidden" name="type" value="astrid_request_done">
+    <!-- Astrid ticket -->
+    {% if object.status.code == "NEW" and perms.astrid.has_access_to_myastrid %}
 
-      <!-- Astrid ticket input -->
       <div class="mb-2 d-flex flex-column">
         <div class="d-flex align-items-center mb-2">
           <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Astrid ticket" %}:</strong>
@@ -97,99 +96,131 @@
         </div>
       </div>
 
+    {% else %}
+
+      <div class="mb-2 d-flex align-items-center">
+        <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Astrid ticket" %}:</strong>
+        <div class="position-relative flex-grow-1">
+          <input type="text" class="form-control copy-field" value="{{ object.external_reference }}" readonly>
+          <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+        </div>
+      </div>
+
+    {% endif %}
+
+
+
+    {% if object.status.code == "NEW" and perms.astrid.has_access_to_myastrid %}
+
+      <input type="hidden" name="type" value="astrid_request_submitted">
+
+      <!-- Opmerkingen -->
+      <div class="mb-2 d-flex align-items-start">
+        <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Opmerkingen" %}:</strong>
+        <div class="position-relative flex-grow-1">
+          <textarea name="note" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="mb- d-flex flex-column mt-3">
+        <button class="btn btn-success " type="submit" name="action" value="request_submitted">{% trans "Aanvraag ingediend" %}</button>
+      </div>
+      <div class="mb-2 d-flex flex-column mt-3">
+        <button class="btn btn-danger" type="submit" name="action" value="refused">{% trans "Aanvraag geweigerd" %}</button>
+      </div>
+
+    {% elif object.status.code == "IN_PROGRESS" and perms.astrid.has_access_to_myastrid %}
+
+      <input type="hidden" name="type" value="feedback_from_astrid">
+
+      <!-- Opmerkingen -->
+      <div class="mb-2 d-flex align-items-start">
+        <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Opmerkingen" %}:</strong>
+        <div class="position-relative flex-grow-1">
+          <textarea name="note" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+
       <!-- Button -->
       <div class="mb-2 d-flex flex-column">
-        <button class="btn btn-primary" type="submit">Aanvraag uitgevoerd</button>
+        <button class="btn btn-success mt-3" type="submit" name="action" value="precessed">{% trans "Aanvraag verwerkt" %}</button>
+      </div>
+      <div class="mb-2 d-flex flex-column">
+        <button class="btn btn-danger mt-3" type="submit" name="action" value="refused">{% trans "Aanvraag geweigerd" %}</button>
       </div>
 
-    </form>
+    {% elif object.status.code == "WAITING_VERIFICATION" and perms.astrid.can_verify_requests%}
 
-  {% elif object.status.code == "IN_PROGRESS" and perms.astrid.can_verify_requests%}
-
-
-    <div class="mb-2 d-flex align-items-center">
-      <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Astrid ticket" %}:</strong>
-      <div class="position-relative flex-grow-1">
-        <input type="text" class="form-control copy-field" value="{{ object.external_reference }}" readonly>
-        <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+      <div class="mb-2 d-flex flex-column">
+        <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#confirmModal">
+          {% trans "Bevestig activatie nieuwe radio" %}
+        </button>
       </div>
-    </div>
 
-
-
-    <div class="mb-2 d-flex flex-column">
-      <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#confirmModal">
-        {% trans "Bevestig activatie nieuwe radio" %}
-      </button>
-    </div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content" id="confirmModalContent">
-          <div class="modal-header">
-            <h5 class="modal-title" id="confirmModalLabel">{% trans "Bevestiging" %}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
-          </div>
-          <div class="modal-body">
-            {% trans "Ik bevestig dat de radio actief is." %}
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Annuleer" %}</button>
-            <button type="button" class="btn btn-primary" id="confirmButton">{% trans "Bevestig" %}</button>
+      <!-- Modal -->
+      <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content" id="confirmModalContent">
+            <div class="modal-header">
+              <h5 class="modal-title" id="confirmModalLabel">{% trans "Bevestiging" %}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Sluiten"></button>
+            </div>
+            <div class="modal-body">
+              {% trans "Ik bevestig dat de radio actief is." %}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Annuleer" %}</button>
+              <button type="button" class="btn btn-primary" id="confirmButton">{% trans "Bevestig" %}</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <script>
+      <script>
 
-    document.getElementById('confirmButton').addEventListener('click', function() {
-      fetch(window.location.href, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'X-CSRFToken': '{{csrf_token}}'
-        },
-        body: new URLSearchParams({
-          'type': 'validate'
-        })
-      })
-      .then(response => {
-        if (response.ok) {
-          window.location.href = "{% url 'astrid:request_overview' %}";
-        } else {
-          setModalError("Vallidatie mislukt", "De vallidatie is niet gelukt. Probeer opnieuw.");
+        document.getElementById('confirmButton').addEventListener('click', function() {
+          fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'X-CSRFToken': '{{csrf_token}}'
+            },
+            body: new URLSearchParams({
+              'type': 'validate'
+            })
+          })
+          .then(response => {
+            if (response.ok) {
+              window.location.href = "{% url 'astrid:request_overview' %}";
+            } else {
+              setModalError("Vallidatie mislukt", "De vallidatie is niet gelukt. Probeer opnieuw.");
+            }
+          })
+          .catch(() => {
+            setModalError("Netwerkfout", "Kon de server niet bereiken. Controleer je verbinding.");
+          });
+        });
+
+        function setModalError(title, message) {
+          document.getElementById("confirmModalLabel").textContent = title;
+          document.querySelector("#confirmModal .modal-body").textContent = message;
+          document.querySelector("#confirmModal .modal-header").classList.add("bg-danger", "text-white");
+
+          const modalEl = document.getElementById("confirmModal");
+          const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+          modal.show();
         }
-      })
-      .catch(() => {
-        setModalError("Netwerkfout", "Kon de server niet bereiken. Controleer je verbinding.");
-      });
-    });
 
-    function setModalError(title, message) {
-      // pas titel aan
-      document.getElementById("confirmModalLabel").textContent = title;
-      // pas body aan
-      document.querySelector("#confirmModal .modal-body").textContent = message;
-      // maak header rood
-      document.querySelector("#confirmModal .modal-header").classList.add("bg-danger", "text-white");
-      // laat modal open
-      const modalEl = document.getElementById("confirmModal");
-      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-      modal.show();
-    }
+        </script>
 
-    </script>
-
-  {% endif %}
+    {% endif %}
 
 </div>
 
 <script>
 
 addEventListener("DOMContentLoaded", (event) => { 
-
 
   function copyInput(input) {
       navigator.clipboard.writeText(input.value)

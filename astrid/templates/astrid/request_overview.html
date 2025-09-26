@@ -23,7 +23,10 @@
         </thead>
         <tbody>
         {% for request in requests %}
-            <tr class="{% if request.status.code == 'NEW' %}table-success{% endif %}">
+            <tr class="
+                {% if request.status.code == 'NEW' %}table-success
+                {% elif request.status.code == 'WAITING_VERIFICATION' %}table-warning{% endif %}
+            ">
                 <td><a href="{% url 'astrid:request_detail' pk=request.pk %}">#{{ request.id }}</a></td>
                 <td>{{ request.request_type }}</td>
                 <td>

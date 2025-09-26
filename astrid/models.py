@@ -61,7 +61,7 @@ class Request(Ticket):
         if errors:
             raise ValidationError(errors)
 
-    def start_execution(self, user=None):
+    def set_open(self, user=None, note=""):
         in_progress, created = TicketStatus.objects.get_or_create(
             code="IN_PROGRESS",
             defaults={"name": "In progress"},
@@ -70,10 +70,23 @@ class Request(Ticket):
             ticket=self,
             user=user,
             status_after=in_progress,
-            note=_("Execution started"),
+            note=note or _("Execution started"),
         )
 
-    def mark_waiting_verification(self, user=None):
+
+    def start_execution(self, user=None, note=""):
+        in_progress, created = TicketStatus.objects.get_or_create(
+            code="IN_PROGRESS",
+            defaults={"name": "In progress"},
+        )
+        TicketLog.objects.create(
+            ticket=self,
+            user=user,
+            status_after=in_progress,
+            note=note or _("Execution started"),
+        )
+
+    def mark_waiting_verification(self, user=None, note=""):
         waiting, created = TicketStatus.objects.get_or_create(
             code="WAITING_VERIFICATION",
             defaults={"name": "Waiting for verification"},
@@ -82,10 +95,10 @@ class Request(Ticket):
             ticket=self,
             user=user,
             status_after=waiting,
-            note=_("Waiting for verification"),
+            note=note or _("Waiting for verification"),
         )
 
-    def mark_verified(self, user=None):
+    def mark_verified(self, user=None, note=""):
         closed, created = TicketStatus.objects.get_or_create(
             code="CLOSED",
             defaults={"name": "Closed"},
@@ -104,11 +117,11 @@ class Request(Ticket):
             ticket=self,
             user=user,
             status_after=closed,
-            note=_("Request verified and closed"),
+            note=note or _("Request verified and closed"),
         )
         issi = self.old_radio.subscription.issi
 
-    def mark_done(self, user=None):
+    def mark_closed(self, user=None, note=""):
         closed, created = TicketStatus.objects.get_or_create(
             code="CLOSED",
             defaults={"name": "Closed"},
@@ -117,7 +130,7 @@ class Request(Ticket):
             ticket=self,
             user=user,
             status_after=closed,
-            note=_("Request verified and closed"),
+            note=note or _("Request verified and closed"),
         )
 
     class Meta:
