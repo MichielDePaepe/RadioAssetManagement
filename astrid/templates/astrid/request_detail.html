@@ -202,29 +202,33 @@
 </div>
 
 <script>
-
-  addEventListener("DOMContentLoaded", (event) => { 
-
-    function copyInput(input) {
+function copyInput(input) {
+    if (navigator.clipboard && window.isSecureContext) {
+        // Moderne manier
         navigator.clipboard.writeText(input.value)
-            .then(() => console.log("Copied:", input.value));
+            .then(() => console.log("Copied:", input.value))
+            .catch(err => console.error("Clipboard error:", err));
+    } else {
+        // Fallback
+        input.select();
+        input.setSelectionRange(0, 99999); // voor mobiel
+        document.execCommand("copy");
+        console.log("Copied (fallback):", input.value);
     }
+}
 
-    // Klik op icon
-    document.querySelectorAll('.fa-copy').forEach(icon => {
-        icon.addEventListener('click', () => {
-            const input = icon.previousElementSibling;
-            copyInput(input);
-        });
+// Koppelen aan alle copy-fields
+document.querySelectorAll('.copy-field').forEach(input => {
+    input.addEventListener('click', () => copyInput(input));
+});
+
+// Koppelen aan icoontje
+document.querySelectorAll('.fa-copy').forEach(icon => {
+    icon.addEventListener('click', () => {
+        let input = icon.previousElementSibling;
+        if (input) copyInput(input);
     });
-
-    // Klik op input zelf
-    document.querySelectorAll('.copy-field').forEach(input => {
-        input.addEventListener('click', () => copyInput(input));
-    });
-
-  })
-
+});
 </script>
 
 
