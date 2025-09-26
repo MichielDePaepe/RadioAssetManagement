@@ -175,14 +175,13 @@ class RequestDetailView(DetailView):
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
 
+        request_type = request.POST.get("type")
         action = request.POST.get("action")
         note = request.POST.get("note")
-        
-        if request.POST.get("type") == "astrid_request_submitted":
+
+        if request_type == "astrid_request_submitted":
             if not request.user.has_perm("astrid.has_access_to_myastrid"):
                 raise PermissionDenied
-
-            print(action)
 
             if action == "request_submitted":
                 astrid_ticket = request.POST.get("astrid_ticket")
@@ -198,9 +197,10 @@ class RequestDetailView(DetailView):
             elif action == "refused":
                 if not note:
                     messages.error(request, _("Geef een reden op waarom de aanvraag geweigerd werd"))
+                    return redirect(request.path)
                 obj.mark_closed(user=request.user, note=note)
         
-        elif request.POST.get("type") == "feedback_from_astrid":
+        elif request_type == "feedback_from_astrid":
             if not request.user.has_perm("astrid.has_access_to_myastrid"):
                 raise PermissionDenied
 
@@ -209,10 +209,19 @@ class RequestDetailView(DetailView):
             elif action == "refused":
                 obj.mark_closed(user=request.user, note=note or _("Request refused by astrid"))
 
-        elif request.POST.get("type") == "validate":
+        elif request_type == "validate_activation":
             if not request.user.has_perm("astrid.can_verify_requests"):
-                raise PermissionDenied 
-            obj.mark_verified(user=request.user, note=note)
+                raise PermissionDenied
+
+            if not note:
+                messages.error(request, _("Opmerking mag niet leeg zijn"))
+                return redirect(request.path)
+
+            if action == "radio_is_working":
+                obj.mark_verified(user=request.user, note=note)
+
+            if action == "radio_is_not_working":
+                obj.mark_verified(user=request.user, note=note)
         
         else:
             return HttpResponseBadRequest("Invalid POST")

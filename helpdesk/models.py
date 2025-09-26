@@ -74,7 +74,7 @@ class TicketLog(models.Model):
     note = models.TextField(blank=True)
 
     class Meta:
-        ordering = ["-timestamp"]
+        ordering = ["timestamp"]
 
     def __str__(self):
         return f"Log {self.id} for Ticket #{self.ticket.id}"

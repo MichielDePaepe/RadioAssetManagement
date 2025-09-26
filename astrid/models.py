@@ -103,6 +103,7 @@ class Request(Ticket):
             code="CLOSED",
             defaults={"name": "Closed"},
         )
+        
         if self.request_type == self.RequestType.VTEI:
             subscritpion = self.old_radio.subscription
             subscritpion.radio = self.new_radio
@@ -113,13 +114,19 @@ class Request(Ticket):
             subscritpion.issi = self.new_issi
             subscritpion.save()
 
+        if self.request_type == self.RequestType.VISSI_VTEI:
+            subscritpion = self.old_radio.subscription
+            subscritpion.radio = self.new_radio
+            subscritpion.issi = self.new_issi
+            subscritpion.save()
+
         TicketLog.objects.create(
             ticket=self,
             user=user,
             status_after=closed,
             note=note or _("Request verified and closed"),
         )
-        issi = self.old_radio.subscription.issi
+
 
     def mark_closed(self, user=None, note=""):
         closed, created = TicketStatus.objects.get_or_create(
