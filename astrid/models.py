@@ -10,6 +10,7 @@ class Request(Ticket):
         VTEI = "VTEI", _("VTEI")
         VISSI = "VISSI", _("VISSI")
         VISSI_VTEI = "VISSI & VTEI", _("VISSI & VTEI")
+        ACTIVATION = "ACTIVATION", _("Activation")
 
     old_radio = models.ForeignKey("radio.Radio", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_old")
     old_issi = models.ForeignKey("radio.ISSI", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_old")

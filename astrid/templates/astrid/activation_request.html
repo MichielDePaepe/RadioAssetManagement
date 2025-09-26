@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load radio_selector_tags static i18n %}
+
+{% block content %}
+
+<h1 class="mb-3">{% trans "Activatie aanvragen" %}</h1>
+
+<div class="mb-4">
+  <p>
+    {% blocktranslate %}
+    Aanvraag om een radio te activeren met een nieuw abonnement.
+    {% endblocktranslate %}
+  </p>
+</div>
+
+<form method="post">
+  {% csrf_token %}
+
+  <div class="row mt-3">
+
+    <div class="col radio-widget">
+      <label for="request-description">{% trans "Radio" %}</label>
+      <div class="border rounded p-4 d-flex flex-column position-relative"> 
+        <div class="overflow-auto text-center">
+          <div class="radio-card" id="radio-card">
+            {% radio_selector_button %}
+          </div>
+        </div>
+      </div>
+      <input type="hidden" name="radio" class="hidden-radio-input">
+    </div>
+
+  </div>
+
+  <div class="row mt-3">
+    <div class="col">
+      <label for="request-description">{% trans "ISSI" %}</label>
+      <input class="form-control" id="issi" name="issi" placeholder="{% trans 'ISSI die geactiveerd moet worden' %}">
+    </div>
+  </div>
+
+  <div class="row mt-3">
+    <div class="col">
+      <label for="request-description">{% trans "Reden" %}</label>
+      <textarea class="form-control" id="request-description" name="request_description" rows="3" placeholder="{% trans 'Omschrijf hier de reden van de aanvraag' %}"></textarea>
+    </div>
+  </div>
+
+  <div class="row mt-3">
+    <div class="col text-center">
+      <button type="submit" class="btn btn-primary">Aanvragen</button>
+    </div>
+  </div>
+
+
+</form>
+
+{% radio_selector_modal %}
+
+<script>
+  function radio_selector_callback(btn, data){
+    const card = btn.parentElement; 
+    const hidden_input = card.closest(".radio-widget").querySelector(".hidden-radio-input");
+
+    hidden_input.value = data.tei;
+    card.dataset.tei = data.tei;
+  }
+</script>
+
+{% endblock %}
+
+
+
+{% block extra_script %}
+
+  <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
+  <script src="{% static 'js/radio_card.js' %}"></script>
+
+{% endblock %}

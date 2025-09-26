@@ -8,6 +8,8 @@ from django.utils.translation import gettext as _
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
+from django.db.models import Q
+
 
 from django.db import transaction
 import openpyxl
@@ -108,11 +110,8 @@ class UploadSubscriptionsView(LoginRequiredMixin, PermissionRequiredMixin, Templ
 
 
 
-class VTEIRequestCreateView(View):
+class VTEIRequestCreateView(TemplateView):
     template_name = "astrid/vtei_request.html"
-
-    def get(self, request):
-        return render(request, self.template_name)
 
     def post(self, request):
         try:
@@ -131,14 +130,17 @@ class VTEIRequestCreateView(View):
             if new_radio.is_active:
                 raise(Exception(_("The radio selected as new radio already has a subscription.")))
 
-            requests = Request.objects.filter(old_radio = old_radio, ticket_type__code = "ASTRID_REQUEST").exclude(status__code = "CLOSED")
-            if requests:
-                raise(Exception(_("The old radio has an open request ticket: {tickets}").format(tickets = ", ".join([f"#{r.pk}" for r in requests]))))
+            req = Request.objects.filter((Q(radio=old_radio) | Q(old_radio=old_radio)) & Q(ticket_type__code="ASTRID_REQUEST")).exclude(status__code = "CLOSED").first()
+            if req:
+                ticket_url = reverse("astrid:request_detail", kwargs={"pk": req.pk})
+                radio_url = reverse("radio:detail", kwargs={"pk": old_radio.pk})
+                raise(Exception(_("The <a href='{radio_url}'>radio</a> has an open request ticket: <a href='{ticket_url}'>#{ticket_id}</a>").format(radio_url=radio_url, ticket_url=ticket_url, ticket_id=req.pk)))
 
-            requests = Request.objects.filter(radio = new_radio, ticket_type__code = "ASTRID_REQUEST").exclude(status__code = "CLOSED")
-            if requests:
-                raise(Exception(_("The new radio has an open request ticket: {tickets}").format(tickets = ", ".join([f"#{r.pk}" for r in requests]))))
-
+            req = Request.objects.filter((Q(radio=new_radio) | Q(old_radio=new_radio)) & Q(ticket_type__code="ASTRID_REQUEST")).exclude(status__code = "CLOSED").first()
+            if req:
+                ticket_url = reverse("astrid:request_detail", kwargs={"pk": req.pk})
+                radio_url = reverse("radio:detail", kwargs={"pk": new_radio.pk})
+                raise(Exception(_("The <a href='{radio_url}'>radio</a> has an open request ticket: <a href='{ticket_url}'>#{ticket_id}</a>").format(radio_url=radio_url, ticket_url=ticket_url, ticket_id=req.pk)))
 
             Request.objects.create(
                 request_type = Request.RequestType.VTEI,
@@ -152,6 +154,60 @@ class VTEIRequestCreateView(View):
             messages.success(request, _("VTEI request successful"))
 
   
+        except Exception as e:
+            messages.error(request, str(e))
+
+
+        return redirect(request.path)
+
+
+class ActivationRequestCreateView(TemplateView):
+    template_name = "astrid/activation_request.html"
+
+    def post(self, request):
+        try:
+            radio_pk = request.POST.get("radio")
+
+            if not radio_pk:
+                raise(Exception(_("A radio needs to be selected.")))
+
+            radio = Radio.objects.get(pk=int(radio_pk))
+                
+            if radio.is_active:
+                url = reverse("radio:detail", kwargs={"pk": radio.pk})
+                raise(Exception(_("The selected <a href='{url}'>radio</a> already has a subscription.").format(url=url)))
+
+            issi_val = request.POST.get("issi")
+
+            if not issi_val:
+                raise(Exception(_("A ISSI needs to be provided.")))
+
+            issi = ISSI.objects.get(pk=int(issi_val))
+
+            if hasattr(issi, "subscription"):
+                url = reverse("radio:detail", kwargs={"pk": issi.subscription.radio.pk})
+                raise(Exception(_("The ISSI <a href='{url}'>{issi}</a> is already activated.").format(url=url, issi=issi_val)))
+
+            req = Request.objects.filter((Q(radio=radio) | Q(old_radio=radio)) & Q(ticket_type__code="ASTRID_REQUEST")).exclude(status__code = "CLOSED").first()
+            if req:
+                ticket_url = reverse("astrid:request_detail", kwargs={"pk": req.pk})
+                radio_url = reverse("radio:detail", kwargs={"pk": radio.pk})
+                raise(Exception(_("The <a href='{radio_url}'>radio</a> has an open request ticket: <a href='{ticket_url}'>#{ticket_id}</a>").format(radio_url=radio_url, ticket_url=ticket_url, ticket_id=req.pk)))
+
+            req = Request.objects.filter((Q(old_issi=issi) | Q(new_issi=issi)) & Q(ticket_type__code="ASTRID_REQUEST")).exclude(status__code = "CLOSED").first()
+            if req:
+                ticket_url = reverse("astrid:request_detail", kwargs={"pk": req.pk})
+                raise(Exception(_("The ISSI is already used in an open request ticket: <a href='{ticket_url}'>#{ticket_id}</a>").format(ticket_url=ticket_url, ticket_id=req.pk)))
+
+            Request.objects.create(
+                request_type = Request.RequestType.ACTIVATION,
+                new_issi = issi,
+                radio = radio,
+                description = request.POST.get("request_description"),
+            )
+
+            messages.success(request, _("Activation request successful"))
+
         except Exception as e:
             messages.error(request, str(e))
 
