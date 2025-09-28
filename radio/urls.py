@@ -16,4 +16,8 @@ urlpatterns = [
     path('lookup/', LookupView.as_view(), name='lookup'),
     path('selector/test', TemplateView.as_view(template_name="radio/selector/test.html"), name='selector_test'),
     path('selector/result/<int:pk>/', SelectorResultView.as_view(), name='selector_result'),
+
+    path('image/<int:pk>_<str:type>.png/', QRImageView.as_view(), name='label_image'),
+
+    
 ]

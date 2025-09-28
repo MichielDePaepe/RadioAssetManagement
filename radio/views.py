@@ -1,6 +1,6 @@
 from django.views import View
 from django.views.generic import TemplateView
-from django.http import JsonResponse, Http404, HttpResponseBadRequest
+from django.http import JsonResponse, Http404, HttpResponseBadRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.edit import CreateView
@@ -13,7 +13,7 @@ from django.db import transaction
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.utils.translation import gettext as _
 
-
+from io import BytesIO
 import openpyxl
 import json
 import re
@@ -24,6 +24,7 @@ from .models import *
 from .forms import *
 from printer.models import *
 from .services.printing import RadioPrintingService
+from .services.image_service import ImageGenerator
 
 
 class RadioCardView(View):
@@ -257,4 +258,32 @@ class SelectorResultView(TemplateView):
         return context
 
 
+
+
+class QRImageView(View):
+
+    def get(self, request, pk, type):
+        # get the Radio object
+        radio = Radio.objects.get(pk=pk)
+
+        # map grayscale to black/yellow
+        ig = ImageGenerator(radio)
+
+        img = None
+        if type == "qr":
+            img = ig.qr_image(color_dark=(0, 0, 0), color_light=(255, 255, 0))
+        elif type == "tei_label":
+            img = ig.portable_radio_tei_label(color_dark=(0, 0, 0), color_light=(255, 255, 0))
+        elif type == "mobile_label":
+            img = ig.mobile_radio_label(color_dark=(255,255,255), color_light=(0,102,204))
+        else:
+            return Http404()
+
+        # save image to in-memory bytes buffer
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        buffer.seek(0)
+
+        # return as HttpResponse
+        return HttpResponse(buffer.getvalue(), content_type="image/png")
 
