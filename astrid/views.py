@@ -325,7 +325,7 @@ class RequestDetailView(DetailView):
                     obj.mark_verified(user=request.user, note=note)
 
                 if action == "radio_is_not_working":
-                    obj.mark_verified(user=request.user, note=note)
+                    pass
             
             else:
                 return HttpResponseBadRequest("Invalid POST")
