@@ -21,25 +21,24 @@ class Request(Ticket):
     def new_radio(self):
         return self.radio
 
-    def __str__(self):
-        if self.request_type == self.RequestType.VTEI:
-            return f"VTEI – from {self.old_radio} to {self.new_radio}"
-        elif self.request_type == self.RequestType.VISSI:
-            return f"VISSI – from {self.issi_old} to {self.issi_new} on {self.new_radio}"
-        elif self.request_type == self.RequestType.VISSI_VTEI:
-            return (
-                f"VISSI & VTEI – from {self.issi_old} / {self.old_radio} "
-                f"to {self.issi_new} / {self.new_radio}"
-            )
-        return str(self.request_type)
-
     def save(self, *args, **kwargs):
         astrid_type, created = TicketType.objects.get_or_create(
             code="ASTRID_REQUEST",
             defaults={"name": "Astrid Request"},
         )
         self.ticket_type = astrid_type
-        self.title = str(self)
+
+        title = ""
+        if self.request_type == self.RequestType.VTEI:
+            title = f"VTEI – from {self.old_radio.tei_str} {self.old_radio.model} to {self.new_radio.tei_str} {self.new_radio.model}, ISSI {self.old_issi}"
+        elif self.request_type == self.RequestType.VISSI:
+            title = f"VISSI – from {self.issi_old} to {self.issi_new} on {self.new_radio.tei_str} {self.new_radio.model}"
+        elif self.request_type == self.RequestType.VISSI_VTEI:
+            title = f"VISSI & VTEI - from {self.old_radio.tei_str} {self.old_radio.model}, ISSI {self.old_issi} to {self.new_radio.tei_str} {self.new_radio.model}, ISSI {self.new_issi}"
+        elif self.request_type == self.RequestType.ACTIVATION:
+            title = f"Activation - {self.new_radio.tei_str} {self.new_radio.model} with ISSI {self.new_issi}"
+
+        self.title = title
 
         super().save(*args, **kwargs)
 
