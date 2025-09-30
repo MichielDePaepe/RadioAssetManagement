@@ -1,0 +1,24 @@
+<!-- radio/selector/input.html -->
+{% load static i18n %}
+
+<div class="mb-3">
+  <div class="input-group">
+    <input type="text" id="radio-issi" class="form-control" placeholder="ISSI">
+    <button type="button" class="btn btn-primary search-btn" id="search-issi-btn" data-type="issi">Zoek</button>
+  </div>
+  <div class="form-text text-danger" id="error-issi"></div>
+</div>
+
+<div class="mb-3">
+  <div class="input-group">
+    <input type="text" id="radio-tei" class="form-control" placeholder="TEI">
+    <button type="button" class="btn btn-primary search-btn" id="search-tei-btn" data-type="tei">Zoek</button>
+  </div>
+  <div class="form-text text-danger" id="error-tei"></div>
+</div>
+
+<div class="mb-3">
+  <input type="text" id="radio-selector-scanner-input">
+  <button type="button" class="btn btn-success w-100" id="scan-btn" data-type="qr"><i class="bi bi-qr-code"></i> Start scanner</button>
+  <div class="form-text text-danger" id="error-qr"></div>
+</div>

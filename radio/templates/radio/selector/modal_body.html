@@ -1,0 +1,230 @@
+<!-- radio/selector/modal_body.html -->
+{% load static i18n %}
+
+
+{% csrf_token %}
+
+<!-- STEP 1: Inputs -->
+<div id="inputs">
+  {% include "radio/selector/input.html" %}
+</div>
+
+<!-- STEP 2: Resultaat -->
+<div id="result" class="mt-3" style="display:none;"></div>
+
+<!-- Java Script -->
+<script src="{% static 'js/scanner.js' %}"></script>
+
+
+
+<script>
+
+// --- Scanner initialization ---
+const scanner = new Scanner({
+  inputId: "radio-selector-scanner-input",
+  onScan: handleScanResponse
+});
+
+// --- Determine if this is a modal or static card ---
+const isStatic = {{ static|yesno:"true,false" }};
+let containerElement = null; // general container for modal or card
+let modalElement = null;     // modal element, only used if !isStatic
+let autoConfirm = {{ auto_confirm|yesno:"true,false" }};
+
+// --- Inputs / Results elements ---
+const inputsDiv = document.getElementById("inputs");
+const resultDiv = document.getElementById("result");
+
+// --- Current button & callback ---
+let currentButton = null;
+let currentCallback = null;
+
+
+document.addEventListener("DOMContentLoaded", function() {
+   
+{% if not static %}
+
+  // Modal case
+  modalElement = document.getElementById("radioSelectorModal");
+  containerElement = modalElement;
+
+  const bsInstance = new bootstrap.Modal(modalElement);
+
+  // Show modal if needed
+  if (modalElement.dataset.showOnLoad === "true") {
+      bsInstance.show();
+  }
+
+  // Reset modal when shown/hidden
+  modalElement.addEventListener('shown.bs.modal', () => { resertToInputs(); stop_scanning(); });
+  modalElement.addEventListener('hidden.bs.modal', () => { resertToInputs(); stop_scanning(); });
+
+
+  // --- Handle buttons that open the selector ---
+  document.querySelectorAll(".open-radio-selector-modal").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const callbackName = btn.dataset.callback;
+      if (callbackName && window[callbackName]) {
+        currentCallback = window[callbackName];
+      } else if (window.radio_selector_callback) {
+        currentCallback = window.radio_selector_callback;
+      } else {
+        console.error("No callback function found");
+        currentCallback = null;
+      }
+      currentButton = btn;
+    });
+  });
+
+{% else %}
+
+  // Static card case
+  containerElement = document.getElementById("radioSelectorCard");
+
+  callbackName = '{{ callback }}';
+  if (callbackName && window[callbackName]) {
+    currentCallback = window[callbackName];
+  } else {
+    console.error("No callback function found");
+    currentCallback = null;
+  }
+
+{% endif %}
+
+});
+
+
+
+
+// --- Reset function ---
+function resertToInputs() {
+  inputsDiv.style.display = "block";
+  resultDiv.style.display = "none";
+  resultDiv.innerHTML = "";
+  document.getElementById("radio-issi").value = "";
+  document.getElementById("radio-tei").value = "";
+  document.getElementById("error-issi").textContent = "";
+  document.getElementById("error-tei").textContent = "";
+  document.getElementById("error-qr").textContent = "";
+}
+
+
+// Handle clicking the search buttons (ISSI / TEI)
+document.querySelectorAll(".search-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const type = btn.dataset.type;
+    const input = document.getElementById(`radio-${type}`);
+    const errorDiv = document.getElementById(`error-${type}`);
+
+    errorDiv.textContent = "";
+    resultDiv.innerHTML = "";
+
+    const value = input.value.trim();
+    if (!value) {
+        errorDiv.textContent = "{% trans 'Vul een waarde in.' %}";
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("type", type);
+    formData.append("value", value);
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    try {
+      const res = await fetch("{% url 'radio:lookup' %}", {
+          method: "POST",
+          headers: { "X-CSRFToken": csrfToken },
+          body: formData
+      });
+      const data = await res.json();
+
+      if (data.status === "success") {
+        // Display the result page
+        loadSelectorResult(data);
+      } else {
+        errorDiv.textContent = data.message;
+      }
+    } catch (err) {
+      errorDiv.textContent = "{% trans 'Er is een fout opgetreden bij het zoeken.' %}";
+      console.error(err);
+    }
+  });
+});
+
+// Start scanning process and update button state
+function start_scanning() {
+  const btn = document.getElementById("scan-btn");
+  btn.classList.remove("btn-success");
+  btn.classList.add("btn-danger");
+  btn.innerHTML = '<i class="bi bi-record-circle"></i> Scanning';
+  scanner.start();
+}
+
+// Stop scanning and reset button state
+function stop_scanning() {
+  const btn = document.getElementById("scan-btn");
+  btn.classList.remove("btn-danger");
+  btn.classList.add("btn-success");
+  btn.innerHTML = '<i class="bi bi-qr-code"></i> Start scanner';
+  scanner.stop();
+}
+
+// Toggle scanning when scan button is clicked
+document.getElementById("scan-btn").addEventListener("click", e => {
+  if (!scanner.is_scanning) {
+    start_scanning();
+  } else {
+    stop_scanning();
+  }
+});
+
+// Handle QR scan result
+function handleScanResponse(data) {
+  stop_scanning();
+  console.log(data);
+  if (data.status === "ok") {
+    loadSelectorResult(data);
+  } else {
+    document.getElementById("error-qr").textContent = data.message;
+  }
+}
+
+// --- Load result ---
+function loadSelectorResult(data) {
+
+  if (autoConfirm && currentCallback) {
+    currentCallback(currentButton, data);
+    modalElement && bootstrap.Modal.getInstance(modalElement)?.hide();
+    return;
+  }
+
+  const resultUrlTemplate = "{% url 'radio:selector_result' pk=0 %}";
+  const resultUrl = resultUrlTemplate.replace('0', data.TEI);
+
+  inputsDiv.style.display = "none";
+  resultDiv.style.display = "block";
+
+  fetch(resultUrl)
+    .then(res => res.text())
+    .then(html => resultDiv.innerHTML = html)
+    .catch(err => console.error("Fetch error:", err));
+}
+
+
+// Handle clicks on the result buttons (confirm / cancel)
+resultDiv.addEventListener("click", e => {
+  if (e.target.id === "cancel-radio") {
+    resertToInputs();
+  } else if (e.target.id === "confirm-radio") {
+    if (currentCallback) currentCallback(currentButton, e.target.dataset);
+
+    // Hide modal if it's a modal
+    if (!isStatic && modalElement) {
+      bootstrap.Modal.getInstance(modalElement)?.hide();
+    }
+  }
+});
+
+
+</script>

@@ -4,9 +4,17 @@ register = template.Library()
 
 
 @register.inclusion_tag('radio/selector/modal.html')
-def radio_selector_modal(title="Radio zoeken"):
+def radio_selector_modal(
+    title="Radio zoeken",
+    static=False,
+    auto_confirm=False,
+    callback="radio_selector_callback",
+):
     return {
         'title': title,
+        'static': static,
+        'auto_confirm': auto_confirm,
+        'callback': callback,
     }
 
 
