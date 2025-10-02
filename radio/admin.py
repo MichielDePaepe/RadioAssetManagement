@@ -107,6 +107,7 @@ class RadioAdmin(admin.ModelAdmin):
         'subscription__issi__customer',
         RadioOwnerFilter, 
         HasSubscriptionFilter,
+        'model__radio_type',
     )
     readonly_fields = ('model', )
 
@@ -203,3 +204,38 @@ class DisciplineAdmin(admin.ModelAdmin):
 class ISSIDisciplineRangeAdmin(admin.ModelAdmin):
     list_display = ('discipline', 'min_issi', 'max_issi')
 
+
+# admin.py
+from django.contrib import admin
+from .models import RadioDecommissioningTicket
+
+
+@admin.register(RadioDecommissioningTicket)
+class RadioDecommissioningTicketAdmin(admin.ModelAdmin):
+    """
+    Admin view for RadioDecommissioningTicket.
+    """
+
+    list_display = (
+        "id",
+        "title",
+        "radio",
+        "ticket_type",
+        "status",
+        "created_at",
+        "updated_at",
+    )
+    list_filter = ("status", "ticket_type", "created_at")
+    search_fields = ("title", "radio__tei_str", "radio__issi")
+    readonly_fields = ("ticket_type", "created_at", "updated_at")
+
+    fieldsets = (
+        (None, {"fields": ("title", "radio", "description", "status")}),
+        ("Ticket info", {"fields": ("ticket_type", "created_at", "updated_at")}),
+    )
+
+    def save_model(self, request, obj, form, change):
+        """
+        Ensure proper handling when saving from the admin interface.
+        """
+        obj.save()

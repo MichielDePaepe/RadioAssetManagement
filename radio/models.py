@@ -1,4 +1,7 @@
 from django.db import models
+from helpdesk.models import Ticket, TicketType
+from django.utils.translation import gettext_lazy as _
+
 
 
 class Radio(models.Model):
@@ -41,8 +44,18 @@ class Radio(models.Model):
         return tei
 
 class RadioModel(models.Model):
+    class RadioType(models.TextChoices):
+        PORTABLE = "PORTABLE", "Portable"
+        MOBILE = "MOBILE", "Mobile"
+
     name = models.CharField(max_length=100, blank=True)
     is_atex = models.BooleanField(default=False)
+    radio_type = models.CharField(
+        max_length=10,
+        choices=RadioType.choices,
+        default=RadioType.PORTABLE,
+    )
+
 
     def __str__(self):
         return self.name
@@ -131,4 +144,38 @@ class Subscription(models.Model):
         ]
 
 
+class RadioDecommissioningTicket(Ticket):
+    """
+    Ticket subclass for decommissioning a radio.
+    """
+
+    def save(self, *args, **kwargs):
+        # Ensure a radio is attached to the ticket
+        if not hasattr(self, "radio") or self.radio is None:
+            raise ValueError("RadioDecommissioningTicket requires a 'radio' instance.")
+
+        # Ensure the correct TicketType exists
+        decommissioning_type, _ = TicketType.objects.get_or_create(
+            code="DECOMMISSIONING",
+            defaults={"name_en": "Decommissioning"},
+        )
+        self.ticket_type = decommissioning_type
+
+        # Only set the title on creation, not on every update
+        if not self.pk:
+            self.title = f"Decommissioning of a {self.radio.model} witgh TEI {self.radio.tei_str}"
+
+        super().save(*args, **kwargs)
+
+    class Meta:
+        permissions = [
+            (
+                "can_create_decommission_requests",
+                _("Can create a decommission request"),
+            ),
+            (
+                "can_approve_decommission_requests",
+                _("Can approve a decommission request"),
+            ),
+        ]
 

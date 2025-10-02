@@ -34,10 +34,13 @@
               <i class="fa fa-walkie-talkie"></i> Radio
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="radioDropdown">
+              <li><a class="dropdown-item" href="{% url 'radio:find' %}"><i class="bi bi-search"></i> {% trans "Find" %}</a></li>
               {% if perms.radio.add_radio %}
               <li><a class="dropdown-item" href="{% url 'radio:create' %}"><i class="bi bi-plus-circle"></i> {% trans "Add radio" %}</a></li>
               {% endif %}
-              <li><a class="dropdown-item" href="{% url 'radio:find' %}"><i class="bi bi-search"></i> {% trans "Find" %}</a></li>
+              {% if perms.radio.can_create_decommission_requests %}
+              <li><a class="dropdown-item" href="{% url 'radio:decommissioning_request' %}"><i class="bi bi-slash-circle"></i> {% trans "Decommissioning request" %}</a></li>
+              {% endif %}
             </ul>
           </li>
         {% endif %} 

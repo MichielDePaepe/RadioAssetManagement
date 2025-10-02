@@ -19,5 +19,6 @@ urlpatterns = [
 
     path('image/<int:pk>_<str:type>.png/', QRImageView.as_view(), name='label_image'),
 
-    
+    path("decommissioning/request/", DecommissioningRequestView.as_view(), name="decommissioning_request"),
+
 ]

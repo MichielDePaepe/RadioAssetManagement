@@ -64,7 +64,7 @@ class Request(Ticket):
     def set_open(self, user=None, note=""):
         in_progress, created = TicketStatus.objects.get_or_create(
             code="IN_PROGRESS",
-            defaults={"name": "In progress"},
+            defaults={"name_en": "In progress"},
         )
         TicketLog.objects.create(
             ticket=self,
@@ -77,7 +77,7 @@ class Request(Ticket):
     def start_execution(self, user=None, note=""):
         in_progress, created = TicketStatus.objects.get_or_create(
             code="IN_PROGRESS",
-            defaults={"name": "In progress"},
+            defaults={"name_en": "In progress"},
         )
         TicketLog.objects.create(
             ticket=self,
@@ -89,7 +89,7 @@ class Request(Ticket):
     def mark_waiting_verification(self, user=None, note=""):
         waiting, created = TicketStatus.objects.get_or_create(
             code="WAITING_VERIFICATION",
-            defaults={"name": "Waiting for verification"},
+            defaults={"name_en": "Waiting for verification"},
         )
         TicketLog.objects.create(
             ticket=self,
@@ -101,7 +101,7 @@ class Request(Ticket):
     def mark_verified(self, user=None, note=""):
         closed, created = TicketStatus.objects.get_or_create(
             code="CLOSED",
-            defaults={"name": "Closed"},
+            defaults={"name_en": "Closed"},
         )
         
         if self.request_type == self.RequestType.VTEI:
@@ -131,7 +131,7 @@ class Request(Ticket):
     def mark_closed(self, user=None, note=""):
         closed, created = TicketStatus.objects.get_or_create(
             code="CLOSED",
-            defaults={"name": "Closed"},
+            defaults={"name_en": "Closed"},
         )
         TicketLog.objects.create(
             ticket=self,

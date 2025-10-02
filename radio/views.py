@@ -12,6 +12,9 @@ from django.contrib import messages
 from django.db import transaction
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.utils.translation import gettext as _
+from django.core.exceptions import PermissionDenied
+from django.db.models import Q
+
 
 from io import BytesIO
 import openpyxl
@@ -21,6 +24,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .models import *
+from astrid.models import Request
 from .forms import *
 from printer.models import *
 from .services.printing import RadioPrintingService
@@ -287,3 +291,69 @@ class QRImageView(View):
         # return as HttpResponse
         return HttpResponse(buffer.getvalue(), content_type="image/png")
 
+
+
+class DecommissioningRequestView(PermissionRequiredMixin, TemplateView):
+    template_name = "radio/decommissioning_request.html"
+    permission_required ="radio.can_create_decommission_requests"
+
+    def post(self, request):
+        try:
+
+            # Get the selected radio primary key from the POST data
+            radio_pk = request.POST.get("radio")
+
+            # A radio must be selected, otherwise raise an exception
+            if not radio_pk:
+                raise Exception(_("A radio needs to be selected."))
+
+            # Fetch the radio object from the database
+            radio = Radio.objects.get(pk=int(radio_pk))
+
+            radio_url = reverse("radio:detail", kwargs={"pk": radio.pk})
+
+            # Prevent decommissioning of an active radio
+            if radio.is_active:
+                url = reverse("radio:detail", kwargs={"pk": radio.pk})
+                raise Exception(_("The selected <a href='{url}'>radio</a> is still active.").format(url=url))
+
+            # Check if there is already an open ASTRID request ticket linked to this radio
+            req = Request.objects.filter(
+                (Q(radio=radio) | Q(old_radio=radio)) & Q(ticket_type__code="ASTRID_REQUEST")
+            ).exclude(status__code="CLOSED").first()
+
+            if req:
+                ticket_url = reverse("astrid:request_detail", kwargs={"pk": req.pk})
+                raise Exception(
+                    _("The <a href='{radio_url}'>radio</a> has an open request ticket: <a href='{ticket_url}'>#{ticket_id}</a>")
+                    .format(radio_url=radio_url, ticket_url=ticket_url, ticket_id=req.pk)
+                )
+
+            # Check if there is already an open DECOMMISSIONING request ticket linked to this radio
+            req = Request.objects.filter(radio=radio, ticket_type__code="DECOMMISSIONING").exclude(status__code="CLOSED").first()
+            if req:
+                raise Exception(_("There is an open decommissioning request (#{ticket_id}) for this <a href='{url}'>radio</a>").format(ticket_id=req.pk, url=radio_url))
+            
+            # Check if there is a description
+            description = request.POST.get("description")
+            if not description:
+                raise Exception(_("A reason for the decommissioning request is required."))
+
+            # If no conflicts are found, create a new decommissioning request
+            RadioDecommissioningTicket.objects.create(
+                radio=radio,
+                description=description,
+            )
+
+            # Show a success message to the user
+            messages.success(request, _("Decommissioning request successful"))
+
+        except PermissionDenied as e:
+            # Permission error -> return 403
+            raise
+        except Exception as e:
+            # Catch all raised exceptions and show them as error messages
+            messages.error(request, str(e))
+
+        # Redirect back to the same page after handling the request
+        return redirect(request.path)

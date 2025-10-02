@@ -46,7 +46,7 @@ def get_default_status():
 
 
 class Ticket(models.Model):
-    radio = models.ForeignKey(Radio, on_delete=models.CASCADE, related_name="tickets")
+    radio = models.ForeignKey("radio.Radio", on_delete=models.CASCADE, related_name="tickets")
     ticket_type = models.ForeignKey(TicketType, on_delete=models.CASCADE, related_name="tickets")
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
