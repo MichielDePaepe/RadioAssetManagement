@@ -20,13 +20,13 @@
             <i class="bi bi-list-check"></i> {% trans "Inventory" %}
           </a>
         </li>
-
+<!--
         <li class="nav-item">
           <a class="nav-link" href="{% url 'inventory:posts_list' %}">
             <i class="bi bi-qr-code-scan"></i> {% trans "Scanner" %}
           </a>
         </li>
-
+-->
 
         {% if user.is_authenticated %}
           <li class="nav-item dropdown">
@@ -39,7 +39,9 @@
               <li><a class="dropdown-item" href="{% url 'radio:create' %}"><i class="bi bi-plus-circle"></i> {% trans "Add radio" %}</a></li>
               {% endif %}
               {% if perms.radio.can_create_decommission_requests %}
-              <li><a class="dropdown-item" href="{% url 'radio:decommissioning_request' %}"><i class="bi bi-slash-circle"></i> {% trans "Decommissioning request" %}</a></li>
+              <!--
+                <li><a class="dropdown-item" href="{% url 'radio:decommissioning_request' %}"><i class="bi bi-slash-circle"></i> {% trans "Decommissioning request" %}</a></li>
+              -->
               {% endif %}
             </ul>
           </li>
