@@ -73,7 +73,7 @@ class ImageGenerator:
         qr.add_data(url)
         qr.make(fit=True)
 
-        qr_px = self.mm_to_px(18-2)
+        qr_px = 234
 
         img_qr = qr.make_image(fill_color="black", back_color="white").convert("RGB").resize((qr_px, qr_px))
 

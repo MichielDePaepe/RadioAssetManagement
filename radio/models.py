@@ -28,7 +28,11 @@ class Radio(models.Model):
 
     @property
     def is_active(self):
-        return self.subscription.active if hasattr(self, 'subscription') else False
+        return self.subscription.active and not self.subscription.DMO_only if hasattr(self, 'subscription') else False
+
+    @property
+    def is_DMO_only(self):
+        return self.subscription.DMO_only if hasattr(self, 'subscription') else False
 
     def save(self, *args, **kwargs):
         matching_range = TEIRange.objects.filter(min_tei__lte=self.TEI, max_tei__gte=self.TEI).first()
@@ -136,6 +140,7 @@ class Subscription(models.Model):
     issi = models.OneToOneField(ISSI, on_delete=models.CASCADE, related_name="subscription")
     astrid_alias = models.CharField(max_length=100, blank=True)
     active = models.BooleanField(default=True)
+    DMO_only = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('radio', 'issi')

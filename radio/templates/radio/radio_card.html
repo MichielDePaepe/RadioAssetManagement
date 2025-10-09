@@ -34,7 +34,11 @@
     <div class="card-body text-center">
 
       {% if not radio.is_active %}
-        <span class="badge bg-warning text-dark">Niet actief</span>
+        <span class="badge bg-danger">{% trans "Niet actief" %}</span>
+      {% endif %}
+
+      {% if not radio.is_DMO_only %}
+        <span class="badge bg-info">{% trans "DMO only" %}</span>
       {% endif %}
       
       {% if radio.inventory_entries.all %}

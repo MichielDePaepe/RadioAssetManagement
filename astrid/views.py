@@ -43,7 +43,7 @@ class UploadSubscriptionsView(LoginRequiredMixin, PermissionRequiredMixin, Templ
                 excel_subs = set()
 
                 # Get existing subscriptions linked to owned customers (TEI, ISSI pairs)
-                existing_subs = set(Subscription.objects.filter(issi__customer__owner = True).values_list('radio__TEI', 'issi__number'))
+                existing_subs = set(Subscription.objects.filter(issi__customer__owner=True, DMO_only=False).values_list('radio__TEI', 'issi__number'))
 
                 # Iterate through each row in the Excel file
                 for row in ws.iter_rows(min_row=2):

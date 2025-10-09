@@ -45,6 +45,8 @@
         <td>
           {% if radio.is_active %}
             <span class="badge bg-success">{% trans "Actief" %}</span>
+          {% elif radio.is_DMO_only %}
+            <span class="badge bg-info">{% trans "DMO only" %}</span>
           {% elif radio.decommissioned %}
             <span class="badge bg-warning">{% trans "Decommissioned" %}</span>
           {% else %}
