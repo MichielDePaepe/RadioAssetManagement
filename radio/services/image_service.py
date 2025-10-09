@@ -49,14 +49,14 @@ class ImageGenerator:
     def mm_to_pt(self, mm):
         return mm * 72 / 25.4
 
-    def add_padding(self, img, target_height):
-        """Add white padding above and below to reach target height"""
-        if img.height >= target_height:
-            return img  # already tall enough
+    def add_padding(self, img, target_width):
+        """Add white padding left and right to reach target width"""
+        if img.width >= target_width:
+            return img  # already wide enough
 
-        new_img = Image.new("RGB", (img.width, target_height), "white")
-        top_padding = (target_height - img.height) // 2
-        new_img.paste(img, (0, top_padding))
+        new_img = Image.new("RGB", (target_width, img.height), "white")
+        left_padding = (target_width - img.width) // 2
+        new_img.paste(img, (left_padding, 0))
         return new_img
 
     
@@ -73,7 +73,7 @@ class ImageGenerator:
         qr.add_data(url)
         qr.make(fit=True)
 
-        qr_px = 234
+        qr_px = 234 - self.mm_to_px(1.5)
 
         img_qr = qr.make_image(fill_color="black", back_color="white").convert("RGB").resize((qr_px, qr_px))
 
