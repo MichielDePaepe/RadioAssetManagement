@@ -27,6 +27,6 @@ class RadioPrintingService:
     def print_mobile_label(self, copies=1):
         img = self.image_generator.mobile_radio_label()        
 
-        self.printer.print(type="12", images=[label_img.rotate(90, expand=True)] * int(copies))
+        self.printer.print(type="12", images=[img.rotate(90, expand=True)] * int(copies))
 
         return f"Mobile radio label has been send to printer {self.printer.name}."
