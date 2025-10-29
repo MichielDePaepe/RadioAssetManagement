@@ -120,7 +120,7 @@
       </div>
 
       <!-- Mobile -->
-      {% if radio.is_active and radio.model.radio_type == 'MOBILE' %}
+      {% if radio.is_active or radio.is_DMO_only and radio.model.radio_type == 'MOBILE' %}
       <div class="d-flex justify-content-between align-items-center mb-2">
         <img src="{% url 'radio:label_image' radio.pk 'mobile_label' %}" alt="Mobile Label" class="img-fluid border" style="height:45px; width:auto;">
         <button type="submit" name="action" value="label" class="btn btn-primary btn-print">
