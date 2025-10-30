@@ -32,7 +32,7 @@ class Request(Ticket):
         if self.request_type == self.RequestType.VTEI:
             title = f"VTEI – from {self.old_radio.tei_str} {self.old_radio.model} to {self.new_radio.tei_str} {self.new_radio.model}, ISSI {self.old_issi}"
         elif self.request_type == self.RequestType.VISSI:
-            title = f"VISSI – from {self.issi_old} to {self.issi_new} on {self.new_radio.tei_str} {self.new_radio.model}"
+            title = f"VISSI – from {self.old_issi} to {self.new_issi} on {self.new_radio.tei_str} {self.new_radio.model}"
         elif self.request_type == self.RequestType.VISSI_VTEI:
             title = f"VISSI & VTEI - from {self.old_radio.tei_str} {self.old_radio.model}, ISSI {self.old_issi} to {self.new_radio.tei_str} {self.new_radio.model}, ISSI {self.new_issi}"
         elif self.request_type == self.RequestType.ACTIVATION:
@@ -51,11 +51,11 @@ class Request(Ticket):
                 errors["old_radio"] = _("Both old and new radio must be set for VTEI.")
 
         elif self.request_type == self.RequestType.VISSI:
-            if not self.issi_old or not self.issi_new or not self.new_radio:
+            if not self.old_issi or not self.new_issi or not self.new_radio:
                 errors["old_radio"] = _("ISSI old, ISSI new and radio must be set for VISSI.")
 
         elif self.request_type == self.RequestType.VISSI_VTEI:
-            if not (self.radio_old and self.new_radio and self.issi_old and self.issi_new):
+            if not (self.old_radio and self.new_radio and self.old_issi and self.new_issi):
                 errors["old_radio"] = _("All radio and ISSI fields must be set for VISSI & VTEI.")
 
         if errors:
