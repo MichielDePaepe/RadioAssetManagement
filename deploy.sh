@@ -2,13 +2,14 @@
 # ============================================================
 # Production deployment script
 # ------------------------------------------------------------
-# 1. Updates code from origin
-# 2. Installs dependencies
-# 3. Runs migrations and collects static files
-# 4. Restarts Django (Supervisor) and Nginx
+# 1. Checks if local code is behind origin/main
+# 2. If yes, pulls updates, reinstalls dependencies,
+#    runs migrations, collects static files,
+#    and restarts Django + Nginx
+# 3. If no updates are needed, it exits gracefully.
 # ------------------------------------------------------------
 # NOTE:
-#   - This script is allowed only in production (ENVIRONMENT=prod)
+#   - This script may only run in production (ENVIRONMENT=prod)
 # ============================================================
 
 # Load environment variables from .env if present
@@ -29,11 +30,23 @@ fi
 
 source ../bin/activate
 
-# Fetch latest code and reset to remote
+echo "🔍 Checking for updates..."
 git fetch origin
+
+LOCAL_HASH=$(git rev-parse HEAD)
+REMOTE_HASH=$(git rev-parse origin/main)
+
+if [ "$LOCAL_HASH" = "$REMOTE_HASH" ]; then
+  echo "✅ Already up to date. No deployment needed."
+  exit 0
+fi
+
+echo "⬇️  Updates found — deploying latest version..."
+
+# Reset to the latest version from origin
 git reset --hard origin/main
 
-# Install dependencies
+# Install updated dependencies
 pip install -r requirements.txt
 
 # Apply migrations and collect static files
@@ -44,7 +57,4 @@ python manage.py collectstatic --noinput
 sudo supervisorctl restart django
 sudo systemctl restart nginx
 
-echo "✅ Deployment completed successfully on production."
-
-
-
+echo "🚀 Deployment completed successfully."
