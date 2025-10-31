@@ -42,7 +42,11 @@ class TicketStatus(models.Model):
 
 
 def get_default_status():
-    return TicketStatus.objects.get(default=True).pk
+    try:
+        return TicketStatus.objects.get(default=True).pk
+    except TicketStatus.DoesNotExist:
+        return None
+
 
 
 class Ticket(models.Model):
