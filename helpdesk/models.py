@@ -50,13 +50,18 @@ def get_default_status():
 
 
 class Ticket(models.Model):
+    class TicketPriority(models.TextChoices):
+        LOW = "low", "Low"
+        MEDIUM = "medium", "Medium"
+        HIGH = "high", "High"
+
     radio = models.ForeignKey("radio.Radio", on_delete=models.CASCADE, related_name="tickets")
     ticket_type = models.ForeignKey(TicketType, on_delete=models.CASCADE, related_name="tickets")
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
 
     status = models.ForeignKey(TicketStatus, on_delete=models.PROTECT, related_name="tickets", default=get_default_status)
-    priority = models.CharField(max_length=10, choices=[("low","Low"),("medium","Medium"),("high","High")], default="medium")
+    priority = models.CharField(max_length=10, choices=TicketPriority.choices, default=TicketPriority.MEDIUM)
     external_reference = models.CharField(max_length=100, blank=True, null=True)
     siamu_ticket = models.CharField(max_length=100, blank=True, null=True)
 

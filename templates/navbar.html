@@ -86,6 +86,19 @@
 
         {% if user.is_authenticated %}
           <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="helpdeskDropdown" role="button" data-bs-toggle="dropdown">
+              <i class="bi bi-life-preserver"></i> Helpdesk
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="helpdeskDropdown">
+              <li><a class="dropdown-item" href="{% url 'helpdesk:ticket_list' %}">
+                <i class="bi bi-list-ul"></i> {% trans "Ticket overview" %}
+              </a></li>
+            </ul>
+          </li>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+          <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
               <i class="bi bi-person-circle"></i> {{ user.username }}
             </a>

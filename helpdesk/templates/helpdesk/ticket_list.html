@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+
+
+{% block content %}
+{% load i18n %}
+
+
+<div class="container-fluid mt-4">
+
+  <h1 class="mb-3">Helpdesk</h1>
+
+  <div class="row">
+    <div class="col-md">
+      <table class="table table-hover table-sm align-middle">
+<thead class="table-light align-middle">
+  <tr>
+    {% for col, label in columns %}
+      <th scope="col" class="text-nowrap">
+        {% if current_sort == col %}
+          <a href="?sort=-{{ col }}
+             {% if prio_selected %}&priority={{ prio_selected }}{% endif %}
+             {% if type_selected %}&type={{ type_selected }}{% endif %}
+             {% if status_selected %}&status={{ status_selected }}{% endif %}"
+             class="text-decoration-none text-dark fw-semibold d-flex justify-content-between align-items-center">
+            <span>{{ label }}</span>
+            <i class="bi bi-caret-up-fill text-secondary"></i>
+          </a>
+        {% elif current_sort == '-'|add:col %}
+          <a href="?sort={{ col }}
+             {% if prio_selected %}&priority={{ prio_selected }}{% endif %}
+             {% if type_selected %}&type={{ type_selected }}{% endif %}
+             {% if status_selected %}&status={{ status_selected }}{% endif %}"
+             class="text-decoration-none text-dark fw-semibold d-flex justify-content-between align-items-center">
+            <span>{{ label }}</span>
+            <i class="bi bi-caret-down-fill text-secondary"></i>
+          </a>
+        {% else %}
+          <a href="?sort={{ col }}
+             {% if prio_selected %}&priority={{ prio_selected }}{% endif %}
+             {% if type_selected %}&type={{ type_selected }}{% endif %}
+             {% if status_selected %}&status={{ status_selected }}{% endif %}"
+             class="text-decoration-none text-dark fw-semibold d-flex justify-content-between align-items-center">
+            <span>{{ label }}</span>
+            <i class="bi bi-caret-down text-muted opacity-25"></i>
+          </a>
+        {% endif %}
+      </th>
+    {% endfor %}
+  </tr>
+</thead>
+
+        <tbody>
+          {% for t in tickets %}
+          <tr>
+            <td>
+              {% if t.ticket_type.code == "ASTRID_REQUEST" %}
+                <a href="{% url 'astrid:request_detail' t.pk %}">#{{ t.id }}</a>
+              {% else %}
+                <a href="{% url 'helpdesk:ticket_detail' t.pk %}">#{{ t.id }}</a>
+              {% endif %}
+            </td>
+            <td>{{ t.title }}</td>
+            <td>{{ t.ticket_type.name }}</td>
+            <td>{{ t.status.name }}</td>
+            <td>{{ t.get_priority_display }}</td>
+            <td>
+              <time class="timeago" datetime="{{ t.updated_at|date:'c' }}">
+                {{ t.updated_at|date:"Y-m-d H:i" }}
+              </time>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center text-muted">Geen tickets gevonden.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_script %}
+
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.full.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const lang = "{{ request.LANGUAGE_CODE|default:'en' }}".split('-')[0];
+  timeago.render(document.querySelectorAll('.timeago'), lang);
+});
+
+</script>
+{% endblock %}

@@ -266,8 +266,14 @@ class RequestOverviewView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["requests"] = Request.objects.filter(ticket_type__code = "ASTRID_REQUEST").exclude(status__code = "CLOSED")
+        context["requests"] = (
+            Request.objects
+            .filter(ticket_type__code="ASTRID_REQUEST")
+            .exclude(status__code="CLOSED")
+            .order_by("-id")
+        )
         return context
+
 
 
 class RequestDetailView(DetailView):
