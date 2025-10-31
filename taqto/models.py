@@ -11,4 +11,3 @@ class Permissions(models.Model):
             ("tacto_user", "Is allowed to use taqto"),
             ("can_download_contacts", "Can download contacts CSV"),
         ]
-        app_label = "auth"
