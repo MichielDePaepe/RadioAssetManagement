@@ -4,14 +4,11 @@
 {% block content %}
 
 <h1 class="mb-3">
-	{% blocktrans with type=object.request_type id=object.id %}
-		{{ type }} request #{{ id }}
-	{% endblocktrans %}
+  {% blocktrans with type=object.request_type id=object.id %}
+    {{ type }} request #{{ id }}
+  {% endblocktrans %}
 </h1>
 <hr>
-
-
-
 
 <div class="container-fluid" style="max-width: 600px;">
 
@@ -26,11 +23,14 @@
   {% if object.siamu_ticket %}
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "SIAMU ticket" %}:</strong>
-    <div class="flex-grow-1">
-      <a href="http://helpdesk.firebru2k8.local/helpdesk/ticket.aspx?tid={{ object.siamu_ticket }}"
-         target="_blank" class="text-decoration-none">
-        #{{ object.siamu_ticket }}
-      </a>
+    <div class="position-relative flex-grow-1">
+      <input type="text"
+             class="form-control copy-field"
+             value="#{{ object.siamu_ticket }}"
+             data-copy-value="http://helpdesk.firebru2k8.local/helpdesk/ticket.aspx?tid={{ object.siamu_ticket }}"
+             readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
+         style="cursor:pointer"></i>
     </div>
   </div>
   {% endif %}
@@ -40,8 +40,13 @@
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "TEI oude radio" %}:</strong>
     <div class="position-relative flex-grow-1">
-      <input type="text" class="form-control copy-field" value="{{ object.old_radio.tei_str }}" readonly>
-      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+      <input type="text"
+             class="form-control copy-field"
+             value="{{ object.old_radio.tei_str }}"
+             data-copy-value="{{ object.old_radio.tei_str }}"
+             readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
+         style="cursor:pointer"></i>
     </div>
   </div>
   {% endif %}
@@ -51,8 +56,13 @@
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "ISSI oude radio" %}:</strong>
     <div class="position-relative flex-grow-1">
-      <input type="text" class="form-control copy-field" value="{{ object.old_issi.number }}" readonly>
-      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+      <input type="text"
+             class="form-control copy-field"
+             value="{{ object.old_issi.number }}"
+             data-copy-value="{{ object.old_issi.number }}"
+             readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
+         style="cursor:pointer"></i>
     </div>
   </div>
   {% endif %}
@@ -61,8 +71,13 @@
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "TEI nieuwe radio" %}:</strong>
     <div class="position-relative flex-grow-1">
-      <input type="text" class="form-control copy-field" value="{{ object.new_radio.tei_15_str }}" readonly>
-      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+      <input type="text"
+             class="form-control copy-field"
+             value="{{ object.new_radio.tei_str }}"
+             data-copy-value="{{ object.new_radio.tei_15_str }}"
+             readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
+         style="cursor:pointer"></i>
     </div>
   </div>
 
@@ -70,8 +85,13 @@
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">ISSI:</strong>
     <div class="position-relative flex-grow-1">
-      <input type="text" class="form-control copy-field" value="{{ object.new_issi.number }}" readonly>
-      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+      <input type="text"
+             class="form-control copy-field"
+             value="{{ object.new_issi.number }}"
+             data-copy-value="{{ object.new_issi.number }}"
+             readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
+         style="cursor:pointer"></i>
     </div>
   </div>
 
@@ -79,36 +99,42 @@
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Alias" %}:</strong>
     <div class="position-relative flex-grow-1">
-      <input type="text" class="form-control copy-field" value="{{ object.new_issi.alias }}" readonly>
-      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+      <input type="text"
+             class="form-control copy-field"
+             value="{{ object.new_issi.alias }}"
+             data-copy-value="{{ object.new_issi.alias }}"
+             readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
+         style="cursor:pointer"></i>
     </div>
   </div>
 
   <form method="post" action="">
-
     {% csrf_token %}
 
     <!-- Astrid ticket -->
     {% if object.status.code == "NEW" and perms.astrid.has_access_to_myastrid %}
-
       <div class="mb-2 d-flex flex-column">
         <div class="d-flex align-items-center mb-2">
           <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Astrid ticket" %}:</strong>
           <input type="text" name="astrid_ticket" class="form-control flex-grow-1" placeholder="Ticket nummer">
         </div>
       </div>
-
     {% else %}
-
       <div class="mb-2 d-flex align-items-center">
         <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Astrid ticket" %}:</strong>
         <div class="position-relative flex-grow-1">
-          <input type="text" class="form-control copy-field" value="{{ object.external_reference }}" readonly>
-          <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+          <input type="text"
+                 class="form-control copy-field"
+                 value="{{ object.external_reference }}"
+                 data-copy-value="{{ object.external_reference }}"
+                 readonly>
+          <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
+             style="cursor:pointer"></i>
         </div>
       </div>
-
     {% endif %}
+
 
     <!-- Opmerkingen -->
     {% if object.logs.exists %}
@@ -205,43 +231,32 @@
 
 <script>
 function copyInput(input) {
-    if (navigator.clipboard && window.isSecureContext) {
-        // Moderne manier
-        navigator.clipboard.writeText(input.value)
-            .then(() => console.log("Copied:", input.value))
-            .catch(err => console.error("Clipboard error:", err));
-    } else {
-        // Fallback
-        input.select();
-        input.setSelectionRange(0, 99999); // voor mobiel
-        document.execCommand("copy");
-        console.log("Copied (fallback):", input.value);
-    }
+  const textToCopy = input.dataset.copyValue || input.value;
+  if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(textToCopy)
+          .then(() => console.log("Copied:", textToCopy))
+          .catch(err => console.error("Clipboard error:", err));
+  } else {
+      input.value = textToCopy;
+      input.select();
+      document.execCommand("copy");
+  }
+  input.classList.add('border-success');
+  setTimeout(() => input.classList.remove('border-success'), 600);
 }
 
-// Koppelen aan alle copy-fields
+// Bind all copy fields
 document.querySelectorAll('.copy-field').forEach(input => {
-    input.addEventListener('click', () => copyInput(input));
+  input.addEventListener('click', () => copyInput(input));
 });
 
-// Koppelen aan icoontje
+// Bind icons
 document.querySelectorAll('.fa-copy').forEach(icon => {
-    icon.addEventListener('click', () => {
-        let input = icon.previousElementSibling;
-        if (input) copyInput(input);
-    });
+  icon.addEventListener('click', () => {
+    const input = icon.previousElementSibling;
+    if (input) copyInput(input);
+  });
 });
 </script>
-
-
-
-
-
-
-
-
-
-
-
 
 {% endblock %}
