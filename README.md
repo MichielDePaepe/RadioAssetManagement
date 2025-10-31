@@ -71,7 +71,7 @@ Je kan als volgt een secret key genereren
 
 1. Open de shell
 ```bash
-$ ./manage.py shell
+$ django-admin shell
 ```
 2. voor onderstaande code uit
 ```python

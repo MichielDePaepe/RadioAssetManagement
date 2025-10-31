@@ -14,6 +14,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.utils.translation import gettext as _
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
+from itertools import chain
+
 
 
 from io import BytesIO
@@ -155,8 +157,30 @@ class RadioDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['printers'] = Printer.objects.all()
+        radio = self.object
+
+        # Tickets die rechtstreeks gelinkt zijn aan de radio
+        direct_tickets = Ticket.objects.filter(
+            radio=radio
+        ).select_related("ticket_type", "status")
+
+        # Requests waar deze radio als old_radio voorkomt
+        related_requests = Request.objects.filter(
+            Q(old_radio=radio)
+        ).select_related("ticket_type", "status")
+
+        # Combineer beide querysets
+        all_tickets = sorted(
+            chain(direct_tickets, related_requests),
+            key=lambda t: t.updated_at,
+            reverse=True,
+        )
+
+        context["tickets"] = all_tickets
+        context["printers"] = Printer.objects.all()
         return context
+
+
 
     def post(self, request, *args, **kwargs):
         radio = self.get_object()

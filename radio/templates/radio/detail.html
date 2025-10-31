@@ -136,6 +136,54 @@
 </div>
 
 
+{% if tickets %}
+<div class="card mt-4 w-100">
+  <div class="card-header">
+    Tickets gelinkt aan deze radio
+  </div>
+  <div class="card-body p-3">
+    <table class="table table-sm mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Titel</th>
+          <th scope="col">Type</th>
+          <th scope="col">Status</th>
+          <th scope="col">Laatst bijgewerkt</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tickets %}
+        <tr>
+          <td>
+            {% if t.ticket_type.code == "ASTRID_REQUEST" %}
+              <a href="{% url 'astrid:request_detail' t.pk %}">#{{ t.id }}</a>
+            {% else %}
+              <a href="{% url 'helpdesk:ticket_detail' t.pk %}">#{{ t.id }}</a>
+            {% endif %}
+          </td>
+          <td>
+            {{ t.title }}
+          </td>
+          <td>{{ t.ticket_type.name }}</td>
+          <td>
+            <span class="badge bg-light text-dark">{{ t.status.name }}</span>
+          </td>
+          <td><time class="timeago" datetime="{{ t.updated_at|date:'c' }}"></time></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info mt-4 w-100 text-center">
+  Geen tickets gekoppeld aan deze radio.
+</div>
+{% endif %}
+
+
+
 
 
 </div>
