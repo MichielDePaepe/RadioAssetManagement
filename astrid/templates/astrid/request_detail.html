@@ -26,9 +26,11 @@
   {% if object.siamu_ticket %}
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "SIAMU ticket" %}:</strong>
-    <div class="position-relative flex-grow-1">
-      <input type="text" class="form-control copy-field" value="#{{ object.siamu_ticket }}" readonly>
-      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted" style="cursor:pointer"></i>
+    <div class="flex-grow-1">
+      <a href="http://helpdesk.firebru2k8.local/helpdesk/ticket.aspx?tid={{ object.siamu_ticket }}"
+         target="_blank" class="text-decoration-none">
+        #{{ object.siamu_ticket }}
+      </a>
     </div>
   </div>
   {% endif %}
