@@ -1,7 +1,6 @@
 <!-- radio/selector/modal_body.html -->
 {% load static i18n %}
 
-
 {% csrf_token %}
 
 <!-- STEP 1: Inputs -->
@@ -15,10 +14,7 @@
 <!-- Java Script -->
 <script src="{% static 'js/scanner.js' %}"></script>
 
-
-
 <script>
-
 // --- Scanner initialization ---
 const scanner = new Scanner({
   inputId: "radio-selector-scanner-input",
@@ -27,8 +23,8 @@ const scanner = new Scanner({
 
 // --- Determine if this is a modal or static card ---
 const isStatic = {{ static|yesno:"true,false" }};
-let containerElement = null; // general container for modal or card
-let modalElement = null;     // modal element, only used if !isStatic
+let containerElement = null; 
+let modalElement = null;     
 let autoConfirm = {{ auto_confirm|yesno:"true,false" }};
 
 // --- Inputs / Results elements ---
@@ -39,28 +35,21 @@ const resultDiv = document.getElementById("result");
 let currentButton = null;
 let currentCallback = null;
 
-
 document.addEventListener("DOMContentLoaded", function() {
-   
 {% if not static %}
-
   // Modal case
   modalElement = document.getElementById("radioSelectorModal");
   containerElement = modalElement;
 
   const bsInstance = new bootstrap.Modal(modalElement);
 
-  // Show modal if needed
-  if (modalElement.dataset.showOnLoad === "true") {
-      bsInstance.show();
-  }
+  if (modalElement.dataset.showOnLoad === "true") bsInstance.show();
 
   // Reset modal when shown/hidden
   modalElement.addEventListener('shown.bs.modal', () => { resertToInputs(); stop_scanning(); });
   modalElement.addEventListener('hidden.bs.modal', () => { resertToInputs(); stop_scanning(); });
 
-
-  // --- Handle buttons that open the selector ---
+  // Handle buttons that open the selector
   document.querySelectorAll(".open-radio-selector-modal").forEach(btn => {
     btn.addEventListener("click", () => {
       const callbackName = btn.dataset.callback;
@@ -75,12 +64,9 @@ document.addEventListener("DOMContentLoaded", function() {
       currentButton = btn;
     });
   });
-
 {% else %}
-
   // Static card case
   containerElement = document.getElementById("radioSelectorCard");
-
   callbackName = '{{ callback }}';
   if (callbackName && window[callbackName]) {
     currentCallback = window[callbackName];
@@ -88,13 +74,8 @@ document.addEventListener("DOMContentLoaded", function() {
     console.error("No callback function found");
     currentCallback = null;
   }
-
 {% endif %}
-
 });
-
-
-
 
 // --- Reset function ---
 function resertToInputs() {
@@ -103,13 +84,14 @@ function resertToInputs() {
   resultDiv.innerHTML = "";
   document.getElementById("radio-issi").value = "";
   document.getElementById("radio-tei").value = "";
+  document.getElementById("radio-alias").value = "";
   document.getElementById("error-issi").textContent = "";
   document.getElementById("error-tei").textContent = "";
+  document.getElementById("error-alias").textContent = "";
   document.getElementById("error-qr").textContent = "";
 }
 
-
-// Handle clicking the search buttons (ISSI / TEI)
+// --- Handle clicking the search buttons (ISSI / TEI / ALIAS) ---
 document.querySelectorAll(".search-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
     const type = btn.dataset.type;
@@ -121,8 +103,8 @@ document.querySelectorAll(".search-btn").forEach(btn => {
 
     const value = input.value.trim();
     if (!value) {
-        errorDiv.textContent = "{% trans 'Vul een waarde in.' %}";
-        return;
+      errorDiv.textContent = "{% trans 'Vul een waarde in.' %}";
+      return;
     }
 
     const formData = new FormData();
@@ -133,14 +115,13 @@ document.querySelectorAll(".search-btn").forEach(btn => {
 
     try {
       const res = await fetch("{% url 'radio:lookup' %}", {
-          method: "POST",
-          headers: { "X-CSRFToken": csrfToken },
-          body: formData
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken },
+        body: formData
       });
       const data = await res.json();
 
       if (data.status === "success") {
-        // Display the result page
         loadSelectorResult(data);
       } else {
         errorDiv.textContent = data.message;
@@ -152,7 +133,7 @@ document.querySelectorAll(".search-btn").forEach(btn => {
   });
 });
 
-// Start scanning process and update button state
+// --- Scanner logic (on/off, QR handling) ---
 function start_scanning() {
   const btn = document.getElementById("scan-btn");
   btn.classList.remove("btn-success");
@@ -161,7 +142,6 @@ function start_scanning() {
   scanner.start();
 }
 
-// Stop scanning and reset button state
 function stop_scanning() {
   const btn = document.getElementById("scan-btn");
   btn.classList.remove("btn-danger");
@@ -170,29 +150,19 @@ function stop_scanning() {
   scanner.stop();
 }
 
-// Toggle scanning when scan button is clicked
 document.getElementById("scan-btn").addEventListener("click", e => {
-  if (!scanner.is_scanning) {
-    start_scanning();
-  } else {
-    stop_scanning();
-  }
+  if (!scanner.is_scanning) start_scanning();
+  else stop_scanning();
 });
 
-// Handle QR scan result
 function handleScanResponse(data) {
   stop_scanning();
-  console.log(data);
-  if (data.status === "ok") {
-    loadSelectorResult(data);
-  } else {
-    document.getElementById("error-qr").textContent = data.message;
-  }
+  if (data.status === "ok") loadSelectorResult(data);
+  else document.getElementById("error-qr").textContent = data.message;
 }
 
 // --- Load result ---
 function loadSelectorResult(data) {
-
   if (autoConfirm && currentCallback) {
     currentCallback(currentButton, data);
     modalElement && bootstrap.Modal.getInstance(modalElement)?.hide();
@@ -211,20 +181,13 @@ function loadSelectorResult(data) {
     .catch(err => console.error("Fetch error:", err));
 }
 
-
-// Handle clicks on the result buttons (confirm / cancel)
+// --- Confirm/Cancel buttons ---
 resultDiv.addEventListener("click", e => {
   if (e.target.id === "cancel-radio") {
     resertToInputs();
   } else if (e.target.id === "confirm-radio") {
     if (currentCallback) currentCallback(currentButton, e.target.dataset);
-
-    // Hide modal if it's a modal
-    if (!isStatic && modalElement) {
-      bootstrap.Modal.getInstance(modalElement)?.hide();
-    }
+    if (!isStatic && modalElement) bootstrap.Modal.getInstance(modalElement)?.hide();
   }
 });
-
-
 </script>

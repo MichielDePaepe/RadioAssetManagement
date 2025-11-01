@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+# astrid/views.py
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views import View
 from django.views.generic import TemplateView
@@ -14,7 +15,8 @@ from django.db.models import Q
 from django.db import transaction
 import openpyxl
 
-from radio.models import Radio, ISSI, Subscription
+from helpdesk.models import *
+from radio.models import *
 from .models import *
 
 import logging
@@ -135,62 +137,77 @@ class UploadSubscriptionsView(LoginRequiredMixin, PermissionRequiredMixin, Templ
 class VTEIRequestCreateView(TemplateView):
     template_name = "astrid/vtei_request.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        radio_id = self.request.GET.get("radio")
+        context["preselected_radio"] = None
+        if radio_id:
+            try:
+                context["preselected_radio"] = Radio.objects.get(pk=radio_id)
+            except Radio.DoesNotExist:
+                pass
+        return context
+
     def post(self, request):
         try:
-            # Get the primary keys of the old and new radios from the submitted form
             old_radio_pk = request.POST.get("old-radio")
             new_radio_pk = request.POST.get("new-radio")
 
-            # Both radios must be selected, otherwise raise an error
             if not (old_radio_pk and new_radio_pk):
-                raise(Exception(_("Both an old and a new radio need to be selected.")))
-            
-            # Fetch the old and new Radio objects from the database
+                raise Exception(_("Both an old and a new radio need to be selected."))
+
             old_radio = Radio.objects.get(pk=int(old_radio_pk))
             new_radio = Radio.objects.get(pk=int(new_radio_pk))
 
-            # The old radio must have an active subscription
             if not old_radio.is_active:
-                raise(Exception(_("The radio selected as old radio has no subscription.")))
+                raise Exception(_("The radio selected as old radio has no subscription."))
 
-            # The new radio must not already have a subscription
             if new_radio.is_active:
-                raise(Exception(_("The radio selected as new radio already has a subscription.")))
+                raise Exception(_("The radio selected as new radio already has a subscription."))
 
-            # Check if there is already an open ASTRID request for the old radio
-            req = Request.objects.filter((Q(radio=old_radio) | Q(old_radio=old_radio)) & Q(ticket_type__code="ASTRID_REQUEST")).exclude(status__code = "CLOSED").first()
-            if req:
-                ticket_url = reverse("astrid:request_detail", kwargs={"pk": req.pk})
-                radio_url = reverse("radio:detail", kwargs={"pk": old_radio.pk})
-                raise(Exception(_("The <a href='{radio_url}'>radio</a> has an open request ticket: <a href='{ticket_url}'>#{ticket_id}</a>").format(radio_url=radio_url, ticket_url=ticket_url, ticket_id=req.pk)))
+            # Controleer of er al een open request bestaat
+            conflict = Request.objects.filter(
+                (Q(radio=old_radio) | Q(old_radio=old_radio) |
+                 Q(radio=new_radio) | Q(old_radio=new_radio)),
+                ticket_type__code="ASTRID_REQUEST"
+            ).exclude(status__code="CLOSED").first()
 
-            # Check if there is already an open ASTRID request for the new radio
-            req = Request.objects.filter((Q(radio=new_radio) | Q(old_radio=new_radio)) & Q(ticket_type__code="ASTRID_REQUEST")).exclude(status__code = "CLOSED").first()
-            if req:
-                ticket_url = reverse("astrid:request_detail", kwargs={"pk": req.pk})
-                radio_url = reverse("radio:detail", kwargs={"pk": new_radio.pk})
-                raise(Exception(_("The <a href='{radio_url}'>radio</a> has an open request ticket: <a href='{ticket_url}'>#{ticket_id}</a>").format(radio_url=radio_url, ticket_url=ticket_url, ticket_id=req.pk)))
+            if conflict:
+                ticket_url = reverse("astrid:request_detail", kwargs={"pk": conflict.pk})
+                raise Exception(
+                    _("There is already an open Astrid request for one of the radios: "
+                      "<a href='{url}'>#{id}</a>").format(url=ticket_url, id=conflict.pk)
+                )
 
-            # If no conflicts are found, create a new VTEI request
-            Request.objects.create(
-                request_type = Request.RequestType.VTEI,
-                old_radio = old_radio,
-                old_issi = old_radio.subscription.issi,
-                new_issi = old_radio.subscription.issi,
-                radio = new_radio,
-                description = request.POST.get("request_description"),
+            # Omschrijving vooraf invullen met referentie naar ticket
+            description = request.POST.get("request_description", "")
+
+            # Nieuwe request aanmaken
+            new_request = Request.objects.create(
+                request_type=Request.RequestType.VTEI,
+                old_radio=old_radio,
+                old_issi=old_radio.subscription.issi,
+                new_issi=old_radio.subscription.issi,
+                radio=new_radio,
+                description=description,
             )
 
-            # Add success message if creation was successful
-            messages.success(request, _("VTEI request successful"))
+            # TicketLog aanmaken als ticket bestaat
+            if ticket:
+                TicketLog.objects.create(
+                    ticket=ticket,
+                    user=request.user,
+                    status_after=ticket.status,
+                    note=f"Astrid VTEI request #{new_request.pk} aangemaakt op basis van dit ticket.",
+                )
 
-  
+            messages.success(request, _("VTEI request succesvol aangemaakt"))
+            return redirect(reverse("astrid:request_detail", kwargs={"pk": new_request.pk}))
+
         except Exception as e:
-            # If any error occurs, show it as an error message to the user
             messages.error(request, str(e))
+            return redirect(request.path)
 
-        # Redirect back to the same page (prevents form resubmission)
-        return redirect(request.path)
 
 
 class ActivationRequestCreateView(TemplateView):

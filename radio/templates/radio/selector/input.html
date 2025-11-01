@@ -18,7 +18,17 @@
 </div>
 
 <div class="mb-3">
+  <div class="input-group">
+    <input type="text" id="radio-alias" class="form-control" placeholder="Alias">
+    <button type="button" class="btn btn-primary search-btn" id="search-alias-btn" data-type="alias">Zoek</button>
+  </div>
+  <div class="form-text text-danger" id="error-alias"></div>
+</div>
+
+<div class="mb-3">
   <input type="text" id="radio-selector-scanner-input">
-  <button type="button" class="btn btn-success w-100" id="scan-btn" data-type="qr"><i class="bi bi-qr-code"></i> Start scanner</button>
+  <button type="button" class="btn btn-success w-100" id="scan-btn" data-type="qr">
+    <i class="bi bi-qr-code"></i> Start scanner
+  </button>
   <div class="form-text text-danger" id="error-qr"></div>
 </div>

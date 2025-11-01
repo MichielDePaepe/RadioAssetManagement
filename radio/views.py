@@ -217,7 +217,7 @@ class RadioDetailView(DetailView):
 class LookupView(View):
 
     def post(self, request, *args, **kwargs):
-        if True:
+        try:
             lookup_type = request.POST.get('type')
             value = request.POST.get('value').strip()
 
@@ -249,6 +249,26 @@ class LookupView(View):
                 except Radio.DoesNotExist:
                     return JsonResponse({"status": "error", "message": _("Radio met dit TEI {tei} nummer niet gevonden").format(tei=tei_value.zfill(14))}, status=404)
 
+            elif lookup_type == 'alias':
+                try:
+                    issi = ISSI.objects.filter(alias__iexact=value).first()
+                    if not issi:
+                        return JsonResponse(
+                            {"status": "error", "message": _("Geen ISSI gevonden met alias “{alias}”").format(alias=value)},
+                            status=404
+                        )
+                    if hasattr(issi, "subscription") and hasattr(issi.subscription, "radio"):
+                        radio = issi.subscription.radio
+                    else:
+                        return JsonResponse(
+                            {"status": "error", "message": _("Geen radio gekoppeld aan deze alias")},
+                            status=404
+                        )
+                except Exception as e:
+                    logger.error(f"Alias lookup error: {e}")
+                    return JsonResponse({"status": "error", "message": _("Fout bij het zoeken op alias")}, status=500)
+
+
             elif lookup_type in ('qr', 'serial'):
                 logger.debug(value)
 
@@ -270,8 +290,6 @@ class LookupView(View):
             else:
                 return JsonResponse({"status": "error", "message": _("Radio not found")}, status=404)
 
-        try:
-            pass
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 

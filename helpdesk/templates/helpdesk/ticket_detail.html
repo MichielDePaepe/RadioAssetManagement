@@ -5,13 +5,14 @@
 <div class="container mt-4">
   
   <h2 class="mb-0">{{ ticket.title }}</h2>
+  
   <hr>
 
   <div class="row g-3">
-
     <div class="col-md-8">
 
       <h4 class="mb-2">Description</h4>
+
       <div class="card shadow-sm mb-3">
         <div class="card-body">
           <p class="card-text">{{ ticket.description|linebreaks }}</p>
@@ -19,117 +20,184 @@
       </div>
 
       <h4 class="mb-2">Logs</h4>
+
       {% if logs %}
-      <div class="list-group">
-        {% for log in logs %}
-        <div class="list-group-item">
-          <div class="d-flex justify-content-between">
-            <div>
+        <div class="list-group">
+          {% for log in logs %}
+            <div class="list-group-item">
               <small class="text-muted">
-                {{ log.timestamp|date:"d/m/Y H:i" }} — {% if log.user %}{{ log.user }}{% else %}System{% endif %}
+                {{ log.timestamp|date:"d/m/Y H:i" }} —
+                {% if log.user %}{{ log.user }}{% else %}System{% endif %}
               </small>
               <div class="mt-1">
                 <span class="badge bg-light text-dark border me-1">{{ log.status_before }}</span>
                 <i class="bi bi-arrow-right mx-1 text-muted"></i>
                 <span class="badge bg-light text-dark border">{{ log.status_after }}</span>
               </div>
+              {% if log.note %}
+                <p class="mt-2 mb-0">{{ log.note|linebreaks }}</p>
+              {% endif %}
             </div>
-          </div>
-          {% if log.note %}
-            <p class="mt-2 mb-0">{{ log.note|linebreaks }}</p>
-          {% endif %}
+          {% endfor %}
         </div>
-        {% endfor %}
-      </div>
       {% else %}
         <div class="alert alert-secondary">No logs yet.</div>
       {% endif %}
+
+      <hr>
+
+      <h5 class="mt-4">Log toevoegen</h5>
+
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="{{ form.note.id_for_label }}" class="form-label">{{ form.note.label }}</label>
+          {{ form.note }}
+        </div>
+        <div class="mb-3">
+          <label for="{{ form.status_after.id_for_label }}" class="form-label">{{ form.status_after.label }}</label>
+          {{ form.status_after }}
+        </div>
+        <div class="text-end">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Log toevoegen
+          </button>
+        </div>
+      </form>
+
     </div>
 
-<!-- Right column: ticket info -->
-<div class="col-md-4">
-  <div class="card mb-3">
-    <div class="card-body">
-      <!-- Type -->
-      <div class="mb-2 d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;">Type:</strong>
-        <div class="flex-grow-1">{{ ticket.ticket_type }}</div>
-      </div>
+    <!-- Right column: ticket info -->
+    <div class="col-md-4">
+      
+      <h4 class="mb-2">Ticket info</h4>
 
-      {% if ticket.ticket_type.code == "ASTRID_REQUEST" %}
-      <div class="mb-2 d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;"></strong>
-        <div class="flex-grow-1"><a href="{% url 'astrid:request_detail' pk=ticket.pk %}">Go to request ticket #{{ticket.pk}}</a></div>
-      </div>
-      {% endif %}
+      <div class="card mb-3">
+        <div class="card-body">
 
+          <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="update_ticket" value="1">
 
+            <!-- Type -->
+            <div class="mb-2 d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;">Type:</strong>
+              <div class="flex-grow-1">
+                {% if perms.helpdesk.can_edit_ticket_fields %}
+                  {{ edit_form.ticket_type }}
+                {% else %}
+                  {{ ticket.ticket_type }}
+                {% endif %}
+              </div>
+            </div>
 
-      <!-- Priority -->
-      <div class="mb-2 d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;">Priority:</strong>
-        <div class="flex-grow-1">
-          <span class="badge {% if ticket.priority == 'high' %}bg-danger{% elif ticket.priority == 'low' %}bg-success{% else %}bg-warning text-dark{% endif %}">
-            {{ ticket.get_priority_display }}
-          </span>
+            {% if ticket.ticket_type.code == "ASTRID_REQUEST" %}
+            <div class="mb-2 d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;"></strong>
+              <div class="flex-grow-1">
+                <a href="{% url 'astrid:request_detail' pk=ticket.pk %}">
+                  Go to request ticket #{{ ticket.pk }}
+                </a>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Priority -->
+            <div class="mb-2 d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;">Priority:</strong>
+              <div class="flex-grow-1">
+                {% if perms.helpdesk.can_edit_ticket_fields %}
+                  {{ edit_form.priority }}
+                {% else %}
+                  <span class="badge 
+                    {% if ticket.priority == 'high' %}bg-danger
+                    {% elif ticket.priority == 'low' %}bg-success
+                    {% else %}bg-warning text-dark
+                    {% endif %}">
+                    {{ ticket.get_priority_display }}
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Status -->
+            <div class="mb-2 d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;">Status:</strong>
+              <div class="flex-grow-1">
+                <span class="badge bg-light text-dark border">{{ ticket.status }}</span>
+              </div>
+            </div>
+
+            <!-- Radio -->
+            <div class="mb-2 d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;">Radio:</strong>
+              <div class="flex-grow-1">
+                <a href="{% url 'radio:detail' ticket.radio.pk %}">{{ ticket.radio }}</a>
+              </div>
+            </div>
+
+            <!-- External reference -->
+            {% if ticket.external_reference %}
+            <div class="mb-2 d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;">External ref:</strong>
+              <div class="flex-grow-1">{{ ticket.external_reference }}</div>
+            </div>
+            {% endif %}
+
+            <!-- SIAMU ticket -->
+            <div class="mb-2 d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;">SIAMU:</strong>
+              <div class="flex-grow-1">
+                {% if perms.helpdesk.can_edit_ticket_fields %}
+                  {{ edit_form.siamu_ticket }}
+                {% else %}
+                  {{ ticket.siamu_ticket|default:"—" }}
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Created by -->
+            <div class="mb-2 d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;">Created by:</strong>
+              <div class="flex-grow-1">{{ ticket.created_by }}</div>
+            </div>
+
+            <!-- Assigned to -->
+            <div class="mb-2 d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;">Assigned to:</strong>
+              <div class="flex-grow-1">
+                {% if perms.helpdesk.can_assign_ticket %}
+                  {{ edit_form.assigned_to }}
+                {% else %}
+                  {{ ticket.assigned_to|default:"—" }}
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Created & Updated -->
+            <div class="mb-2 d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;">Created:</strong>
+              <div class="flex-grow-1">{{ ticket.created_at|date:"d/m/Y H:i" }}</div>
+            </div>
+            <div class="d-flex align-items-center">
+              <strong class="me-2 flex-shrink-0" style="width: 40%;">Updated:</strong>
+              <div class="flex-grow-1">{{ ticket.updated_at|date:"d/m/Y H:i" }}</div>
+            </div>
+
+            <!-- Save button (only if user can edit something) -->
+            {% if perms.helpdesk.can_edit_ticket_fields or perms.helpdesk.can_assign_ticket %}
+            <div class="text-end mt-3">
+              <button type="submit" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-save me-1"></i> Opslaan
+              </button>
+            </div>
+            {% endif %}
+
+          </form>
         </div>
       </div>
-
-      <!-- Status -->
-      <div class="mb-2 d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;">Status:</strong>
-        <div class="flex-grow-1">
-          <span class="badge bg-light text-dark border">{{ ticket.status }}</span>
-        </div>
-      </div>
-
-      <!-- Radio -->
-      <div class="mb-2 d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;">Radio:</strong>
-        <div class="flex-grow-1">
-          <a href="{% url 'radio:detail' ticket.radio.pk %}">{{ ticket.radio }}</a>
-        </div>
-      </div>
-
-      <!-- External reference -->
-      {% if ticket.external_reference %}
-      <div class="mb-2 d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;">External ref:</strong>
-        <div class="flex-grow-1">{{ ticket.external_reference }}</div>
-      </div>
-      {% endif %}
-
-      <!-- SIAMU ticket -->
-      {% if ticket.siamu_ticket %}
-      <div class="mb-2 d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;">SIAMU:</strong>
-        <div class="flex-grow-1">{{ ticket.siamu_ticket }}</div>
-      </div>
-      {% endif %}
-
-      <div class="mb-2 d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;">Created by:</strong>
-        <div class="flex-grow-1">{{ ticket.created_by }}</div>
-      </div>
-      <div class="mb-2 d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;">Assigned to:</strong>
-        <div class="flex-grow-1">{{ ticket.assigned_to|default:"—" }}</div>
-      </div>
-      <div class="mb-2 d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;">Created:</strong>
-        <div class="flex-grow-1">{{ ticket.created_at|date:"d/m/Y H:i" }}</div>
-      </div>
-      <div class="d-flex align-items-center">
-        <strong class="me-2 flex-shrink-0" style="width: 40%;">Updated:</strong>
-        <div class="flex-grow-1">{{ ticket.updated_at|date:"d/m/Y H:i" }}</div>
-      </div>
-
     </div>
-  </div>
-</div>
-
-
-
+    
   </div>
 </div>
 

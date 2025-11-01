@@ -73,14 +73,21 @@ class Ticket(models.Model):
     def __str__(self):
         return f"#{self.id} - {self.title}"
 
+    class Meta:
+        permissions = [
+            ("can_assign_ticket", "Kan het veld 'Assigned to' aanpassen"),
+            ("can_edit_ticket_fields", "Kan Type, Priority en SIAMU refferece aanpassen"),
+        ]
+
+
 
 class TicketLog(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name="logs")
     timestamp = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     status_before = models.ForeignKey(TicketStatus, on_delete=models.SET_NULL, null=True, blank=True, related_name="previous_logs")
-    status_after = models.ForeignKey(TicketStatus, on_delete=models.SET_NULL, null=True, related_name="next_logs")
-    note = models.TextField(blank=True)
+    status_after = models.ForeignKey(TicketStatus, on_delete=models.SET_NULL, null=True, blank=True, related_name="next_logs")
+    note = models.TextField()
 
     class Meta:
         ordering = ["timestamp"]
