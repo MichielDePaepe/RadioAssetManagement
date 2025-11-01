@@ -1,0 +1,105 @@
+#!/bin/bash
+# ============================================================
+# DJANGO + POSTGRESQL BACKUP SCRIPT
+# ============================================================
+# FUNCTIONS
+# ------------------------------------------------------------
+# 1. Dumps the full PostgreSQL database to .sql
+# 2. Exports Django data to JSON (for SQLite/dev import)
+# 3. Saves current Git commit info to a text file
+#
+# NOTES
+# ------------------------------------------------------------
+# * The model `taqto.Permissions` is excluded because it is
+#   defined with `managed = False`, meaning Django does not
+#   create a physical table for it.
+# * Any other unmanaged models should also be excluded, otherwise
+#   `dumpdata` will fail with "relation does not exist".
+#
+# ENVIRONMENT CONFIG
+# ------------------------------------------------------------
+# * Create file: ~/.radio_env
+#       BASE_FOLDER="/home/taqto/RadioAssetManagement"
+#
+# * Permissions (keep private):
+#       chmod 600 ~/.radio_env
+#
+# * When moving to another server, only update ~/.radio_env.
+# * Cron jobs do not load user environments, so absolute path (~/.radio_env)
+#   is required for the `source` command.
+#
+# CRON SETUP
+# ------------------------------------------------------------
+# 1. Edit cron for user taqto:
+#       sudo crontab -u taqto -e
+#
+# 2. Add this line (backup every Monday at 03:00):
+#       0 3 * * 1 /home/taqto/RadioAssetManagement/RadioAssetManagement/dump_db \
+#         >> /home/taqto/RadioAssetManagement/db_dumps/cron.log 2>&1
+#
+# 3. Make script executable:
+#       chmod +x /home/taqto/RadioAssetManagement/RadioAssetManagement/dump_db
+#
+# 4. Check cron service:
+#       systemctl status cron
+#
+# 5. View backup logs:
+#       cat /home/taqto/RadioAssetManagement/db_dumps/cron.log
+# ============================================================
+
+source ~/.radio_env
+
+project_folder="${BASE_FOLDER}/RadioAssetManagement"
+dump_dir="${BASE_FOLDER}/db_dumps"
+timestamp=$(date +%Y%d%m_%H%M%S)
+
+
+echo "=== Starting backup at ${timestamp} ==="
+echo "Base folder: ${BASE_FOLDER}"
+echo "Dump folder: ${dump_dir}"
+
+mkdir -p "$dump_dir"
+echo "[OK] Dump folder created or already exists."
+
+# --- Activate virtualenv ---
+echo "[STEP] Activating virtual environment..."
+source "${BASE_FOLDER}/bin/activate"
+echo "[OK] Virtualenv activated."
+
+# --- PostgreSQL full dump ---
+echo "[STEP] Dumping PostgreSQL database..."
+pg_dump -U taqto RadioAssetManagement > "${dump_dir}/${timestamp}_postgres_dump.sql"
+if [ $? -eq 0 ]; then
+  echo "[OK] PostgreSQL dump completed."
+else
+  echo "[ERROR] PostgreSQL dump failed!"
+  exit 1
+fi
+
+# --- Django JSON export ---
+echo "[STEP] Exporting Django data to JSON..."
+cd "$project_folder"
+python manage.py dumpdata \
+  --natural-foreign --natural-primary \
+  -e contenttypes -e auth.Permission -e taqto.Permissions \
+  --indent 2 > "${dump_dir}/${timestamp}_django_dump.json"
+if [ $? -eq 0 ]; then
+  echo "[OK] Django JSON export completed."
+else
+  echo "[ERROR] Django dumpdata failed!"
+  exit 1
+fi
+
+# --- Git version info ---
+echo "[STEP] Saving latest Git commit info..."
+git log -1 --oneline > "${dump_dir}/${timestamp}_git_info.txt"
+if [ $? -eq 0 ]; then
+  current_commit=$(git log -1 --oneline)
+  echo "[OK] Git info saved."
+  echo "Current commit: ${current_commit}"
+else
+  echo "[WARNING] Git info could not be saved (not a repo?)."
+fi
+
+echo "=== Backup completed successfully at ${timestamp} ==="
+echo "Files stored in: ${dump_dir}/"
