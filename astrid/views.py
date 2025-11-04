@@ -102,6 +102,7 @@ class UploadSubscriptionsView(LoginRequiredMixin, PermissionRequiredMixin, Templ
                             issi=issi,
                             astrid_alias=alias
                         )
+                        
                     else:
                         # Update alias if subscription already exists but alias changed
                         sub = Subscription.objects.get(radio=radio, issi=issi_number)
