@@ -1,3 +1,4 @@
+
 from django.views import View
 from django.views.generic import ListView, DetailView, FormView, CreateView
 from django.views.generic.edit import FormMixin
@@ -131,4 +132,3 @@ class TicketListView(ListView):
         ctx["show_closed"] = self.request.GET.get("show_closed") == "1"
 
         return ctx
-

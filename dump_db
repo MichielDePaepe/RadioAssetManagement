@@ -51,7 +51,7 @@ source ~/.radio_env
 
 project_folder="${BASE_FOLDER}/RadioAssetManagement"
 dump_dir="${BASE_FOLDER}/db_dumps"
-timestamp=$(date +%Y%d%m_%H%M%S)
+timestamp=$(date +%Y%m%d_%H%M%S)
 
 
 echo "=== Starting backup at ${timestamp} ==="

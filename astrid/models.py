@@ -3,7 +3,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from helpdesk.models import Ticket, TicketType, TicketLog, TicketStatus
 from django.utils.translation import gettext as _
-
+from radio.models import *
 
 class Request(Ticket):
     class RequestType(models.TextChoices):
@@ -103,22 +103,30 @@ class Request(Ticket):
             code="CLOSED",
             defaults={"name_en": "Closed"},
         )
+
+        # Remove old subscription
+        old_subscription = getattr(self.old_radio, "subscription", None)
+        if old_subscription:
+            old_subscription.delete()
         
+        # Add new subscription
         if self.request_type == self.RequestType.VTEI:
-            subscritpion = self.old_radio.subscription
-            subscritpion.radio = self.new_radio
-            subscritpion.save()
+            Subscription.objects.create(
+                radio = self.new_radio,
+                issi = self.old_issi
+            )
 
         if self.request_type == self.RequestType.VISSI:
-            subscritpion = self.radio.subscription
-            subscritpion.issi = self.new_issi
-            subscritpion.save()
+            Subscription.objects.create(
+                radio = self.old_radio,
+                issi = self.new_issi
+            )
 
         if self.request_type == self.RequestType.VISSI_VTEI:
-            subscritpion = self.old_radio.subscription
-            subscritpion.radio = self.new_radio
-            subscritpion.issi = self.new_issi
-            subscritpion.save()
+            Subscription.objects.create(
+                radio = self.new_radio,
+                issi = self.new_issi
+            )
 
         TicketLog.objects.create(
             ticket=self,
@@ -138,6 +146,15 @@ class Request(Ticket):
             user=user,
             status_after=closed,
             note=note or _("Request verified and closed"),
+        )
+
+    def add_log(self, user=None, note=""):
+        """Add a log entry without changing the ticket status."""
+        TicketLog.objects.create(
+            ticket=self,
+            user=user,
+            status_after=self.status,
+            note=note,
         )
 
     class Meta:

@@ -1,4 +1,5 @@
 # astrid/views.py
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views import View
@@ -206,6 +207,9 @@ class VTEIRequestCreateView(TemplateView):
             return redirect(reverse("astrid:request_detail", kwargs={"pk": new_request.pk}))
 
         except Exception as e:
+            if settings.DEBUG:
+                raise
+
             messages.error(request, str(e))
             return redirect(request.path)
 
@@ -349,12 +353,15 @@ class RequestDetailView(DetailView):
                     obj.mark_verified(user=request.user, note=note)
 
                 if action == "radio_is_not_working":
-                    pass
+                    obj.add_log(user=request.user, note=note)
             
             else:
                 return HttpResponseBadRequest("Invalid POST")
         
         except Exception as e:
+            if settings.DEBUG:
+                raise
+            
             messages.error(request, str(e))
             return redirect(request.path)
 
