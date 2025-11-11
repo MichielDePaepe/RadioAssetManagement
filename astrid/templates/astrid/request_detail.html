@@ -41,35 +41,33 @@
     <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "TEI oude radio" %}:</strong>
     <div class="position-relative flex-grow-1">
       <input type="text"
-             class="form-control copy-field"
+             class="form-control copy-field pe-5"
              value="{{ object.old_radio.tei_str }}"
              data-copy-value="{{ object.old_radio.tei_str }}"
              readonly>
-      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
-         style="cursor:pointer"></i>
-    </div>
-  </div>
-  {% endif %}
 
-  <!-- ISSI oude radio -->
-  {% if "VISSI" in object.request_type %}
-  <div class="mb-2 d-flex align-items-center">
-    <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "ISSI oude radio" %}:</strong>
-    <div class="position-relative flex-grow-1">
-      <input type="text"
-             class="form-control copy-field"
-             value="{{ object.old_issi.number }}"
-             data-copy-value="{{ object.old_issi.number }}"
-             readonly>
       <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
          style="cursor:pointer"></i>
+
+      <a href="{% url 'radio:detail' object.old_radio.pk %}"
+        class="position-absolute top-50 translate-middle-y text-muted"
+        style="right:1.8rem; cursor:pointer;">
+        <i class="fa fa-walkie-talkie"></i>
+      </a>
+
     </div>
   </div>
   {% endif %}
 
   <!-- TEI nieuwe radio -->
   <div class="mb-2 d-flex align-items-center">
-    <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "TEI nieuwe radio" %}:</strong>
+    <strong class="me-2 flex-shrink-0" style="width: 40%;">
+      {% if object.request_type == "VISSI" %}
+        {% trans "TEI" %}:
+      {% else %}
+        {% trans "TEI nieuwe radio" %}:
+      {% endif %}
+    </strong>
     <div class="position-relative flex-grow-1">
       <input type="text"
              class="form-control copy-field"
@@ -78,12 +76,42 @@
              readonly>
       <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
          style="cursor:pointer"></i>
+
+      <a href="{% url 'radio:detail' object.new_radio.pk %}"
+        class="position-absolute top-50 translate-middle-y text-muted"
+        style="right:1.8rem; cursor:pointer;">
+        <i class="fa fa-walkie-talkie"></i>
+      </a>
+
     </div>
   </div>
 
+  <!-- ISSI oude radio -->
+  {% if "VISSI" in object.request_type %}
+  <div class="mb-2 d-flex align-items-center">
+    <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Oude ISSI" %}:</strong>
+    <div class="position-relative flex-grow-1">
+      <input type="text"
+             class="form-control copy-field"
+             value="{{ object.old_issi.number }}"
+             data-copy-value="{{ object.old_issi.number }}"
+             readonly>
+      <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
+         style="cursor:pointer"></i>
+
+    </div>
+  </div>
+  {% endif %}
+
   <!-- ISSI -->
   <div class="mb-2 d-flex align-items-center">
-    <strong class="me-2 flex-shrink-0" style="width: 40%;">ISSI:</strong>
+    <strong class="me-2 flex-shrink-0" style="width: 40%;">
+      {% if object.request_type == "VTEI" %}
+        ISSI:
+      {% else %}
+        {% trans "Nieuwe ISSI" %}:
+      {% endif %}
+    </strong>
     <div class="position-relative flex-grow-1">
       <input type="text"
              class="form-control copy-field"
