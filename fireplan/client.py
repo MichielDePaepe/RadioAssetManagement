@@ -4,7 +4,7 @@ from django.conf import settings
 
 
 class FireplanClient:
-    BASE = "http://fireplan"
+    BASE = "http://fireplan.firebru2k8.local"
     LOGIN_URL = BASE + "/fr/login"
 
     def __init__(self):
