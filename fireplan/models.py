@@ -79,6 +79,23 @@ class StatusCode(models.Model):
             str(self),
         )
 
+    def status_icon_html(self):
+        col = self.color or "#999"
+        text = self.description or self.code
+
+        return format_html(
+            '<span style="width:12px; height:12px; border-radius:50%; '
+            'display:inline-block; background-color:{}; margin-right:6px; position:relative;" '
+            'onmouseover="this.nextElementSibling.style.display=\'inline-block\'" '
+            'onmouseout="this.nextElementSibling.style.display=\'none\'"></span>'
+            '<span style="display:none; background:#333; color:#fff; padding:2px 6px; '
+            'font-size:11px; border-radius:4px; position:absolute; white-space:nowrap; '
+            'transform:translateY(150%);">{}</span>',
+            col,
+            text,
+        )
+
+
 
 class Vector(models.Model):
     resourceCode = models.CharField(max_length=50, primary_key=True)

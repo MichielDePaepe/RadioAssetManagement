@@ -56,7 +56,15 @@
       </tr>
       <tr>
         <th scope="row" class="bg-light">Voorziene plaats</th>
-        <td>{{ radio.container_link.container }}: {{ radio.container_link.name }}</td>
+        <td>
+          {{ radio.container_link.container }}: {{ radio.container_link.name }}
+          {% if radio.container_link.container.vector.vehicle %}
+            <br>
+            
+            {{ radio.container_link.container.vector.statusCode.status_icon_html }}
+            {{ radio.container_link.container.vector.vehicle.call_sign }}
+          {% endif %}
+        </td>
       </tr>
       <tr>
         <th scope="row" class="bg-light">Laatst gezien</th>
