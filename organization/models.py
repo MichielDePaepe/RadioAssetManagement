@@ -7,6 +7,7 @@ class Container(models.Model):
     parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='children')
 
     show_in_listing = models.BooleanField(default=True)
+    vector = models.OneToOneField('fireplan.Vector', null=True, blank=True, on_delete=models.SET_NULL, related_name='container')
 
     def __str__(self):
         return self.name
