@@ -54,6 +54,7 @@
           {% endif %}
         </td>
       </tr>
+      {% if radio.container_link %}
       <tr>
         <th scope="row" class="bg-light">Voorziene plaats</th>
         <td>
@@ -66,6 +67,8 @@
           {% endif %}
         </td>
       </tr>
+      {% endif %}
+      {% if radio.inventory_entries %}
       <tr>
         <th scope="row" class="bg-light">Laatst gezien</th>
         <td>
@@ -73,6 +76,7 @@
           <time class="timeago" datetime="{{ radio.inventory_entries.latest.timestamp|date:'c' }}"></time>
         </td>
       </tr>
+      {% endif %}
     </tbody>
   </table>
 
