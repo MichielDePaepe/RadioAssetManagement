@@ -29,3 +29,8 @@ class FireplanClient:
         if "Identifiants invalides" in resp.text:
             raise Exception("❌ Foute Fireplan login")
 
+    def get(self, path, **kwargs):
+        return self.session.get(self.BASE + path, **kwargs)
+
+    def post(self, path, data=None, json=None, **kwargs):
+        return self.session.post(self.BASE + path, data=data, json=json, **kwargs)

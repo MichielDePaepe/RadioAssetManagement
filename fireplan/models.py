@@ -24,6 +24,13 @@ class Vehicle(models.Model):
         null=True,
     )
 
+    radio = models.ForeignKey(        
+        "radio.Radio",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+
     def save(self, *args, **kwargs):
         if self.number:
             self.call_sign = self.number.split(" - ")[0]

@@ -1,5 +1,6 @@
 from .client import FireplanClient
 from .models import *
+from radio.models import *
 import requests
 from django.conf import settings
 import json
@@ -14,7 +15,7 @@ from dateutil import parser
 def sync_fireplan_fleet():
     fp = FireplanClient()   # login gebeurt automatisch
 
-    url = f"{fp.BASE}/fr/api/charroi/view"
+    path = "/fr/api/charroi/view"
 
     payload = {
         "page": 1,
@@ -23,7 +24,7 @@ def sync_fireplan_fleet():
         "sortdesc": False,
     }
 
-    r = fp.session.post(url, json=payload)
+    r = fp.post(path, json=payload)
     r.raise_for_status()
 
     data = r.json()
@@ -232,3 +233,48 @@ def sync_vectors():
     Vector.objects.exclude(resourceCode__in=seen_pcodes).delete()
 
     return len(seen_pcodes)
+
+
+def sync_fireplan_qr_codes():
+    fp = FireplanClient()   # login automatisch
+
+    url = f"{fp.BASE}/fr/api/inventory/qr-codes"
+
+    payload = {
+        "first": 0,
+        "rows": 5000,
+        "filters": '%7B%22id%22:%7B%22operator%22:%22and%22,%22constraints%22:[%7B%22value%22:null,%22matchMode%22:%22contains%22%7D]%7D,%22name%22:%7B%22value%22:null,%22matchMode%22:%22in%22%7D,%22serialNumber%22:%7B%22value%22:null,%22matchMode%22:%22in%22%7D,%22type%22:%7B%22value%22:null,%22matchMode%22:%22in%22%7D,%22qrCode%22:%7B%22operator%22:%22and%22,%22constraints%22:[%7B%22value%22:null,%22matchMode%22:%22contains%22%7D]%7D,%22createdAt%22:%7B%22operator%22:%22and%22,%22constraints%22:[%7B%22value%22:null,%22matchMode%22:%22dateIs%22%7D]%7D%7D',
+        "multiSortMeta": "[]",
+    }
+
+    r = fp.session.get(url, params=payload)
+    r.raise_for_status()
+
+    data = r.json()
+    records = data.get("records", [])
+
+    result = []
+
+    pattern = re.compile(r"https://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)")
+    
+    for rec in records:
+        if rec.get("name") in ["Radio mobile Astrid", "Radio portable Astrid"]:
+            match = pattern.match(rec["qrCode"])
+            if match:
+                fireplan_id = int(match.group("fireplan_id"))
+                TEI = rec["serialNumber"]
+                
+                result.append({
+                    "TEI": TEI,
+                    "fireplan_id": fireplan_id
+                })
+
+                radio, _ = Radio.objects.get_or_create(
+                    TEI=TEI,
+                    defaults={"fireplan_id": fireplan_id},
+                )
+
+
+
+
+    return result

@@ -54,6 +54,8 @@ Maak een `.env` file aan in de base directory van het project.
 ENVIRONMENT=dev
 DEBUG=True
 SECRET_KEY=***
+FIREPLAN_USERNAME=***
+FIREPLAN_PASSWORD=***
 ```
 
 ### Production
@@ -63,6 +65,8 @@ DEBUG=False
 SECRET_KEY=***
 DATABASE_URL=postgres://<pg username>:<pg password>@localhost:5432/<db name>
 ALLOWED_PROD_HOST=<host 1>, <host 2>
+FIREPLAN_USERNAME=***
+FIREPLAN_PASSWORD=***
 ```
 
 ### Secret key
