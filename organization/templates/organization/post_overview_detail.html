@@ -85,7 +85,9 @@ h2, h3, h4 {
             {% for child in post.children.all %}
               {% if child.show_in_listing %}
               <div class="child-block">
-                <h4>{{ child }}</h4>
+                <h4>
+                    {{ child }}{% if child.vector.vehicle %} ({{ child.vector.vehicle.call_sign }}){% endif %}
+                </h4>
                 <table class="table table-sm table-bordered radio-table">
                     <tbody>
                         {% for link in child.radio_links.all %}
