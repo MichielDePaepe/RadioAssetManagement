@@ -235,7 +235,7 @@ def sync_vectors():
     return len(seen_pcodes)
 
 
-def sync_fireplan_qr_codes():
+def sync_fireplan_id():
     fp = FireplanClient()   # login automatisch
 
     url = f"{fp.BASE}/fr/api/inventory/qr-codes"
@@ -260,21 +260,26 @@ def sync_fireplan_qr_codes():
     for rec in records:
         if rec.get("name") in ["Radio mobile Astrid", "Radio portable Astrid"]:
             match = pattern.match(rec["qrCode"])
-            if match:
-                fireplan_id = int(match.group("fireplan_id"))
-                TEI = rec["serialNumber"]
-                
-                result.append({
-                    "TEI": TEI,
-                    "fireplan_id": fireplan_id
-                })
+            if not match:
+                continue
 
-                radio, _ = Radio.objects.get_or_create(
-                    TEI=TEI,
+            fireplan_id = int(match.group("fireplan_id"))
+            tei = rec["serialNumber"]
+
+            try:
+                radio, created = Radio.objects.get_or_create(
+                    TEI=tei,
                     defaults={"fireplan_id": fireplan_id},
                 )
+            except ValueError:
+                continue
 
+            if not created:
+                if radio.fireplan_id != fireplan_id:
+                    radio.fireplan_id = fireplan_id
+                    radio.save()
 
+            result.append({"TEI": tei, "fireplan_id": fireplan_id})
 
 
     return result

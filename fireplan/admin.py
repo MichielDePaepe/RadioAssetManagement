@@ -1,5 +1,4 @@
-from django.contrib import admin
-from django.contrib import messages
+from django.contrib import admin, messages
 from .models import *
 from .sync import sync_fireplan_fleet, sync_vectors
 

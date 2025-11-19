@@ -1,8 +1,9 @@
 from django.utils.html import format_html
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import Q
 
 from .models import *
+from fireplan.sync import sync_fireplan_id
 
 
 class HasSubscriptionFilter(admin.SimpleListFilter):
@@ -111,6 +112,8 @@ class RadioAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('model', )
 
+    actions = ["sync_fireplan_id"]
+
     def get_search_results(self, request, queryset, search_term):
         # strip leading zeros voor TEI
         stripped_term = search_term.lstrip("0")
@@ -140,6 +143,17 @@ class RadioAdmin(admin.ModelAdmin):
         return obj.is_active
     is_active.boolean = True
     is_active.short_description = 'Active'
+
+    def sync_fireplan_id(self, request, queryset=None):
+        result = sync_fireplan_id()
+        count = len(result)
+        self.message_user(
+            request,
+            f"Synchronisatie voltooid. {count} radio's bijgewerkt.",
+            level=messages.SUCCESS,
+        )
+
+    sync_fireplan_id.short_description = "Synchroniseer Fireplan ID's"
 
 
 
