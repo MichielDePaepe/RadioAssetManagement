@@ -35,6 +35,7 @@ class TicketLogForm(forms.ModelForm):
 
 
 
+
 class TicketEditForm(forms.ModelForm):
     class Meta:
         model = Ticket
@@ -63,3 +64,34 @@ class TicketEditForm(forms.ModelForm):
             if not user.has_perm("helpdesk.can_assign_ticket"):
                 self.fields["assigned_to"].widget.attrs["readonly"] = True
                 self.fields["assigned_to"].widget.attrs["disabled"] = True
+
+
+class TicketCreateForm(forms.ModelForm):
+    class Meta:
+        model = Ticket
+        fields = [
+            "title",
+            "description",
+            "ticket_type",
+            "priority",
+            "radio",
+            "external_reference",
+            "siamu_ticket",
+            "assigned_to",
+        ]
+        widgets = {
+            "title": forms.TextInput(attrs={"class": "form-control", "placeholder": "Titel"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Beschrijving"}),
+            "ticket_type": forms.Select(attrs={"class": "form-select"}),
+            "priority": forms.Select(attrs={"class": "form-select"}),
+            "radio": forms.Select(attrs={"class": "form-select"}),
+            "external_reference": forms.TextInput(attrs={"class": "form-control", "placeholder": "Extern referentie"}),
+            "siamu_ticket": forms.TextInput(attrs={"class": "form-control", "placeholder": "SIAMU-nummer"}),
+            "assigned_to": forms.Select(attrs={"class": "form-select"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # ASTRID_REQUEST niet als type aanbieden bij nieuwe tickets
+        self.fields["ticket_type"].queryset = TicketType.objects.exclude(code="ASTRID_REQUEST")

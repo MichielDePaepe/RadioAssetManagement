@@ -258,6 +258,7 @@ def sync_fireplan_id():
     pattern = re.compile(r"https://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)")
     
     for rec in records:
+        print(f"{rec.get("name")}\t{rec["serialNumber"]}")
         if rec.get("name") in ["Radio mobile Astrid", "Radio portable Astrid", "Portable ATEX"]:
             match = pattern.match(rec["qrCode"])
             if not match:

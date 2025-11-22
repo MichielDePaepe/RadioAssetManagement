@@ -24,7 +24,7 @@ class TicketDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["logs"] = self.object.logs.select_related("user", "status_before", "status_after")
-        context["form"] = TicketLogForm(ticket=self.object)  # logformulier
+        context["log_form"] = TicketLogForm(ticket=self.object)  # logformulier
         context["edit_form"] = TicketEditForm(instance=self.object, user=self.request.user)
         return context
 
@@ -85,6 +85,24 @@ class TicketDetailView(LoginRequiredMixin, DetailView):
         return redirect(self.get_success_url())
 
 
+
+class TicketCreateView(LoginRequiredMixin, CreateView):
+    model = Ticket
+    form_class = TicketCreateForm
+    template_name = "helpdesk/ticket_detail.html"  # dezelfde template
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["ticket"] = None
+        context["logs"] = None
+        context["radio_pk"] = self.kwargs.get("radio_pk")
+        return context
+
+    def form_valid(self, form):
+        ticket = form.save(commit=False)
+        ticket.created_by = self.request.user
+        ticket.save()
+        return redirect("helpdesk:ticket_detail", pk=ticket.pk)
 
 
 

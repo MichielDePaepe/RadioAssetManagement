@@ -1,42 +1,86 @@
 {% extends "base.html" %}
 {% block content %}
 {% load i18n %}
+{% load radio_selector_tags static i18n %}
+
 
 <div class="container mt-4">
-  
-  <h2 class="mb-0">{{ ticket.title }}</h2>
-  
+
+  <h2 class="mb-0">
+    {% if ticket %}
+      {{ ticket.title }}
+    {% else %}
+      Nieuw ticket
+    {% endif %}
+  </h2>
+
   <hr>
 
   <div class="row g-3">
+
+    <!-- ===================================================== -->
+    <!-- LINKERKOLOM                                           -->
+    <!-- ===================================================== -->
     <div class="col-md-8">
 
-      <h4 class="mb-2">Description</h4>
+      {% if not ticket %}
+      <!-- ===================================================== -->
+      <!-- NIEUW TICKET - ÉÉN FORM DIE OOK METADATA BEVAT        -->
+      <!-- ===================================================== -->
+      <form method="post" id="ticket-create-form">
+        {% csrf_token %}
 
+        <!-- T I T E L -->
+        <h4 class="mb-2">Titel</h4>
+        {{ form.title }}
+
+        <!-- D E S C R I P T I O N -->
+        <h4 class="mb-2">Description</h4>
+        {{ form.description }}
+
+        <div class="text mt-3">
+  <button type="submit" form="ticket-create-form" class="btn btn-primary">
+    <i class="bi bi-check2-circle me-1"></i> Aanmaken
+  </button>
+</div>
+
+
+      {% else %}
+
+      <!-- ===================================================== -->
+      <!-- BESTAAND TICKET                                       -->
+      <!-- ===================================================== -->
+
+      <!-- DESCRIPTION -->
+      <h4 class="mb-2">Description</h4>
       <div class="card shadow-sm mb-3">
         <div class="card-body">
           <p class="card-text">{{ ticket.description|linebreaks }}</p>
         </div>
       </div>
 
+      <!-- LOGS -->
       <h4 class="mb-2">Logs</h4>
-
       {% if logs %}
         <div class="list-group">
           {% for log in logs %}
             <div class="list-group-item">
+
               <small class="text-muted">
                 {{ log.timestamp|date:"d/m/Y H:i" }} —
                 {% if log.user %}{{ log.user }}{% else %}System{% endif %}
               </small>
+
               <div class="mt-1">
                 <span class="badge bg-light text-dark border me-1">{{ log.status_before }}</span>
                 <i class="bi bi-arrow-right mx-1 text-muted"></i>
                 <span class="badge bg-light text-dark border">{{ log.status_after }}</span>
               </div>
+
               {% if log.note %}
                 <p class="mt-2 mb-0">{{ log.note|linebreaks }}</p>
               {% endif %}
+
             </div>
           {% endfor %}
         </div>
@@ -46,17 +90,17 @@
 
       <hr>
 
+      <!-- LOG TOEVOEGEN -->
       <h5 class="mt-4">Log toevoegen</h5>
-
       <form method="post">
         {% csrf_token %}
         <div class="mb-3">
-          <label for="{{ form.note.id_for_label }}" class="form-label">{{ form.note.label }}</label>
-          {{ form.note }}
+          {{ log_form.note.label_tag }}
+          {{ log_form.note }}
         </div>
         <div class="mb-3">
-          <label for="{{ form.status_after.id_for_label }}" class="form-label">{{ form.status_after.label }}</label>
-          {{ form.status_after }}
+          {{ log_form.status_after.label_tag }}
+          {{ log_form.status_after }}
         </div>
         <div class="text-end">
           <button type="submit" name="add_log" class="btn btn-primary">
@@ -65,140 +109,156 @@
         </div>
       </form>
 
+      {% endif %}
     </div>
 
-    <!-- Right column: ticket info -->
-    <div class="col-md-4">
-      
-      <h4 class="mb-2">Ticket info</h4>
+<!-- ===================================================== -->
+<!-- RECHTERKOLOM                                          -->
+<!-- ===================================================== -->
+<div class="col-md-4">
 
-      <div class="card mb-3">
-        <div class="card-body">
+  <h4 class="mb-2">Ticket info</h4>
 
-          <form method="post">
-            {% csrf_token %}
-            <input type="hidden" name="update_ticket" value="1">
+  <div class="card mb-3">
+    <div class="card-body">
 
-            <!-- Type -->
-            <div class="mb-2 d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;">Type:</strong>
-              <div class="flex-grow-1">
-                {% if perms.helpdesk.can_edit_ticket_fields %}
-                  {{ edit_form.ticket_type }}
-                {% else %}
-                  {{ ticket.ticket_type }}
-                {% endif %}
-              </div>
-            </div>
+      {% if ticket %}
+      <!-- EDIT MODE: start form -->
+      <form method="post" id="ticket-edit-form">
+        {% csrf_token %}
+        <input type="hidden" name="update_ticket" value="1">
+      {% endif %}
 
-            {% if ticket.ticket_type.code == "ASTRID_REQUEST" %}
-            <div class="mb-2 d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;"></strong>
-              <div class="flex-grow-1">
-                <a href="{% url 'astrid:request_detail' pk=ticket.pk %}">
-                  Go to request ticket #{{ ticket.pk }}
-                </a>
-              </div>
-            </div>
-            {% endif %}
-
-            <!-- Priority -->
-            <div class="mb-2 d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;">Priority:</strong>
-              <div class="flex-grow-1">
-                {% if perms.helpdesk.can_edit_ticket_fields %}
-                  {{ edit_form.priority }}
-                {% else %}
-                  <span class="badge 
-                    {% if ticket.priority == 'high' %}bg-danger
-                    {% elif ticket.priority == 'low' %}bg-success
-                    {% else %}bg-warning text-dark
-                    {% endif %}">
-                    {{ ticket.get_priority_display }}
-                  </span>
-                {% endif %}
-              </div>
-            </div>
-
-            <!-- Status -->
-            <div class="mb-2 d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;">Status:</strong>
-              <div class="flex-grow-1">
-                <span class="badge bg-light text-dark border">{{ ticket.status }}</span>
-              </div>
-            </div>
-
-            <!-- Radio -->
-            <div class="mb-2 d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;">Radio:</strong>
-              <div class="flex-grow-1">
-                <a href="{% url 'radio:detail' ticket.radio.pk %}">{{ ticket.radio }}</a>
-              </div>
-            </div>
-
-            <!-- External reference -->
-            {% if ticket.external_reference %}
-            <div class="mb-2 d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;">External ref:</strong>
-              <div class="flex-grow-1">{{ ticket.external_reference }}</div>
-            </div>
-            {% endif %}
-
-            <!-- SIAMU ticket -->
-            <div class="mb-2 d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;">SIAMU:</strong>
-              <div class="flex-grow-1">
-                {% if perms.helpdesk.can_edit_ticket_fields %}
-                  {{ edit_form.siamu_ticket }}
-                {% else %}
-                  {{ ticket.siamu_ticket|default:"—" }}
-                {% endif %}
-              </div>
-            </div>
-
-            <!-- Created by -->
-            <div class="mb-2 d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;">Created by:</strong>
-              <div class="flex-grow-1">{{ ticket.created_by }}</div>
-            </div>
-
-            <!-- Assigned to -->
-            <div class="mb-2 d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;">Assigned to:</strong>
-              <div class="flex-grow-1">
-                {% if perms.helpdesk.can_assign_ticket %}
-                  {{ edit_form.assigned_to }}
-                {% else %}
-                  {{ ticket.assigned_to|default:"—" }}
-                {% endif %}
-              </div>
-            </div>
-
-            <!-- Created & Updated -->
-            <div class="mb-2 d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;">Created:</strong>
-              <div class="flex-grow-1">{{ ticket.created_at|date:"d/m/Y H:i" }}</div>
-            </div>
-            <div class="d-flex align-items-center">
-              <strong class="me-2 flex-shrink-0" style="width: 40%;">Updated:</strong>
-              <div class="flex-grow-1">{{ ticket.updated_at|date:"d/m/Y H:i" }}</div>
-            </div>
-
-            <!-- Save button (only if user can edit something) -->
-            {% if perms.helpdesk.can_edit_ticket_fields or perms.helpdesk.can_assign_ticket %}
-            <div class="text-end mt-3">
-              <button type="submit" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-save me-1"></i> Opslaan
-              </button>
-            </div>
-            {% endif %}
-
-          </form>
+        <!-- TYPE -->
+        <div class="mb-2">
+          <label class="form-label">Type:</label>
+          {% if ticket %}
+            {{ edit_form.ticket_type }}
+          {% else %}
+            {{ form.ticket_type }}
+          {% endif %}
         </div>
-      </div>
+
+        <!-- PRIORITY -->
+        <div class="mb-2">
+          <label class="form-label">Priority:</label>
+          {% if ticket %}
+            {{ edit_form.priority }}
+          {% else %}
+            {{ form.priority }}
+          {% endif %}
+        </div>
+
+        <!-- RADIO -->
+        <div class="mb-2">
+          <label class="form-label">Radio:</label>
+
+          {% if ticket %}
+            <!-- READ ONLY LINK -->
+            <a href="{% url 'radio:detail' ticket.radio.pk %}">
+              {{ ticket.radio }}
+            </a>
+          {% else %}
+            <!-- RADIO SELECTOR -->
+            <div class="radio-widget border rounded p-2 position-relative">
+              <div class="text-center">
+                <div class="radio-card" id="radio-card">
+                  {% radio_selector_button %}
+                </div>
+              </div>
+
+              <input type="hidden" name="radio" id="id_radio" class="hidden-radio-input">
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- EXTERNAL REF -->
+        <div class="mb-2">
+          <label class="form-label">External ref:</label>
+          {% if ticket %}
+            {{ edit_form.external_reference }}
+          {% else %}
+            {{ form.external_reference }}
+          {% endif %}
+        </div>
+
+        <!-- SIAMU -->
+        <div class="mb-2">
+          <label class="form-label">SIAMU:</label>
+          {% if ticket %}
+            {{ edit_form.siamu_ticket }}
+          {% else %}
+            {{ form.siamu_ticket }}
+          {% endif %}
+        </div>
+
+        <!-- ASSIGNED TO -->
+        <div class="mb-2">
+          <label class="form-label">Assigned to:</label>
+          {% if ticket %}
+            {{ edit_form.assigned_to }}
+          {% else %}
+            {{ form.assigned_to }}
+          {% endif %}
+        </div>
+
+        {% if ticket %}
+        <!-- OPSLAAN -->
+        <div class="text-end mt-3">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-save me-1"></i> Opslaan
+          </button>
+        </div>
+
+      </form>
+      {% endif %}
+
     </div>
-    
+  </div>
+
+</div>
+
+
   </div>
 </div>
+
+{% if not ticket %}
+
+{% radio_selector_modal %}
+
+<script>
+  function radio_selector_callback(btn, data){
+    const card = btn.parentElement;
+    console.log(btn);
+    console.log(data)
+    const hidden_input = card.closest(".radio-widget").querySelector(".hidden-radio-input");
+    hidden_input.value = data.tei;
+    card.dataset.tei = data.tei;
+  }
+
+  // --- Alleen initialiseren met de ticket-radio ---
+  document.addEventListener("DOMContentLoaded", function() {
+    const radio_pk = "{{ radio_pk|default:'' }}";
+    const card = document.querySelector("#radio-card");
+
+    if (radio_pk && card) {
+      card.dataset.tei = radio_pk;
+      const input = card.closest(".radio-widget").querySelector(".hidden-radio-input");
+      if (input) input.value = radio_pk;
+    }
+  });
+</script>
+
+{% endif %}
+
+
+{% endblock %}
+
+
+{% block extra_script %}
+
+  <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
+  <script src="{% static 'js/radio_card.js' %}"></script>
 
 {% endblock %}
