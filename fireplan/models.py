@@ -24,11 +24,12 @@ class Vehicle(models.Model):
         null=True,
     )
 
-    radio = models.ForeignKey(        
+    radio = models.OneToOneField(
         "radio.Radio",
         null=True,
         blank=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL,
+        related_name="vehicle",
     )
 
     def save(self, *args, **kwargs):

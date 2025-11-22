@@ -69,7 +69,27 @@
         </td>
       </tr>
       {% endif %}
-      {% if radio.inventory_entries %}
+
+      {% if radio.vehicle %}
+      <tr>
+        <th scope="row" class="bg-light">Voertuig</th>
+        <td>
+          {{ radio.vehicle }}
+        </td>
+      </tr>
+      {% endif %}
+
+      {% if radio.vehicle.vector %}
+      <tr>
+        <th scope="row" class="bg-light">Vector</th>
+        <td>
+            {{ radio.vehicle.vector.statusCode.status_icon_html }}
+            {{ radio.vehicle.vector.name }}
+        </td>
+      </tr>
+      {% endif %}
+
+      {% if radio.inventory_entries.exists %}
       <tr>
         <th scope="row" class="bg-light">Laatst gezien</th>
         <td>
