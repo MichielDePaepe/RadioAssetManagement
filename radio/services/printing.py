@@ -30,3 +30,10 @@ class RadioPrintingService:
         self.printer.print(type="12", images=[img.rotate(90, expand=True)] * int(copies))
 
         return f"Mobile radio label has been send to printer {self.printer.name}."
+
+    def print_alias_label(self, copies=1):
+        img = self.image_generator.alias_label()        
+
+        self.printer.print(type="12", images=[img.rotate(90, expand=True)] * int(copies))
+
+        return f"Alias label has been send to printer {self.printer.name}."

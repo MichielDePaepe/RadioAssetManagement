@@ -198,6 +198,8 @@ class RadioDetailView(DetailView):
                 res = print_service.print_tei(copies)
             elif action == "label":
                 res = print_service.print_mobile_label(copies)
+            elif action == "alias":
+                res = print_service.print_alias_label(copies)
             else:
                 raise Exception("No action selected")
             messages.success(request, res)
