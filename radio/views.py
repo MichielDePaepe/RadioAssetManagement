@@ -322,6 +322,8 @@ class QRImageView(View):
             img = ig.portable_radio_tei_label(color_dark=(0, 0, 0), color_light=(255, 255, 0))
         elif type == "mobile_label":
             img = ig.mobile_radio_label(color_dark=(255,255,255), color_light=(0,102,204))
+        elif type == "alias_label":
+            img = ig.alias_label(color_dark=(0, 0, 0), color_light=(255, 255, 255))
         else:
             return Http404()
 

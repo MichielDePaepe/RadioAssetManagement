@@ -169,3 +169,80 @@ class ImageGenerator:
 
         # map grayscale to the requested colors
         return map_grayscale_to_colors(label_img, color_dark, color_light)
+
+
+    def alias_label(self, color_dark=(0, 0, 0), color_light=(255, 255, 255)):
+        """
+        Label 12 mm hoog, max 20 mm breed.
+        Boven: logo, onder: alias (radio.subscription.issi.alias), gecentreerd.
+        """
+        # Afmetingen in pixels
+        label_h_px = self.mm_to_px(12)
+        label_w_px = self.mm_to_px(20)
+
+        # Alias ophalen
+        alias_text = ""
+        subscription = getattr(self.radio, "subscription", None)
+        if subscription is not None:
+            issi = getattr(subscription, "issi", None)
+            if issi is not None:
+                alias_text = issi.alias or ""
+        text = alias_text or ""
+
+        # Basisbeeld
+        label_img = Image.new("L", (label_w_px, label_h_px), color=255)
+        draw = ImageDraw.Draw(label_img)
+
+        # Logo laden en schalen (zelfde als andere labels)
+        logo_img = image2black_and_white(Image.open("logo.png"))
+        aspect_ratio = logo_img.width / logo_img.height
+
+        # Logo neemt ~55% van de hoogte in, maar niet breder dan label
+        max_logo_h = int(label_h_px * 0.55)
+        max_logo_w = label_w_px
+
+        logo_h_px = max_logo_h
+        logo_w_px = int(logo_h_px * aspect_ratio)
+
+        if logo_w_px > max_logo_w:
+            logo_w_px = max_logo_w
+            logo_h_px = int(logo_w_px / aspect_ratio)
+
+        logo_img = logo_img.resize((logo_w_px, logo_h_px))
+
+        # Logo centreren bovenaan
+        logo_x = (label_w_px - logo_w_px) // 2
+        logo_y = 0
+        label_img.paste(logo_img, (logo_x, logo_y))
+
+        # Tekst-gebied onder logo
+        text_area_top = logo_h_px
+        text_area_height = label_h_px - text_area_top
+
+        if text:
+            # Lettertype hergebruiken (Barlow-Bold)
+            # Start met iets grotere font size en krimp tot het past
+            font_size = self.mm_to_px(3.5)
+            min_font_size = self.mm_to_px(2)
+
+            while True and font_size >= min_font_size:
+                font = ImageFont.truetype("fonts/Barlow-Bold.ttf", font_size)
+                bbox = font.getbbox(text)
+                text_w = bbox[2] - bbox[0]
+                text_h = bbox[3] - bbox[1]
+
+                # Kleine marges links/rechts en boven/onder
+                if (
+                    text_w <= label_w_px - self.mm_to_px(1)
+                    and text_h <= text_area_height - self.mm_to_px(1)
+                ):
+                    break
+
+                font_size -= 1
+
+            # Tekst centreren in text-area
+            x = (label_w_px - text_w) // 2
+            y = text_area_top + (text_area_height - text_h) // 2 - bbox[1]
+            draw.text((x, y), text, font=font, fill=0)
+
+        return map_grayscale_to_colors(label_img, color_dark, color_light)
