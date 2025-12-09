@@ -1,11 +1,14 @@
 # fireplan/translation.py
 
-from modeltranslation.translator import TranslationOptions, translator
+from modeltranslation.translator import register, TranslationOptions
 from .models import StatusCode
+from .auth_models import FireplanGrade
 
 
+@register(StatusCode)
 class StatusCodeTranslationOptions(TranslationOptions):
     fields = ("description",)
 
-
-translator.register(StatusCode, StatusCodeTranslationOptions)
+@register(FireplanGrade)
+class FireplanGradeTranslationOptions(TranslationOptions):
+    fields = ("name", "abbrev")

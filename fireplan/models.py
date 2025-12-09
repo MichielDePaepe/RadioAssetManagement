@@ -1,6 +1,9 @@
 # models.py
+from django.conf import settings
 from django.db import models
 from django.utils.html import format_html
+
+from .auth_models import *
 
 
 class VehicleStatus(models.IntegerChoices):
@@ -137,3 +140,7 @@ class Vector(models.Model):
 
     def __str__(self):
         return f"{self.resourceCode} ({self.name})"
+
+
+
+

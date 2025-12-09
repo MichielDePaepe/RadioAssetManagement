@@ -2,6 +2,7 @@ from django.contrib import admin, messages
 from .models import *
 from .sync import sync_fireplan_fleet, sync_vectors
 
+from .auth_admin import *
 
 
 @admin.register(Vehicle)

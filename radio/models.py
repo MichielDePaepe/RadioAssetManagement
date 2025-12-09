@@ -119,8 +119,19 @@ class ISSICustomerRange(models.Model):
 
 
 class Discipline(models.Model):
+    class DisciplineType(models.TextChoices):
+        POLICE = "PORTABLE", _("Police")
+        FIRE = "FIRE", _("Fire")
+        MEDICAL = "MEDICAL", _("Medical")
+        OTHER = "OTHER", _("Other")
+
     name = models.CharField(max_length=100)
     bootstrap_class = models.CharField(max_length=100, null=True, blank=True)
+    discipline_type = models.CharField(
+        max_length=10,
+        choices=DisciplineType.choices,
+        default=DisciplineType.OTHER,
+    )
     
     def __str__(self):
         return self.name
