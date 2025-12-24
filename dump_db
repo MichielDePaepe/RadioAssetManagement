@@ -81,8 +81,8 @@ echo "[STEP] Exporting Django data to JSON..."
 cd "$project_folder"
 python manage.py dumpdata \
   --natural-foreign --natural-primary \
-  -e contenttypes -e auth.Permission -e taqto.Permissions \
-  --indent 2 > "${dump_dir}/${timestamp}_django_dump.json"
+  -e contenttypes -e auth.permission -e admin.logentry -e sessions.session -e taqto.Permissions \
+  --indent 2 > "${dump_dir}/${timestamp}_django_dump.json
 if [ $? -eq 0 ]; then
   echo "[OK] Django JSON export completed."
 else
