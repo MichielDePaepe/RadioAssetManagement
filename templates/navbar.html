@@ -69,42 +69,42 @@
           </li>
         {% endif %}
 
-{% if perms.taqto.tacto_user %}
-<li class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle" href="#" id="taqtoDropdown" role="button" data-bs-toggle="dropdown">
-    <span class="svg-icon align-top">
-      {% include "svg/airbus_logo.svg" %}
-    </span> Taqto
-  </a>
+        {% if perms.taqto.tacto_user %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="taqtoDropdown" role="button" data-bs-toggle="dropdown">
+            <span class="svg-icon align-top">
+              {% include "svg/airbus_logo.svg" %}
+            </span> Taqto
+          </a>
 
-  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="taqtoDropdown">
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="taqtoDropdown">
 
-    {% if perms.taqto.can_download_contacts %}
-      <!-- Titel als "disabled" dropdown-item -->
-      <li>
-        <span class="dropdown-item text-muted disabled" style="pointer-events:none;">
-          <i class="bi bi-person-lines-fill"></i> {% trans "Download contacts" %}
-        </span>
-      </li>
+            {% if perms.taqto.can_download_contacts %}
+              <!-- Titel als "disabled" dropdown-item -->
+              <li>
+                <span class="dropdown-item text-muted disabled" style="pointer-events:none;">
+                  <i class="bi bi-person-lines-fill"></i> {% trans "Download contacts" %}
+                </span>
+              </li>
 
-      <!-- Fire -->
-      <li>
-        <a class="dropdown-item ps-4" href="{% url 'taqto:contacts_download_by_discipline' 'fire' %}">
-          <i class="bi bi-fire"></i> {% trans "Fire" %}
-        </a>
-      </li>
+              <!-- Fire -->
+              <li>
+                <a class="dropdown-item ps-4" href="{% url 'taqto:contacts_download_by_discipline' 'fire' %}">
+                  <i class="bi bi-fire"></i> {% trans "Fire" %}
+                </a>
+              </li>
 
-      <!-- Medical -->
-      <li>
-        <a class="dropdown-item ps-4" href="{% url 'taqto:contacts_download_by_discipline' 'medical' %}">
-          <i class="bi bi-heart-pulse"></i> {% trans "Medical" %}
-        </a>
-      </li>
-    {% endif %}
+              <!-- Medical -->
+              <li>
+                <a class="dropdown-item ps-4" href="{% url 'taqto:contacts_download_by_discipline' 'medical' %}">
+                  <i class="bi bi-heart-pulse"></i> {% trans "Medical" %}
+                </a>
+              </li>
+            {% endif %}
 
-  </ul>
-</li>
-{% endif %}
+          </ul>
+        </li>
+        {% endif %}
 
 
         {% if user.is_authenticated %}

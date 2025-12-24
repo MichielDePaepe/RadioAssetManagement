@@ -113,7 +113,7 @@ class ScanSubmitView(View):
             container = rcl.container
             radio = Radio.objects.get(TEI=a["tei"])
 
-            InventoryEntry(radio=radio, container=container).save()
+            #InventoryEntry(radio=radio, container=container).save()
 
         return HttpResponseRedirect(reverse('inventory:container_list', args=[container.parent.id]))
 
