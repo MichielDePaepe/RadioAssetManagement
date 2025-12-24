@@ -73,14 +73,13 @@ class RadioEndpointAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "container",
-        "allows_multiple",
         "primary_radio",
         "current_radio",
         "current_reason",
         "current_since",
     )
     list_filter = ("allows_multiple", "container__polymorphic_ctype")
-    search_fields = ("name", "container__label", "primary_radio__id")
+    search_fields = ("name", "container__label", "primary_radio__subscription__issi__number")
     autocomplete_fields = ("container", "primary_radio")
     inlines = (RadioAssignmentInline,)
     readonly_fields = ("current_radio", "current_reason", "current_since")
@@ -111,7 +110,7 @@ class RadioEndpointAdmin(admin.ModelAdmin):
 class RadioAssignmentAdmin(admin.ModelAdmin):
     list_display = ("radio", "endpoint", "reason", "start_at", "end_at", "ticket", "replaces_radio", "is_open")
     list_filter = ("reason", "end_at")
-    search_fields = ("radio__id", "endpoint__name", "endpoint__container__label")
+    search_fields = ("radio__subscription__issi__number", "endpoint__name", "endpoint__container__label")
     autocomplete_fields = ("radio", "endpoint", "ticket", "replaces_radio")
     date_hierarchy = "start_at"
 
