@@ -77,6 +77,24 @@ class RadioEndpoint(models.Model):
         related_name="primary_for_endpoint",
     )
 
+    @property
+    def current_assignment(self):
+        """
+        Radio currently assigned to this endpoint (open assignment).
+        Returns None if empty.
+        """
+        assignment = (
+            self.assignments
+            .filter(end_at__isnull=True)
+            .order_by("-start_at")
+            .first()
+        )
+        return assignment if assignment else None
+
+    @property
+    def current_radio(self):
+        return self.current_assignment.radio
+
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["container", "name"], name="uniq_endpoint_per_container"),

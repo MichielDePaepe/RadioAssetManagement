@@ -86,7 +86,7 @@ class RadioEndpointAdmin(admin.ModelAdmin):
     readonly_fields = ("current_radio", "current_reason", "current_since")
 
     def _current_assignment(self, obj):
-        return obj.assignments.filter(end_at__isnull=True).order_by("-start_at").first()
+        return obj.current_assignment
 
     def current_radio(self, obj):
         a = self._current_assignment(obj)
