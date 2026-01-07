@@ -75,6 +75,6 @@ def roip_sync_radios_snapshot(self, tei_list: list[int]) -> dict[str, int]:
         timeout=getattr(settings, "ROIP_HTTP_TIMEOUT", 5),
     )
 
-resp.raise_for_status()
+    resp.raise_for_status()
 
     return {"requested": len(tei_list), "built": len(payload_lines)}
