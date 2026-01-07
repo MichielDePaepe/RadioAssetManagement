@@ -1,0 +1,86 @@
+{% load static radio_selector_tags %}
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Wissel radio</h3>
+<div class="mb-2 text-muted">{{ endpoint.container.label }} – {{ endpoint.name }}</div>
+
+<form method="post" class="card card-body" style="max-width: 720px;">
+  {% csrf_token %}
+  {{ form.endpoint }}
+
+  <label class="form-label">Radio (zoek)</label>
+  <input id="radioSearch" class="form-control" placeholder="TEI / ISSI / alias" autocomplete="off">
+  <div id="radioResults" class="list-group mt-2" style="display:none;"></div>
+
+  <div class="mt-3">
+    <label class="form-label">Gekozen radio</label>
+    {{ form.radio }}
+  </div>
+
+  <div class="mt-3">
+    <label class="form-label">Note</label>
+    {{ form.note }}
+  </div>
+
+  <div class="mt-3 d-flex gap-2">
+    <button class="btn btn-primary" type="submit">Opslaan</button>
+    <a class="btn btn-outline-secondary" href="{% url 'inventory:endpoint_detail' endpoint.pk %}">Annuleer</a>
+  </div>
+</form>
+
+<script>
+(function () {
+  const input = document.getElementById("radioSearch");
+  const results = document.getElementById("radioResults");
+  const select = document.getElementById("id_radio");
+  let t = null;
+
+  function clearResults() {
+    results.innerHTML = "";
+    results.style.display = "none";
+  }
+
+  function setSelectByTEI(tei) {
+    for (const opt of select.options) {
+      if (String(opt.value) === String(tei)) {
+        select.value = opt.value;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  input.addEventListener("input", () => {
+    const q = input.value.trim();
+    if (t) clearTimeout(t);
+    if (q.length < 2) return clearResults();
+
+    t = setTimeout(async () => {
+      const resp = await fetch("{% url 'inventory:radio_search' %}?q=" + encodeURIComponent(q));
+      const data = await resp.json();
+      results.innerHTML = "";
+      if (!data.results.length) return clearResults();
+
+      for (const r of data.results) {
+        const a = document.createElement("button");
+        a.type = "button";
+        a.className = "list-group-item list-group-item-action";
+        a.textContent = r.label;
+        a.addEventListener("click", () => {
+          setSelectByTEI(r.tei);
+          clearResults();
+        });
+        results.appendChild(a);
+      }
+      results.style.display = "block";
+    }, 150);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!results.contains(e.target) && e.target !== input) clearResults();
+  });
+})();
+</script>
+
+{% endblock %}

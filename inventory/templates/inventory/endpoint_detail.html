@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>{{ endpoint.container.label }} – {{ endpoint.name }}</h3>
+
+<div class="mb-3">
+  <div><strong>Primary:</strong>
+    {% if endpoint.primary_radio %}
+      TEI {{ endpoint.primary_radio.tei_str }} / ISSI {{ endpoint.primary_radio.ISSI }} / {{ endpoint.primary_radio.alias }}
+    {% else %}-{% endif %}
+  </div>
+
+  <div><strong>Current assignment:</strong>
+    {% if current_assignment %}
+      TEI {{ current_assignment.radio.tei_str }} / ISSI {{ current_assignment.radio.ISSI }} / {{ current_assignment.radio.alias }}
+    {% else %}
+      <span class="text-muted">geen</span>
+    {% endif %}
+  </div>
+</div>
+
+<a class="btn btn-primary" href="{% url 'inventory:endpoint_switch' endpoint.pk %}">Wissel radio</a>
+
+{% endblock %}

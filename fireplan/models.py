@@ -1,4 +1,4 @@
-# models.py
+# fireplan/models.py
 from django.conf import settings
 from django.db import models
 from django.utils.html import format_html

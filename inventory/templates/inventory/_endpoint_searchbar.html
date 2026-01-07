@@ -1,0 +1,43 @@
+<div class="mb-3">
+  <input id="endpointSearch" class="form-control" placeholder="Zoek..." autocomplete="off">
+  <div id="endpointResults" class="list-group mt-2" style="display:none;"></div>
+</div>
+
+<script>
+(function () {
+  const input = document.getElementById("endpointSearch");
+  const results = document.getElementById("endpointResults");
+  let t = null;
+
+  function clearResults() {
+    results.innerHTML = "";
+    results.style.display = "none";
+  }
+
+  input.addEventListener("input", () => {
+    const q = input.value.trim();
+    if (t) clearTimeout(t);
+    if (q.length < 2) return clearResults();
+
+    t = setTimeout(async () => {
+      const resp = await fetch("{% url 'inventory:endpoint_search' %}?q=" + encodeURIComponent(q));
+      const data = await resp.json();
+      results.innerHTML = "";
+      if (!data.results.length) return clearResults();
+
+      for (const r of data.results) {
+        const a = document.createElement("a");
+        a.className = "list-group-item list-group-item-action";
+        a.href = r.url;
+        a.textContent = r.label;
+        results.appendChild(a);
+      }
+      results.style.display = "block";
+    }, 150);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!results.contains(e.target) && e.target !== input) clearResults();
+  });
+})();
+</script>

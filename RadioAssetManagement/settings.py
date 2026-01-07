@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_celery_results',
     'bootstrap5',
     "crispy_forms",
     "crispy_bootstrap5",
@@ -250,3 +251,10 @@ LOGGING = {
 if DEBUG:
     LOGGING['root']['level'] = 'DEBUG'    
 
+# CELERY
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_TIMEZONE = "Europe/Brussels"

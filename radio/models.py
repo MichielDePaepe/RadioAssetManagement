@@ -1,3 +1,4 @@
+# radio/models.py
 from django.db import models
 from helpdesk.models import Ticket, TicketType
 from django.utils.translation import gettext_lazy as _

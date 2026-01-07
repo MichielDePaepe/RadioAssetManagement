@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% include "inventory/_endpoint_searchbar.html" %}
+
+<h3>{{ container.label }}</h3>
+
+<table class="table table-sm align-middle">
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>Huidige radio</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ep in endpoints %}
+      <tr>
+        <td>
+          <a href="{% url 'inventory:endpoint_detail' ep.pk %}">
+            {{ container.label }} – {{ ep.name }}
+          </a>
+        </td>
+        <td>
+          {% if ep.primary_radio %}
+            TEI {{ ep.primary_radio.tei_str }} / ISSI {{ ep.primary_radio.ISSI }} / {{ ep.primary_radio.alias }}
+          {% else %}
+            <span class="text-muted">-</span>
+          {% endif %}
+        </td>
+        <td class="text-end">
+          <a class="btn btn-sm btn-outline-primary"
+             href="{% url 'inventory:endpoint_switch' ep.pk %}">
+            Wissel radio
+          </a>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
