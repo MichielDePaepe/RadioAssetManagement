@@ -258,3 +258,8 @@ CELERY_RESULT_BACKEND = "django-db"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = "Europe/Brussels"
+
+
+ROIP_INGEST_URL = "http://192.168.20.196:8000/api/ingest/ram-snapshots/"
+ROIP_INGEST_TOKEN = "YqRfVxb5Wiiw9P2UXaDnViyUi95W9e9yrqAKshkxckTvG7WsNjWQfxChQpvHtyeB"
+ROIP_HTTP_TIMEOUT = 5

@@ -180,6 +180,23 @@ user=taqto
 environment=PATH="/home/taqto/RadioAssetManagement/bin/"
 ```
 
+`/etc/supervisor/conf.d/ram-celery-worker.conf`
+```ini
+[program:ram-celery-worker]
+directory=/home/taqto/RadioAssetManagement/RadioAssetManagement
+command=/home/taqto/RadioAssetManagement/bin/celery -A RadioAssetManagement worker -l INFO
+user=taqto
+autostart=true
+autorestart=true
+startsecs=5
+stopsignal=TERM
+stopwaitsecs=60
+killasgroup=true
+stdout_logfile=/var/log/ram/celery_worker.out.log
+stderr_logfile=/var/log/ram/celery_worker.err.log
+environment=DJANGO_SETTINGS_MODULE="RadioAssetManagement.settings",PYTHONUNBUFFERED="1
+```
+
 ### Supervisor commands
 
 * Herlaad configuraties:
@@ -192,6 +209,8 @@ sudo supervisorctl update
 * Starten / stoppen van je project:
 
 ```bash
-sudo supervisorctl start radioassetmanagement
-sudo supervisorctl stop radioassetmanagement
+sudo supervisorctl start django
+sudo supervisorctl stop django
+sudo supervisorctl start ram-celery-worker
+sudo supervisorctl stop ram-celery-worker
 ```

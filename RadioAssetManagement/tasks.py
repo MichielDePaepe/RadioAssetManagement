@@ -7,6 +7,8 @@ from typing import Any, Iterable, Union
 from celery import shared_task
 from django.apps import apps
 from django.db import transaction
+import requests
+from django.conf import settings
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +63,18 @@ def roip_sync_radios_snapshot(self, tei_list: list[int]) -> dict[str, int]:
 
     log.info("ROIP sync batch size=%s", len(payload_lines))
 
-    # TODO: send in 1 request/message to RoIP (recommended)
-    # e.g. http post json: {"items": payload_lines}
+    payload = {"items": payload_lines}
+
+    resp = requests.post(
+        settings.ROIP_INGEST_URL,
+        json=payload,
+        headers={
+            "X-RAM-TOKEN": settings.ROIP_INGEST_TOKEN,
+            "Content-Type": "application/json",
+        },
+        timeout=getattr(settings, "ROIP_HTTP_TIMEOUT", 5),
+    )
+
+resp.raise_for_status()
 
     return {"requested": len(tei_list), "built": len(payload_lines)}
