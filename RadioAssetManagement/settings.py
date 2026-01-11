@@ -81,6 +81,8 @@ INSTALLED_APPS = [
     'traca',
     'astrid',
     'fireplan',
+    'roip',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -259,7 +261,19 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = "Europe/Brussels"
 
+ASGI_APPLICATION = "RadioAssetManagement.asgi.application" 
 
-ROIP_INGEST_URL = "http://192.168.20.196:8000/api/ingest/ram-snapshots/"
-ROIP_INGEST_TOKEN = "YqRfVxb5Wiiw9P2UXaDnViyUi95W9e9yrqAKshkxckTvG7WsNjWQfxChQpvHtyeB"
-ROIP_HTTP_TIMEOUT = 5
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    }
+}
+
+
+MQTT_HOST = os.getenv("MQTT_HOST", "127.0.0.1")
+MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+MQTT_USERNAME = os.getenv("MQTT_USERNAME", "roip")
+MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
+ROIP_MQTT_TOPIC = os.getenv("ROIP_MQTT_TOPIC", "roip/+/events")
+ROIP_CHANNEL_GROUP = os.getenv("ROIP_CHANNEL_GROUP", "live_tx")

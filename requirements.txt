@@ -1,5 +1,5 @@
 amqp==5.3.1
-asgiref==3.9.0
+asgiref==3.11.0
 attrs==25.3.0
 beautifulsoup4==4.13.4
 billiard==4.2.4
@@ -8,6 +8,8 @@ brother-ql==0.9.4
 celery==5.6.2
 certifi==2025.6.15
 cffi==1.17.1
+channels==4.3.2
+channels_redis==4.3.0
 charset-normalizer==3.4.2
 click==8.2.1
 click-didyoumean==0.3.1
@@ -41,10 +43,12 @@ kiwisolver==1.4.9
 kombu==5.6.2
 MarkupSafe==3.0.2
 matplotlib==3.10.6
+msgpack==1.1.2
 numpy==2.3.2
 openpyxl==3.1.5
 packaging==25.0
 packbits==0.6
+paho-mqtt==2.1.0
 pillow==11.3.0
 ply==3.11
 prompt_toolkit==3.0.52
