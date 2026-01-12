@@ -1,127 +1,185 @@
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Live TX</title>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 20px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
-    .pill { padding: 2px 8px; border-radius: 999px; background: #eee; font-size: 12px; }
-    .muted { color: #666; }
-  </style>
-</head>
-<body>
-  <h2>Wie is in uitzending</h2>
-  <div class="muted" id="wsStatus">connecting…</div>
+{% extends 'base.html' %}
+{% load i18n %}
 
-  <table>
-    <thead>
-      <tr>
-        <th>ISSI</th>
-        <th>Alias</th>
-        <th>Voertuig</th>
-        <th>Vector</th>
-        <th>Node</th>
-        <th>GSSI</th>
-        <th>Since</th>
-      </tr>
-    </thead>
-    <tbody id="txBody"></tbody>
-  </table>
+{% block content %}
 
-  <script>
-    const statusEl = document.getElementById("wsStatus");
-    const bodyEl = document.getElementById("txBody");
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
 
-    // key -> { startedAtTs, data }
-    const active = new Map();
+      <div class="text-center mb-4">
+        <h1 class="h3 mb-1">{% trans "Live uitzending" %}</h1>
+        <div class="text-muted small" id="wsStatus">connecting…</div>
+      </div>
 
-    function wsUrl(path) {
-      const scheme = (location.protocol === "https:") ? "wss" : "ws";
-      return `${scheme}://${location.host}${path}`;
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge rounded-pill bg-secondary" id="txBadge">IDLE</span>
+              <span class="text-muted small" id="sinceText"></span>
+            </div>
+            <span class="badge rounded-pill bg-light text-dark border" id="nodeText"></span>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="text-muted small">{% trans "ISSI" %}</div>
+              <div class="fs-3 fw-semibold" id="issiText">—</div>
+            </div>
+
+            <div class="col-12">
+              <div class="text-muted small">{% trans "Alias" %}</div>
+              <div class="fs-5" id="aliasText">—</div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="text-muted small">{% trans "Voertuig" %}</div>
+              <div class="fs-6" id="vehicleText">—</div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="text-muted small">{% trans "Vector" %}</div>
+              <div class="fs-6" id="vectorText">—</div>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="text-muted small">
+              GSSI: <span id="gssiText">—</span>
+              <span class="mx-2">·</span>
+              {% trans "Kanaal" %}: <span id="channelText">—</span>
+            </div>
+
+            <button class="btn btn-sm btn-outline-secondary" id="clearBtn" type="button">
+              <i class="bi bi-x-circle"></i> {% trans "Clear" %}
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="text-center text-muted small mt-3">
+        <span class="badge bg-light text-dark border">
+          <i class="bi bi-broadcast"></i> /ws/live/tx/
+        </span>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_script %}
+<script>
+  const els = {
+    wsStatus: document.getElementById("wsStatus"),
+    txBadge: document.getElementById("txBadge"),
+    sinceText: document.getElementById("sinceText"),
+    nodeText: document.getElementById("nodeText"),
+    issiText: document.getElementById("issiText"),
+    aliasText: document.getElementById("aliasText"),
+    vehicleText: document.getElementById("vehicleText"),
+    vectorText: document.getElementById("vectorText"),
+    gssiText: document.getElementById("gssiText"),
+    channelText: document.getElementById("channelText"),
+    clearBtn: document.getElementById("clearBtn"),
+  };
+
+  function wsUrl(path) {
+    const scheme = (location.protocol === "https:") ? "wss" : "ws";
+    return `${scheme}://${location.host}${path}`;
+  }
+
+  function getIssiNumber(ev) {
+    if (ev.issi && typeof ev.issi === "object") return ev.issi.number ?? "—";
+    return ev.issi ?? "—";
+  }
+
+  function getAlias(ev) {
+    if (ev.issi && typeof ev.issi === "object") return ev.issi.alias ?? (ev.alias ?? "—");
+    return ev.alias ?? "—";
+  }
+
+  function getVehicle(ev) {
+    return ev.vehicle?.call_sign || ev.vehicle?.number || "—";
+  }
+
+  function getVector(ev) {
+    return ev.vector?.name || ev.vector?.abbreviation || ev.vector?.resourceCode || "—";
+  }
+
+  function getChannel(ev) {
+    // show group/dispatch channel if present (gssi) else blank
+    return ev.gssi ?? "—";
+  }
+
+  function setIdle() {
+    els.txBadge.textContent = "IDLE";
+    els.txBadge.className = "badge rounded-pill bg-secondary";
+    els.sinceText.textContent = "";
+    els.nodeText.textContent = "";
+
+    els.issiText.textContent = "—";
+    els.aliasText.textContent = "—";
+    els.vehicleText.textContent = "—";
+    els.vectorText.textContent = "—";
+    els.gssiText.textContent = "—";
+    els.channelText.textContent = "—";
+  }
+
+  function setLive(ev) {
+    els.txBadge.textContent = "LIVE";
+    els.txBadge.className = "badge rounded-pill bg-danger";
+
+    const since = ev.ts ? new Date(ev.ts * 1000).toLocaleTimeString() : "";
+    els.sinceText.textContent = since ? `since ${since}` : "";
+
+    els.nodeText.textContent = ev.node_id || "";
+
+    els.issiText.textContent = getIssiNumber(ev);
+    els.aliasText.textContent = getAlias(ev);
+    els.vehicleText.textContent = getVehicle(ev);
+    els.vectorText.textContent = getVector(ev);
+
+    els.gssiText.textContent = (ev.gssi ?? "—");
+    els.channelText.textContent = getChannel(ev);
+  }
+
+  function handleEvent(ev) {
+    if (!ev || !ev.type) return;
+
+    if (ev.type === "tx_start") {
+      setLive(ev);
+      return;
     }
 
-    function keyOf(ev) {
-      const node = ev.node_id || "unknown";
-      const issi = (ev.issi && ev.issi.number) ? ev.issi.number : ev.issi;
-      const gssi = ev.gssi ?? "";
-      return `${node}|${issi}|${gssi}`;
+    if (ev.type === "tx_stop") {
+      setIdle();
+      return;
     }
+  }
 
-    function fmtVehicle(ev) {
-      if (!ev.vehicle) return "";
-      return ev.vehicle.call_sign || ev.vehicle.number || "";
+  els.clearBtn.addEventListener("click", setIdle);
+
+  const ws = new WebSocket(wsUrl("/ws/live/tx/"));
+
+  ws.onopen = () => { els.wsStatus.textContent = "connected"; };
+  ws.onclose = () => { els.wsStatus.textContent = "disconnected"; };
+  ws.onerror = () => { els.wsStatus.textContent = "error"; };
+
+  ws.onmessage = (e) => {
+    try {
+      handleEvent(JSON.parse(e.data));
+    } catch (err) {
+      console.error("bad message", e.data, err);
     }
+  };
 
-    function fmtVector(ev) {
-      if (!ev.vector) return "";
-      return ev.vector.name || ev.vector.abbreviation || ev.vector.resourceCode || "";
-    }
-
-    function fmtIssi(ev) {
-      if (ev.issi && typeof ev.issi === "object") return ev.issi.number ?? "";
-      return ev.issi ?? "";
-    }
-
-    function fmtAlias(ev) {
-      if (ev.issi && typeof ev.issi === "object") return ev.issi.alias ?? "";
-      return ev.alias ?? "";
-    }
-
-    function render() {
-      // newest first
-      const rows = Array.from(active.values())
-        .sort((a, b) => (b.startedAtTs || 0) - (a.startedAtTs || 0))
-        .map(({ startedAtTs, data }) => {
-          const since = startedAtTs ? new Date(startedAtTs * 1000).toLocaleTimeString() : "";
-          return `
-            <tr>
-              <td><span class="pill">${fmtIssi(data)}</span></td>
-              <td>${fmtAlias(data) || ""}</td>
-              <td>${fmtVehicle(data) || ""}</td>
-              <td>${fmtVector(data) || ""}</td>
-              <td class="muted">${data.node_id || ""}</td>
-              <td class="muted">${data.gssi ?? ""}</td>
-              <td class="muted">${since}</td>
-            </tr>
-          `;
-        }).join("");
-
-      bodyEl.innerHTML = rows;
-    }
-
-    function handleEvent(ev) {
-      if (!ev || !ev.type) return;
-
-      const k = keyOf(ev);
-
-      if (ev.type === "tx_start") {
-        active.set(k, { startedAtTs: ev.ts || null, data: ev });
-        render();
-        return;
-      }
-
-      if (ev.type === "tx_stop") {
-        active.delete(k);
-        render();
-        return;
-      }
-    }
-
-    const ws = new WebSocket(wsUrl("/ws/live/tx/"));
-
-    ws.onopen = () => { statusEl.textContent = "connected"; };
-    ws.onclose = () => { statusEl.textContent = "disconnected"; };
-    ws.onerror = () => { statusEl.textContent = "error"; };
-
-    ws.onmessage = (e) => {
-      try {
-        handleEvent(JSON.parse(e.data));
-      } catch (err) {
-        console.error("bad message", e.data, err);
-      }
-    };
-  </script>
-</body>
-</html>
+  setIdle();
+</script>
+{% endblock %}
