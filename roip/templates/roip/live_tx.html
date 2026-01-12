@@ -76,7 +76,7 @@
                       <th style="width:90px;">{% trans "Voertuig" %}</th>
                       <th>{% trans "Vector" %}</th>
                       <th style="width:90px;" class="text-end">{% trans "Lengte" %}</th>
-                      <th style="width:140px;" class="text-nowrap">{% trans "Opname" %}</th>
+                      <th style="width:90px;" class="text-nowrap">{% trans "Opname" %}</th>
                     </tr>
                   </thead>
                   <tbody id="eventsBody">
@@ -94,24 +94,6 @@
           </div>
         </div>
 
-      </div>
-
-      <!-- Global player (used by right list) -->
-      <div class="card shadow-sm border-0 mt-4">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="fw-semibold">{% trans "Player" %}</div>
-            <a class="small text-decoration-none" id="recordingLink" href="#" target="_blank" rel="noopener" style="display:none;">
-              {% trans "Open" %} <i class="bi bi-box-arrow-up-right"></i>
-            </a>
-          </div>
-
-          <audio id="audioPlayer" controls preload="none" style="width:100%;" class="d-none">
-            <source id="audioSource" src="" type="audio/ogg">
-          </audio>
-
-          <div class="text-muted small" id="playerHint">{% trans "Klik op play bij een opname." %}</div>
-        </div>
       </div>
 
     </div>
@@ -137,11 +119,6 @@
     vehicleText: document.getElementById("vehicleText"),
     vectorText: document.getElementById("vectorText"),
     clearBtn: document.getElementById("clearBtn"),
-
-    audio: document.getElementById("audioPlayer"),
-    audioSource: document.getElementById("audioSource"),
-    playerHint: document.getElementById("playerHint"),
-    recordingLink: document.getElementById("recordingLink"),
 
     eventsBody: document.getElementById("eventsBody"),
     eventCount: document.getElementById("eventCount"),
@@ -223,7 +200,6 @@
     const issi = getIssiNumber(ev);
     const alias = getAlias(ev);
 
-    // If no alias: show ISSI in alias field, and keep ISSI field as number
     els.issiText.textContent = issi ?? "—";
     els.aliasText.textContent = alias ? alias : (issi ? String(issi) : "—");
 
@@ -231,28 +207,16 @@
     els.vectorText.textContent = getVector(ev) || "—";
   }
 
-  function setPlayer(filename) {
-    if (!filename) return;
-
-    const url = `${RECORDINGS_BASE_URL}${filename}`;
-
-    els.audio.classList.remove("d-none");
-    els.playerHint.classList.add("d-none");
-
-    els.audio.pause();
-    els.audio.currentTime = 0;
-
-    els.audioSource.src = url;
-    els.audio.load();
-
-    els.recordingLink.href = url;
-    els.recordingLink.style.display = "inline";
-  }
-
   function pushStopEvent(ev) {
     state.events.unshift(ev);
     if (state.events.length > MAX_EVENTS) state.events.length = MAX_EVENTS;
     els.eventCount.textContent = String(state.events.length);
+  }
+
+  function stopAllRowAudio() {
+    els.eventsBody.querySelectorAll("audio").forEach(a => {
+      try { a.pause(); a.currentTime = 0; } catch(e) {}
+    });
   }
 
   function renderStops() {
@@ -278,12 +242,12 @@
       if (ev.filename) {
         const url = `${RECORDINGS_BASE_URL}${ev.filename}`;
         recCell = `
-          <button class="btn btn-sm btn-outline-primary" data-play="${ev.filename}" type="button">
-            <i class="bi bi-play-fill"></i>
+          <button class="btn btn-sm btn-outline-primary" data-play-url="${url}" type="button" title="{% trans 'Afspelen' %}">
+            <i class="bi bi-volume-up-fill"></i>
           </button>
-          <a class="btn btn-sm btn-outline-secondary ms-1" href="${url}" target="_blank" rel="noopener">
-            <i class="bi bi-box-arrow-up-right"></i>
-          </a>
+          <audio class="d-none" preload="none">
+            <source src="${url}" type="audio/ogg">
+          </audio>
         `;
       }
 
@@ -299,10 +263,16 @@
       `;
     }).join("");
 
-    els.eventsBody.querySelectorAll("button[data-play]").forEach(btn => {
+    els.eventsBody.querySelectorAll("button[data-play-url]").forEach(btn => {
       btn.addEventListener("click", () => {
-        const filename = btn.getAttribute("data-play");
-        setPlayer(filename);
+        stopAllRowAudio();
+
+        const td = btn.closest("td");
+        const audio = td ? td.querySelector("audio") : null;
+        if (!audio) return;
+
+        audio.currentTime = 0;
+        audio.play();
       });
     });
   }
@@ -316,16 +286,11 @@
     }
 
     if (ev.type === "tx_stop") {
-      // store only stop events
       pushStopEvent(ev);
       renderStops();
 
-      // clear live panel after 2s
       clearLiveTimer();
-      state.liveClearTimer = setTimeout(() => {
-        setIdle();
-      }, LIVE_CLEAR_DELAY_MS);
-
+      state.liveClearTimer = setTimeout(() => setIdle(), LIVE_CLEAR_DELAY_MS);
       return;
     }
   }
