@@ -4,10 +4,10 @@
 {% block content %}
 <div class="container py-4">
 
-  <div class="row g-4 align-items-start">
-    <!-- LIVE (fixed height, doesn't grow with history) -->
-    <div class="col-12 col-lg-4">
-      <div class="card shadow-sm" style="min-height: 220px;">
+  <!-- LIVE (top) -->
+  <div class="row g-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
         <div class="card-header d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center gap-2">
             <i class="bi bi-broadcast"></i>
@@ -16,7 +16,7 @@
           <span id="liveBadge" class="badge bg-secondary">{% trans "Idle" %}</span>
         </div>
 
-        <div class="card-body">
+        <div class="card-body" style="min-height: 200px;">
           <div id="liveEmpty" class="text-center text-muted py-4">
             <div class="display-6 mb-2">—</div>
             <div>{% trans "Geen uitzending" %}</div>
@@ -25,8 +25,8 @@
           <div id="liveBox" class="d-none">
             <div class="d-flex align-items-start justify-content-between">
               <div>
-                <div class="h4 mb-1" id="liveAlias">—</div>
-                <div class="text-muted" id="liveVehicleVector">—</div>
+                <div class="h2 mb-1" id="liveHeadline">—</div>
+                <div class="text-muted" id="liveSubline">—</div>
               </div>
               <span class="badge bg-danger">{% trans "ON AIR" %}</span>
             </div>
@@ -48,9 +48,11 @@
 
       </div>
     </div>
+  </div>
 
-    <!-- HISTORY -->
-    <div class="col-12 col-lg-8">
+  <!-- HISTORY (bottom) -->
+  <div class="row g-4 mt-1">
+    <div class="col-12">
       <div class="card shadow-sm">
         <div class="card-header d-flex align-items-center justify-content-between">
           <div class="d-flex align-items-center gap-2">
@@ -79,22 +81,18 @@
             </table>
           </div>
         </div>
-
       </div>
 
       <div class="text-muted small mt-2">
         <i class="bi bi-info-circle"></i>
-        {% trans "Klik op play om de opname te beluisteren. Klik opnieuw om te stoppen." %}
+        {% trans "Klik op play om te luisteren. Klik opnieuw om te stoppen." %}
       </div>
-
     </div>
   </div>
 
 </div>
 
-<!-- stable hidden audio element -->
 <audio id="hiddenPlayer" preload="none" style="display:none"></audio>
-
 {% endblock %}
 
 {% block extra_script %}
@@ -109,8 +107,9 @@
   const liveBadge = document.getElementById("liveBadge");
   const liveEmpty = document.getElementById("liveEmpty");
   const liveBox = document.getElementById("liveBox");
-  const liveAlias = document.getElementById("liveAlias");
-  const liveVehicleVector = document.getElementById("liveVehicleVector");
+
+  const liveHeadline = document.getElementById("liveHeadline");
+  const liveSubline = document.getElementById("liveSubline");
   const liveSince = document.getElementById("liveSince");
   const liveNode = document.getElementById("liveNode");
 
@@ -119,22 +118,51 @@
   let currentKey = null;
   let currentUrl = null;
 
-  // live state (single radio assumption)
   let liveVisible = false;
   let liveHideTimer = null;
 
-  function formatAliasOrIssi(ev) {
-    const alias = ev?.issi?.alias || ev?.alias;
-    const issi = ev?.issi?.number || ev?.issi;
-    return (alias && String(alias).trim().length) ? alias : (issi ?? "—");
+  function issiNumber(ev) {
+    return ev?.issi?.number ?? ev?.issi ?? null;
+  }
+  function aliasValue(ev) {
+    return ev?.issi?.alias || ev?.alias || "";
+  }
+  function vehicleCallsign(ev) {
+    return ev?.vehicle?.call_sign || ev?.vehicle?.number || "";
+  }
+  function vectorName(ev) {
+    return ev?.vector?.name || ev?.vector?.abbreviation || "";
   }
 
-  function getVehicle(ev) {
-    return ev?.vehicle?.call_sign || ev?.vehicle?.number || "—";
-  }
+  // LIVE formatting rules:
+  // - If vehicle exists: "CALLSIGN - VECTOR" in large (vector may be missing -> just CALLSIGN)
+  // - Else if vector missing: alias in large
+  // - Else if only ISSI: ISSI in large
+  // Subline: always ISSI in grey if available (and not already only thing shown)
+  function formatLive(ev) {
+    const issi = issiNumber(ev);
+    const alias = (aliasValue(ev) || "").trim();
+    const veh = (vehicleCallsign(ev) || "").trim();
+    const vec = (vectorName(ev) || "").trim();
 
-  function getVector(ev) {
-    return ev?.vector?.name || ev?.vector?.abbreviation || "—";
+    let headline = "—";
+    let subline = "—";
+
+    if (veh) {
+      headline = vec ? `${veh} - ${vec}` : veh;
+      subline = issi ? `ISSI ${issi}` : (alias || "—");
+    } else if (alias) {
+      headline = alias;
+      subline = issi ? `ISSI ${issi}` : "—";
+    } else if (issi) {
+      headline = String(issi);
+      subline = "—";
+    } else {
+      headline = "—";
+      subline = "—";
+    }
+
+    return { headline, subline, issi };
   }
 
   function fmtDuration(seconds) {
@@ -164,9 +192,7 @@
     if (!btn) return;
 
     btn.dataset.playing = isPlaying ? "1" : "0";
-    btn.innerHTML = isPlaying
-      ? `<i class="bi bi-pause-fill"></i>`
-      : `<i class="bi bi-play-fill"></i>`;
+    btn.innerHTML = isPlaying ? `<i class="bi bi-pause-fill"></i>` : `<i class="bi bi-play-fill"></i>`;
     btn.classList.toggle("btn-success", !isPlaying);
     btn.classList.toggle("btn-danger", isPlaying);
   }
@@ -181,13 +207,10 @@
   }
 
   async function startPlayback(key, url) {
-    if (currentKey && currentKey !== key) {
-      setButtonState(currentKey, false);
-    }
+    if (currentKey && currentKey !== key) setButtonState(currentKey, false);
 
     currentKey = key;
     currentUrl = url;
-
     player.src = url;
 
     try {
@@ -208,11 +231,7 @@
   });
 
   function showLive(ev) {
-    // cancel hide timer if any
-    if (liveHideTimer) {
-      clearTimeout(liveHideTimer);
-      liveHideTimer = null;
-    }
+    if (liveHideTimer) { clearTimeout(liveHideTimer); liveHideTimer = null; }
 
     liveVisible = true;
     liveBadge.className = "badge bg-danger";
@@ -221,17 +240,9 @@
     liveEmpty.classList.add("d-none");
     liveBox.classList.remove("d-none");
 
-    const alias = formatAliasOrIssi(ev);
-    const veh = getVehicle(ev);
-    const vec = getVector(ev);
-
-    liveAlias.textContent = alias;
-
-    // only show vehicle/vector if they exist
-    const parts = [];
-    if (veh && veh !== "—") parts.push(veh);
-    if (vec && vec !== "—") parts.push(vec);
-    liveVehicleVector.textContent = parts.length ? parts.join(" · ") : "—";
+    const f = formatLive(ev);
+    liveHeadline.textContent = f.headline;
+    liveSubline.textContent = f.subline;
 
     liveSince.textContent = fmtTime(ev.ts);
     liveNode.textContent = ev.node_id || "—";
@@ -249,17 +260,35 @@
     }, 2000);
   }
 
+  function formatHistoryAlias(ev) {
+    const alias = (aliasValue(ev) || "").trim();
+    const issi = issiNumber(ev);
+    if (alias) return alias;
+    if (issi) return String(issi);
+    return "—";
+  }
+
+  function formatHistoryVehicle(ev) {
+    const v = (vehicleCallsign(ev) || "").trim();
+    return v || "—";
+  }
+
+  function formatHistoryVector(ev) {
+    const vec = (vectorName(ev) || "").trim();
+    return vec || "—";
+  }
+
   function upsertStopRow(ev) {
     const key = ev.filename || `${ev.node_id || "node"}:${ev.ts || Date.now()}`;
     const url = recordingUrl(ev);
 
     let row = rowsByKey.get(key);
 
-    const alias = formatAliasOrIssi(ev);
-    const veh = getVehicle(ev);
-    const vec = getVector(ev);
-    const dur = fmtDuration(ev.duration_s);
     const t = fmtTime(ev.ts);
+    const alias = formatHistoryAlias(ev);
+    const veh = formatHistoryVehicle(ev);
+    const vec = formatHistoryVector(ev);
+    const dur = fmtDuration(ev.duration_s);
 
     if (!row) {
       row = document.createElement("tr");
@@ -300,19 +329,14 @@
 
     row.querySelector("[data-col='time']").textContent = t;
     row.querySelector("[data-col='alias']").textContent = alias;
-    row.querySelector("[data-col='vehicle']").textContent = (veh && veh !== "—") ? veh : "—";
-    row.querySelector("[data-col='vector']").textContent = (vec && vec !== "—") ? vec : "—";
+    row.querySelector("[data-col='vehicle']").textContent = veh;
+    row.querySelector("[data-col='vector']").textContent = vec;
     row.querySelector("[data-col='duration']").textContent = dur;
 
     const btn = row.querySelector("button[data-action='toggle']");
     if (btn) {
-      if (url) {
-        btn.disabled = false;
-        btn.dataset.url = url;
-      }
-      if (key === currentKey) {
-        setButtonState(key, !player.paused);
-      }
+      if (url) { btn.disabled = false; btn.dataset.url = url; }
+      if (key === currentKey) setButtonState(key, !player.paused);
     }
   }
 
@@ -324,14 +348,12 @@
     const url = btn.dataset.url;
     if (!url) return;
 
-    // toggle same recording
     if (currentKey === key) {
       if (!player.paused) stopPlayback();
       else startPlayback(key, url);
       return;
     }
 
-    // play different recording
     startPlayback(key, url);
   });
 
@@ -346,8 +368,6 @@
 
     if (ev.type === "tx_stop") {
       upsertStopRow(ev);
-
-      // live box disappears after 2s
       if (liveVisible) hideLiveWithDelay();
       return;
     }
