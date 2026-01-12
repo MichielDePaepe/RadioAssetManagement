@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Live TX</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+    .pill { padding: 2px 8px; border-radius: 999px; background: #eee; font-size: 12px; }
+    .muted { color: #666; }
+  </style>
+</head>
+<body>
+  <h2>Wie is in uitzending</h2>
+  <div class="muted" id="wsStatus">connecting…</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ISSI</th>
+        <th>Alias</th>
+        <th>Voertuig</th>
+        <th>Vector</th>
+        <th>Node</th>
+        <th>GSSI</th>
+        <th>Since</th>
+      </tr>
+    </thead>
+    <tbody id="txBody"></tbody>
+  </table>
+
+  <script>
+    const statusEl = document.getElementById("wsStatus");
+    const bodyEl = document.getElementById("txBody");
+
+    // key -> { startedAtTs, data }
+    const active = new Map();
+
+    function wsUrl(path) {
+      const scheme = (location.protocol === "https:") ? "wss" : "ws";
+      return `${scheme}://${location.host}${path}`;
+    }
+
+    function keyOf(ev) {
+      const node = ev.node_id || "unknown";
+      const issi = (ev.issi && ev.issi.number) ? ev.issi.number : ev.issi;
+      const gssi = ev.gssi ?? "";
+      return `${node}|${issi}|${gssi}`;
+    }
+
+    function fmtVehicle(ev) {
+      if (!ev.vehicle) return "";
+      return ev.vehicle.call_sign || ev.vehicle.number || "";
+    }
+
+    function fmtVector(ev) {
+      if (!ev.vector) return "";
+      return ev.vector.name || ev.vector.abbreviation || ev.vector.resourceCode || "";
+    }
+
+    function fmtIssi(ev) {
+      if (ev.issi && typeof ev.issi === "object") return ev.issi.number ?? "";
+      return ev.issi ?? "";
+    }
+
+    function fmtAlias(ev) {
+      if (ev.issi && typeof ev.issi === "object") return ev.issi.alias ?? "";
+      return ev.alias ?? "";
+    }
+
+    function render() {
+      // newest first
+      const rows = Array.from(active.values())
+        .sort((a, b) => (b.startedAtTs || 0) - (a.startedAtTs || 0))
+        .map(({ startedAtTs, data }) => {
+          const since = startedAtTs ? new Date(startedAtTs * 1000).toLocaleTimeString() : "";
+          return `
+            <tr>
+              <td><span class="pill">${fmtIssi(data)}</span></td>
+              <td>${fmtAlias(data) || ""}</td>
+              <td>${fmtVehicle(data) || ""}</td>
+              <td>${fmtVector(data) || ""}</td>
+              <td class="muted">${data.node_id || ""}</td>
+              <td class="muted">${data.gssi ?? ""}</td>
+              <td class="muted">${since}</td>
+            </tr>
+          `;
+        }).join("");
+
+      bodyEl.innerHTML = rows;
+    }
+
+    function handleEvent(ev) {
+      if (!ev || !ev.type) return;
+
+      const k = keyOf(ev);
+
+      if (ev.type === "tx_start") {
+        active.set(k, { startedAtTs: ev.ts || null, data: ev });
+        render();
+        return;
+      }
+
+      if (ev.type === "tx_stop") {
+        active.delete(k);
+        render();
+        return;
+      }
+    }
+
+    const ws = new WebSocket(wsUrl("/ws/live/tx/"));
+
+    ws.onopen = () => { statusEl.textContent = "connected"; };
+    ws.onclose = () => { statusEl.textContent = "disconnected"; };
+    ws.onerror = () => { statusEl.textContent = "error"; };
+
+    ws.onmessage = (e) => {
+      try {
+        handleEvent(JSON.parse(e.data));
+      } catch (err) {
+        console.error("bad message", e.data, err);
+      }
+    };
+  </script>
+</body>
+</html>
