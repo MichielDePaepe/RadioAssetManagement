@@ -97,7 +97,10 @@
 
 {% block extra_script %}
 <script>
+
 (() => {
+  const RECORDINGS_BASE_URL = "http://192.168.20.196/media/recordings/";
+
   const wsUrl = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws/live/tx/";
   const ws = new WebSocket(wsUrl);
 
@@ -182,7 +185,7 @@
   function recordingUrl(ev) {
     if (ev.media_url) return ev.media_url;
     if (!ev.filename) return null;
-    return `/media/recordings/${encodeURIComponent(ev.filename)}`;
+    return `${RECORDINGS_BASE_URL}${encodeURIComponent(ev.filename)}`;
   }
 
   function setButtonState(key, isPlaying) {
