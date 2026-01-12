@@ -84,6 +84,8 @@
                       <td colspan="6" class="text-center text-muted py-4">{% trans "Nog geen opnames." %}</td>
                     </tr>
                   </tbody>
+                  <tbody id="historyBody"></tbody>
+                  <audio id="hiddenPlayer" preload="none" style="display:none"></audio>
                 </table>
               </div>
             </div>
@@ -104,209 +106,217 @@
 
 {% block extra_script %}
 <script>
-  // If recordings are on same host: const RECORDINGS_BASE_URL = "/media/recordings/";
-  const RECORDINGS_BASE_URL = "http://192.168.20.196/media/recordings/";
-  const MAX_EVENTS = 20;
-  const LIVE_CLEAR_DELAY_MS = 2000;
+(() => {
+  const wsUrl = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws/live/tx/";
+  const ws = new WebSocket(wsUrl);
 
-  const els = {
-    wsStatus: document.getElementById("wsStatus"),
-    txBadge: document.getElementById("txBadge"),
-    sinceText: document.getElementById("sinceText"),
-    nodeText: document.getElementById("nodeText"),
-    issiText: document.getElementById("issiText"),
-    aliasText: document.getElementById("aliasText"),
-    vehicleText: document.getElementById("vehicleText"),
-    vectorText: document.getElementById("vectorText"),
-    clearBtn: document.getElementById("clearBtn"),
+  const historyBody = document.getElementById("historyBody");
+  const player = document.getElementById("hiddenPlayer");
 
-    eventsBody: document.getElementById("eventsBody"),
-    eventCount: document.getElementById("eventCount"),
-  };
+  // Keep stable identity per recording
+  // key = filename (best unique)
+  const rowsByKey = new Map();
 
-  const state = {
-    events: [], // tx_stop only, newest first
-    liveClearTimer: null,
-  };
+  // Current playback state
+  let currentKey = null;        // filename that is playing (or null)
+  let currentUrl = null;
 
-  function wsUrl(path) {
-    const scheme = (location.protocol === "https:") ? "wss" : "ws";
-    return `${scheme}://${location.host}${path}`;
-  }
-
-  function getIssiNumber(ev) {
-    if (ev.issi && typeof ev.issi === "object") return ev.issi.number ?? null;
-    return ev.issi ?? null;
-  }
-
-  function getAlias(ev) {
-    if (ev.issi && typeof ev.issi === "object") return ev.issi.alias ?? null;
-    return ev.alias ?? null;
+  function formatAliasOrIssi(ev) {
+    const alias = ev?.issi?.alias || ev?.alias;
+    const issi = ev?.issi?.number || ev?.issi;
+    return alias && alias.trim().length ? alias : (issi ?? "—");
   }
 
   function getVehicle(ev) {
-    return ev.vehicle?.call_sign || ev.vehicle?.number || null;
+    return ev?.vehicle?.call_sign || ev?.vehicle?.number || "—";
   }
 
   function getVector(ev) {
-    return ev.vector?.name || ev.vector?.abbreviation || ev.vector?.resourceCode || null;
-  }
-
-  function fmtTime(ts) {
-    if (!ts) return "—";
-    return new Date(ts * 1000).toLocaleTimeString();
+    return ev?.vector?.name || ev?.vector?.abbreviation || "—";
   }
 
   function fmtDuration(seconds) {
     if (seconds == null) return "—";
-    const s = Math.max(0, Number(seconds));
-    if (!Number.isFinite(s)) return "—";
-    if (s < 60) return `${s.toFixed(1)}s`;
-    const m = Math.floor(s / 60);
-    const r = Math.round(s % 60);
-    return `${m}m${String(r).padStart(2, "0")}s`;
+    const s = Math.max(0, Math.round(seconds));
+    const mm = String(Math.floor(s / 60)).padStart(2, "0");
+    const ss = String(s % 60).padStart(2, "0");
+    return `${mm}:${ss}`;
   }
 
-  function clearLiveTimer() {
-    if (state.liveClearTimer) {
-      clearTimeout(state.liveClearTimer);
-      state.liveClearTimer = null;
+  function fmtTime(ts) {
+    // ts is unix seconds
+    if (!ts) return "—";
+    const d = new Date(ts * 1000);
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  }
+
+  function recordingUrl(ev) {
+    // Prefer media_url if you add it later
+    if (ev.media_url) return ev.media_url;
+    if (!ev.filename) return null;
+    return `/media/recordings/${encodeURIComponent(ev.filename)}`;
+  }
+
+  function setButtonState(key, isPlaying) {
+    const row = rowsByKey.get(key);
+    if (!row) return;
+    const btn = row.querySelector("button[data-action='toggle']");
+    if (!btn) return;
+
+    btn.dataset.playing = isPlaying ? "1" : "0";
+    btn.innerHTML = isPlaying
+      ? `<i class="bi bi-pause-fill"></i>`
+      : `<i class="bi bi-play-fill"></i>`;
+    btn.classList.toggle("btn-success", !isPlaying);
+    btn.classList.toggle("btn-danger", isPlaying);
+  }
+
+  function stopPlayback() {
+    if (currentKey) {
+      setButtonState(currentKey, false);
+    }
+    player.pause();
+    player.removeAttribute("src"); // force unload
+    player.load();
+    currentKey = null;
+    currentUrl = null;
+  }
+
+  async function startPlayback(key, url) {
+    // stop previous if any
+    if (currentKey && currentKey !== key) {
+      setButtonState(currentKey, false);
+    }
+
+    currentKey = key;
+    currentUrl = url;
+
+    player.src = url;
+
+    try {
+      await player.play();
+      setButtonState(key, true);
+    } catch (e) {
+      // Autoplay can fail; user gesture should allow it though
+      console.warn("play failed", e);
+      setButtonState(key, false);
+      currentKey = null;
+      currentUrl = null;
     }
   }
 
-  function setIdle() {
-    clearLiveTimer();
+  // If audio ends naturally -> reset button
+  player.addEventListener("ended", () => {
+    if (currentKey) setButtonState(currentKey, false);
+    currentKey = null;
+    currentUrl = null;
+  });
 
-    els.txBadge.textContent = "IDLE";
-    els.txBadge.className = "badge rounded-pill bg-secondary";
-    els.sinceText.textContent = "";
-    els.nodeText.textContent = "";
+  // Build or update a row WITHOUT replacing DOM nodes (prevents playback glitches)
+  function upsertStopRow(ev) {
+    const key = ev.filename || `${ev.node_id || "node"}:${ev.ts || Date.now()}`;
+    const url = recordingUrl(ev);
 
-    els.issiText.textContent = "—";
-    els.aliasText.textContent = "—";
-    els.vehicleText.textContent = "—";
-    els.vectorText.textContent = "—";
-  }
+    let row = rowsByKey.get(key);
+    const alias = formatAliasOrIssi(ev);
+    const veh = getVehicle(ev);
+    const vec = getVector(ev);
+    const dur = fmtDuration(ev.duration_s);
+    const t = fmtTime(ev.ts);
 
-  function setLive(ev) {
-    clearLiveTimer();
-
-    els.txBadge.textContent = "LIVE";
-    els.txBadge.className = "badge rounded-pill bg-danger";
-
-    els.sinceText.textContent = ev.ts ? `since ${fmtTime(ev.ts)}` : "";
-    els.nodeText.textContent = ev.node_id || "";
-
-    const issi = getIssiNumber(ev);
-    const alias = getAlias(ev);
-
-    els.issiText.textContent = issi ?? "—";
-    els.aliasText.textContent = alias ? alias : (issi ? String(issi) : "—");
-
-    els.vehicleText.textContent = getVehicle(ev) || "—";
-    els.vectorText.textContent = getVector(ev) || "—";
-  }
-
-  function pushStopEvent(ev) {
-    state.events.unshift(ev);
-    if (state.events.length > MAX_EVENTS) state.events.length = MAX_EVENTS;
-    els.eventCount.textContent = String(state.events.length);
-  }
-
-  function stopAllRowAudio() {
-    els.eventsBody.querySelectorAll("audio").forEach(a => {
-      try { a.pause(); a.currentTime = 0; } catch(e) {}
-    });
-  }
-
-  function renderStops() {
-    if (state.events.length === 0) {
-      els.eventsBody.innerHTML = `
-        <tr><td colspan="6" class="text-center text-muted py-4">{% trans "Nog geen opnames." %}</td></tr>
-      `;
-      return;
-    }
-
-    els.eventsBody.innerHTML = state.events.map((ev) => {
-      const time = fmtTime(ev.ts);
-
-      const issi = getIssiNumber(ev);
-      const alias = getAlias(ev);
-      const displayName = alias ? alias : (issi ? String(issi) : "—");
-
-      const vehicle = getVehicle(ev) || "—";
-      const vector = getVector(ev) || "—";
-      const length = fmtDuration(ev.duration_s);
-
-      let recCell = `<span class="text-muted">—</span>`;
-      if (ev.filename) {
-        const url = `${RECORDINGS_BASE_URL}${ev.filename}`;
-        recCell = `
-          <button class="btn btn-sm btn-outline-primary" data-play-url="${url}" type="button" title="{% trans 'Afspelen' %}">
-            <i class="bi bi-volume-up-fill"></i>
+    if (!row) {
+      row = document.createElement("tr");
+      row.dataset.key = key;
+      row.innerHTML = `
+        <td class="text-nowrap" data-col="time"></td>
+        <td data-col="alias"></td>
+        <td class="text-nowrap" data-col="vehicle"></td>
+        <td data-col="vector"></td>
+        <td class="text-nowrap text-end" data-col="duration"></td>
+        <td class="text-end">
+          <button type="button"
+                  class="btn btn-sm btn-success"
+                  data-action="toggle"
+                  data-key="${key}"
+                  ${url ? `data-url="${url}"` : "disabled"}
+                  title="${url ? "Play/Pause" : "No recording"}">
+            <i class="bi bi-play-fill"></i>
           </button>
-          <audio class="d-none" preload="none">
-            <source src="${url}" type="audio/ogg">
-          </audio>
-        `;
-      }
-
-      return `
-        <tr>
-          <td class="text-muted text-nowrap">${time}</td>
-          <td class="fw-semibold">${displayName}</td>
-          <td class="text-nowrap">${vehicle}</td>
-          <td>${vector}</td>
-          <td class="text-end text-nowrap">${length}</td>
-          <td class="text-nowrap">${recCell}</td>
-        </tr>
+        </td>
       `;
-    }).join("");
 
-    els.eventsBody.querySelectorAll("button[data-play-url]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        stopAllRowAudio();
+      // prepend newest first
+      historyBody.insertBefore(row, historyBody.firstChild);
+      rowsByKey.set(key, row);
 
-        const td = btn.closest("td");
-        const audio = td ? td.querySelector("audio") : null;
-        if (!audio) return;
+      // keep only last 20
+      while (historyBody.children.length > 20) {
+        const last = historyBody.lastElementChild;
+        if (!last) break;
+        const lastKey = last.dataset.key;
+        // If removing the currently playing row -> stop playback
+        if (lastKey && lastKey === currentKey) stopPlayback();
+        rowsByKey.delete(lastKey);
+        last.remove();
+      }
+    }
 
-        audio.currentTime = 0;
-        audio.play();
-      });
-    });
+    // Update text cells
+    row.querySelector("[data-col='time']").textContent = t;
+    row.querySelector("[data-col='alias']").textContent = alias;
+    row.querySelector("[data-col='vehicle']").textContent = veh;
+    row.querySelector("[data-col='vector']").textContent = vec;
+    row.querySelector("[data-col='duration']").textContent = dur;
+
+    // Update url if needed, but DO NOT reset playback if it's the same row playing
+    const btn = row.querySelector("button[data-action='toggle']");
+    if (btn) {
+      if (url) {
+        btn.disabled = false;
+        btn.dataset.url = url;
+      }
+      if (key === currentKey) {
+        // keep pause icon if playing
+        setButtonState(key, !player.paused);
+      }
+    }
   }
 
-  function handleEvent(ev) {
-    if (!ev || !ev.type) return;
+  // Event delegation for play/pause buttons
+  historyBody.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action='toggle']");
+    if (!btn) return;
 
-    if (ev.type === "tx_start") {
-      setLive(ev);
+    const key = btn.dataset.key;
+    const url = btn.dataset.url;
+    if (!url) return;
+
+    // toggle same recording
+    if (currentKey === key) {
+      if (!player.paused) {
+        stopPlayback();
+      } else {
+        startPlayback(key, url);
+      }
       return;
     }
+
+    // play different recording
+    startPlayback(key, url);
+  });
+
+  // WS handling: only store STOP in history
+  ws.onmessage = (event) => {
+    let ev;
+    try { ev = JSON.parse(event.data); } catch { return; }
 
     if (ev.type === "tx_stop") {
-      pushStopEvent(ev);
-      renderStops();
-
-      clearLiveTimer();
-      state.liveClearTimer = setTimeout(() => setIdle(), LIVE_CLEAR_DELAY_MS);
-      return;
+      upsertStopRow(ev);
     }
-  }
-
-  els.clearBtn.addEventListener("click", setIdle);
-
-  const ws = new WebSocket(wsUrl("/ws/live/tx/"));
-  ws.onopen = () => { els.wsStatus.textContent = "connected"; };
-  ws.onclose = () => { els.wsStatus.textContent = "disconnected"; };
-  ws.onerror = () => { els.wsStatus.textContent = "error"; };
-  ws.onmessage = (e) => {
-    try { handleEvent(JSON.parse(e.data)); }
-    catch (err) { console.error("bad message", e.data, err); }
   };
 
-  setIdle();
-  renderStops();
+  ws.onopen = () => console.log("ws connected");
+  ws.onclose = () => console.log("ws closed");
+})();
 </script>
 {% endblock %}
