@@ -115,8 +115,8 @@
 
         {% if user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link {% if request.resolver_match.url_name == 'live_tx' %}active{% endif %}"
-               href="{% url 'roip:live_tx' %}">
+            <a class="nav-link {% if request.resolver_match.url_name == 'roip-live-tx' %}active{% endif %}"
+               href="{% url 'roip:roip-live-tx' %}">
               <i class="bi bi-broadcast"></i> {% trans "Live" %}
             </a>
           </li>

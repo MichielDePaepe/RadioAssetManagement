@@ -38,5 +38,5 @@ urlpatterns += i18n_patterns(
     path('taqto/', include('taqto.urls')),
     path('printer/', include('printer.urls')),
     path('astrid/', include('astrid.urls')),
-    path("", include("roip.urls")),
+    path('roip/', include("roip.urls"), namespace='roip'),
 )
