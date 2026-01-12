@@ -215,6 +215,8 @@ def sync_vectors():
                 defaults={"description": item["StatusCode"]},
             )
 
+        Vector.objects.filter(vehicle_id=vehicle_id).exclude(resourceCode=pcode).update(vehicle=None)
+
         # -------- save --------
         Vector.objects.update_or_create(
             resourceCode=pcode,  # PRIMARY KEY
