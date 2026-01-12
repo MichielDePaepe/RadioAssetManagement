@@ -5,67 +5,116 @@
 
 <div class="container py-5">
   <div class="row justify-content-center">
-    <div class="col-12 col-md-8 col-lg-6">
+    <div class="col-12 col-lg-10">
 
       <div class="text-center mb-4">
         <h1 class="h3 mb-1">{% trans "Live uitzending" %}</h1>
         <div class="text-muted small" id="wsStatus">connecting…</div>
       </div>
 
-      <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
+      <div class="row g-4">
+        <!-- LEFT: Current TX -->
+        <div class="col-12 col-lg-5">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4">
 
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <div class="d-flex align-items-center gap-2">
-              <span class="badge rounded-pill bg-secondary" id="txBadge">IDLE</span>
-              <span class="text-muted small" id="sinceText"></span>
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge rounded-pill bg-secondary" id="txBadge">IDLE</span>
+                  <span class="text-muted small" id="sinceText"></span>
+                </div>
+                <span class="badge rounded-pill bg-light text-dark border" id="nodeText"></span>
+              </div>
+
+              <div class="row g-3">
+                <div class="col-12">
+                  <div class="text-muted small">{% trans "ISSI" %}</div>
+                  <div class="fs-3 fw-semibold" id="issiText">—</div>
+                </div>
+
+                <div class="col-12">
+                  <div class="text-muted small">{% trans "Alias" %}</div>
+                  <div class="fs-5" id="aliasText">—</div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="text-muted small">{% trans "Voertuig" %}</div>
+                  <div class="fs-6" id="vehicleText">—</div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="text-muted small">{% trans "Vector" %}</div>
+                  <div class="fs-6" id="vectorText">—</div>
+                </div>
+              </div>
+
+              <hr class="my-4">
+
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="text-muted small">
+                  GSSI: <span id="gssiText">—</span>
+                </div>
+
+                <button class="btn btn-sm btn-outline-secondary" id="clearBtn" type="button">
+                  <i class="bi bi-x-circle"></i> {% trans "Clear" %}
+                </button>
+              </div>
+
+              <!-- Player (last tx_stop with filename) -->
+              <div class="mt-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div class="text-muted small">{% trans "Laatste opname" %}</div>
+                  <a class="small text-decoration-none" id="recordingLink" href="#" target="_blank" rel="noopener" style="display:none;">
+                    {% trans "Open" %} <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
+                </div>
+
+                <div class="player">
+                  <audio id="audioPlayer" controls preload="none" style="width:100%;" class="d-none">
+                    <source id="audioSource" src="" type="audio/ogg">
+                  </audio>
+                </div>
+                <div class="text-muted small" id="playerHint">{% trans "Nog geen opname ontvangen." %}</div>
+              </div>
+
             </div>
-            <span class="badge rounded-pill bg-light text-dark border" id="nodeText"></span>
           </div>
-
-          <div class="row g-3">
-            <div class="col-12">
-              <div class="text-muted small">{% trans "ISSI" %}</div>
-              <div class="fs-3 fw-semibold" id="issiText">—</div>
-            </div>
-
-            <div class="col-12">
-              <div class="text-muted small">{% trans "Alias" %}</div>
-              <div class="fs-5" id="aliasText">—</div>
-            </div>
-
-            <div class="col-md-6">
-              <div class="text-muted small">{% trans "Voertuig" %}</div>
-              <div class="fs-6" id="vehicleText">—</div>
-            </div>
-
-            <div class="col-md-6">
-              <div class="text-muted small">{% trans "Vector" %}</div>
-              <div class="fs-6" id="vectorText">—</div>
-            </div>
-          </div>
-
-          <hr class="my-4">
-
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="text-muted small">
-              GSSI: <span id="gssiText">—</span>
-              <span class="mx-2">·</span>
-              {% trans "Kanaal" %}: <span id="channelText">—</span>
-            </div>
-
-            <button class="btn btn-sm btn-outline-secondary" id="clearBtn" type="button">
-              <i class="bi bi-x-circle"></i> {% trans "Clear" %}
-            </button>
-          </div>
-
         </div>
-      </div>
 
-      <div class="text-center text-muted small mt-3">
-        <span class="badge bg-light text-dark border">
-          <i class="bi bi-broadcast"></i> /ws/live/tx/
-        </span>
+        <!-- RIGHT: Last 20 events -->
+        <div class="col-12 col-lg-7">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+              <span class="fw-semibold">{% trans "Laatste berichten" %}</span>
+              <span class="badge bg-light text-dark border" id="eventCount">0</span>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-sm mb-0 align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width:90px;">{% trans "Type" %}</th>
+                      <th>{% trans "Alias" %}</th>
+                      <th style="width:90px;">{% trans "Voertuig" %}</th>
+                      <th>{% trans "Vector" %}</th>
+                      <th style="width:90px;">{% trans "Tijd" %}</th>
+                      <th style="width:110px;">{% trans "Opname" %}</th>
+                    </tr>
+                  </thead>
+                  <tbody id="eventsBody">
+                    <tr>
+                      <td colspan="6" class="text-center text-muted py-4">{% trans "Nog geen berichten." %}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card-footer bg-white text-muted small">
+              <i class="bi bi-broadcast"></i> /ws/live/tx/
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -76,6 +125,14 @@
 
 {% block extra_script %}
 <script>
+  // If your recordings are served from the same host, keep it relative:
+  // const RECORDINGS_BASE_URL = "/media/recordings/";
+  //
+  // If recordings are on a dedicated host (like your example):
+  const RECORDINGS_BASE_URL = "http://192.168.20.196/media/recordings/";
+
+  const MAX_EVENTS = 20;
+
   const els = {
     wsStatus: document.getElementById("wsStatus"),
     txBadge: document.getElementById("txBadge"),
@@ -86,8 +143,20 @@
     vehicleText: document.getElementById("vehicleText"),
     vectorText: document.getElementById("vectorText"),
     gssiText: document.getElementById("gssiText"),
-    channelText: document.getElementById("channelText"),
     clearBtn: document.getElementById("clearBtn"),
+
+    audio: document.getElementById("audioPlayer"),
+    audioSource: document.getElementById("audioSource"),
+    playerHint: document.getElementById("playerHint"),
+    recordingLink: document.getElementById("recordingLink"),
+
+    eventsBody: document.getElementById("eventsBody"),
+    eventCount: document.getElementById("eventCount"),
+  };
+
+  const state = {
+    current: null,     // last tx_start
+    events: [],        // newest first
   };
 
   function wsUrl(path) {
@@ -113,12 +182,13 @@
     return ev.vector?.name || ev.vector?.abbreviation || ev.vector?.resourceCode || "—";
   }
 
-  function getChannel(ev) {
-    // show group/dispatch channel if present (gssi) else blank
-    return ev.gssi ?? "—";
+  function fmtTime(ts) {
+    if (!ts) return "—";
+    return new Date(ts * 1000).toLocaleTimeString();
   }
 
   function setIdle() {
+    state.current = null;
     els.txBadge.textContent = "IDLE";
     els.txBadge.className = "badge rounded-pill bg-secondary";
     els.sinceText.textContent = "";
@@ -129,15 +199,16 @@
     els.vehicleText.textContent = "—";
     els.vectorText.textContent = "—";
     els.gssiText.textContent = "—";
-    els.channelText.textContent = "—";
   }
 
   function setLive(ev) {
+    state.current = ev;
+
     els.txBadge.textContent = "LIVE";
     els.txBadge.className = "badge rounded-pill bg-danger";
 
-    const since = ev.ts ? new Date(ev.ts * 1000).toLocaleTimeString() : "";
-    els.sinceText.textContent = since ? `since ${since}` : "";
+    const since = ev.ts ? `since ${fmtTime(ev.ts)}` : "";
+    els.sinceText.textContent = since;
 
     els.nodeText.textContent = ev.node_id || "";
 
@@ -145,13 +216,93 @@
     els.aliasText.textContent = getAlias(ev);
     els.vehicleText.textContent = getVehicle(ev);
     els.vectorText.textContent = getVector(ev);
-
     els.gssiText.textContent = (ev.gssi ?? "—");
-    els.channelText.textContent = getChannel(ev);
+  }
+
+  function setPlayer(filename) {
+    if (!filename) return;
+
+    const url = `${RECORDINGS_BASE_URL}${filename}`;
+
+    els.audio.classList.remove("d-none");
+    els.playerHint.classList.add("d-none");
+
+    els.audio.pause();
+    els.audio.currentTime = 0;
+
+    els.audioSource.src = url;
+    els.audio.load();
+
+    els.recordingLink.href = url;
+    els.recordingLink.style.display = "inline";
+  }
+
+  function pushEvent(ev) {
+    state.events.unshift(ev);
+    if (state.events.length > MAX_EVENTS) state.events.length = MAX_EVENTS;
+    els.eventCount.textContent = String(state.events.length);
+  }
+
+  function renderEvents() {
+    if (state.events.length === 0) {
+      els.eventsBody.innerHTML = `
+        <tr><td colspan="6" class="text-center text-muted py-4">{% trans "Nog geen berichten." %}</td></tr>
+      `;
+      return;
+    }
+
+    els.eventsBody.innerHTML = state.events.map((ev) => {
+      const typeBadge = ev.type === "tx_start"
+        ? `<span class="badge bg-danger">start</span>`
+        : (ev.type === "tx_stop" ? `<span class="badge bg-secondary">stop</span>` : `<span class="badge bg-light text-dark border">${ev.type}</span>`);
+
+      const alias = getAlias(ev);
+      const vehicle = getVehicle(ev);
+      const vector = getVector(ev);
+      const time = fmtTime(ev.ts);
+
+      let recCell = `<span class="text-muted">—</span>`;
+      if (ev.type === "tx_stop" && ev.filename) {
+        const url = `${RECORDINGS_BASE_URL}${ev.filename}`;
+        recCell = `
+          <button class="btn btn-sm btn-outline-primary" data-play="${ev.filename}" type="button">
+            <i class="bi bi-play-fill"></i>
+          </button>
+          <a class="btn btn-sm btn-outline-secondary ms-1" href="${url}" target="_blank" rel="noopener">
+            <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+        `;
+      }
+
+      return `
+        <tr>
+          <td>${typeBadge}</td>
+          <td>
+            <div class="fw-semibold">${alias}</div>
+            <div class="text-muted small">ISSI ${getIssiNumber(ev)} · GSSI ${ev.gssi ?? "—"}</div>
+          </td>
+          <td class="text-nowrap">${vehicle}</td>
+          <td>${vector}</td>
+          <td class="text-muted text-nowrap">${time}</td>
+          <td class="text-nowrap">${recCell}</td>
+        </tr>
+      `;
+    }).join("");
+
+    // bind play buttons
+    els.eventsBody.querySelectorAll("button[data-play]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const filename = btn.getAttribute("data-play");
+        setPlayer(filename);
+      });
+    });
   }
 
   function handleEvent(ev) {
     if (!ev || !ev.type) return;
+
+    pushEvent(ev);
+    renderEvents();
 
     if (ev.type === "tx_start") {
       setLive(ev);
@@ -159,27 +310,32 @@
     }
 
     if (ev.type === "tx_stop") {
-      setIdle();
+      // keep showing last sender info, but mark not live
+      els.txBadge.textContent = "IDLE";
+      els.txBadge.className = "badge rounded-pill bg-secondary";
+      els.sinceText.textContent = "";
+
+      if (ev.filename) setPlayer(ev.filename);
       return;
     }
   }
 
-  els.clearBtn.addEventListener("click", setIdle);
+  els.clearBtn.addEventListener("click", () => {
+    setIdle();
+    // don't clear the log
+  });
 
+  // WS connect
   const ws = new WebSocket(wsUrl("/ws/live/tx/"));
-
   ws.onopen = () => { els.wsStatus.textContent = "connected"; };
   ws.onclose = () => { els.wsStatus.textContent = "disconnected"; };
   ws.onerror = () => { els.wsStatus.textContent = "error"; };
-
   ws.onmessage = (e) => {
-    try {
-      handleEvent(JSON.parse(e.data));
-    } catch (err) {
-      console.error("bad message", e.data, err);
-    }
+    try { handleEvent(JSON.parse(e.data)); }
+    catch (err) { console.error("bad message", e.data, err); }
   };
 
   setIdle();
+  renderEvents();
 </script>
 {% endblock %}
