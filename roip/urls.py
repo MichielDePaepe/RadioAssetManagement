@@ -2,6 +2,8 @@
 from django.urls import path
 from .views import LiveTxView
 
+app_name = "roip"
+
 urlpatterns = [
-    path("roip/live/", LiveTxView.as_view(), name="roip-live-tx"),
+    path("live/", LiveTxView.as_view(), name="roip-live-tx"),
 ]
