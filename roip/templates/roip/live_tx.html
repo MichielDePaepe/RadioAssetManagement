@@ -1,106 +1,99 @@
-{% extends 'base.html' %}
-{% load i18n %}
+{% extends "base.html" %}
+{% load static i18n %}
 
 {% block content %}
+<div class="container py-4">
 
-<div class="container py-5">
-  <div class="row justify-content-center">
-    <div class="col-12 col-lg-10">
+  <div class="row g-4 align-items-start">
+    <!-- LIVE (fixed height, doesn't grow with history) -->
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm" style="min-height: 220px;">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-broadcast"></i>
+            <strong>{% trans "Live uitzending" %}</strong>
+          </div>
+          <span id="liveBadge" class="badge bg-secondary">{% trans "Idle" %}</span>
+        </div>
 
-      <div class="text-center mb-4">
-        <h1 class="h3 mb-1">{% trans "Live uitzending" %}</h1>
-        <div class="text-muted small" id="wsStatus">connecting…</div>
+        <div class="card-body">
+          <div id="liveEmpty" class="text-center text-muted py-4">
+            <div class="display-6 mb-2">—</div>
+            <div>{% trans "Geen uitzending" %}</div>
+          </div>
+
+          <div id="liveBox" class="d-none">
+            <div class="d-flex align-items-start justify-content-between">
+              <div>
+                <div class="h4 mb-1" id="liveAlias">—</div>
+                <div class="text-muted" id="liveVehicleVector">—</div>
+              </div>
+              <span class="badge bg-danger">{% trans "ON AIR" %}</span>
+            </div>
+
+            <hr>
+
+            <div class="d-flex justify-content-between text-muted small">
+              <div>
+                <i class="bi bi-clock"></i>
+                <span id="liveSince">—</span>
+              </div>
+              <div>
+                <i class="bi bi-hdd"></i>
+                <span id="liveNode">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-clock-history"></i>
+            <strong>{% trans "Laatste opnames" %}</strong>
+          </div>
+          <span class="text-muted small">{% trans "max. 20" %}</span>
+        </div>
+
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-nowrap">{% trans "Tijdstip" %}</th>
+                  <th>{% trans "Alias" %}</th>
+                  <th class="text-nowrap">{% trans "Voertuig" %}</th>
+                  <th>{% trans "Vector" %}</th>
+                  <th class="text-nowrap text-end">{% trans "Lengte" %}</th>
+                  <th class="text-end">{% trans "Opname" %}</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody">
+                <!-- rows injected by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
 
-      <div class="row g-4 align-items-start">
-        <!-- LEFT: Current TX (fixed height, won't grow with right column) -->
-        <div class="col-12 col-lg-5">
-          <div class="card shadow-sm border-0" style="height: 360px;">
-            <div class="card-body p-4 d-flex flex-column">
-
-              <div class="d-flex align-items-center justify-content-between mb-3">
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge rounded-pill bg-secondary" id="txBadge">IDLE</span>
-                  <span class="text-muted small" id="sinceText"></span>
-                </div>
-                <span class="badge rounded-pill bg-light text-dark border" id="nodeText"></span>
-              </div>
-
-              <div class="row g-3 flex-grow-1">
-                <div class="col-12">
-                  <div class="text-muted small">{% trans "ISSI" %}</div>
-                  <div class="fs-3 fw-semibold" id="issiText">—</div>
-                </div>
-
-                <div class="col-12">
-                  <div class="text-muted small">{% trans "Alias" %}</div>
-                  <div class="fs-5" id="aliasText">—</div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="text-muted small">{% trans "Voertuig" %}</div>
-                  <div class="fs-6" id="vehicleText">—</div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="text-muted small">{% trans "Vector" %}</div>
-                  <div class="fs-6" id="vectorText">—</div>
-                </div>
-              </div>
-
-              <div class="d-flex justify-content-end">
-                <button class="btn btn-sm btn-outline-secondary" id="clearBtn" type="button">
-                  <i class="bi bi-x-circle"></i> {% trans "Clear" %}
-                </button>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        <!-- RIGHT: History (tx_stop only) -->
-        <div class="col-12 col-lg-7">
-          <div class="card shadow-sm border-0">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-              <span class="fw-semibold">{% trans "Laatste opnames" %}</span>
-              <span class="badge bg-light text-dark border" id="eventCount">0</span>
-            </div>
-
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-sm mb-0 align-middle">
-                  <thead class="table-light">
-                    <tr>
-                      <th style="width:110px;">{% trans "Tijdstip" %}</th>
-                      <th>{% trans "Alias" %}</th>
-                      <th style="width:90px;">{% trans "Voertuig" %}</th>
-                      <th>{% trans "Vector" %}</th>
-                      <th style="width:90px;" class="text-end">{% trans "Lengte" %}</th>
-                      <th style="width:90px;" class="text-nowrap">{% trans "Opname" %}</th>
-                    </tr>
-                  </thead>
-                  <tbody id="eventsBody">
-                    <tr>
-                      <td colspan="6" class="text-center text-muted py-4">{% trans "Nog geen opnames." %}</td>
-                    </tr>
-                  </tbody>
-                  <tbody id="historyBody"></tbody>
-                  <audio id="hiddenPlayer" preload="none" style="display:none"></audio>
-                </table>
-              </div>
-            </div>
-
-            <div class="card-footer bg-white text-muted small">
-              <i class="bi bi-broadcast"></i> /ws/live/tx/
-            </div>
-          </div>
-        </div>
-
+      <div class="text-muted small mt-2">
+        <i class="bi bi-info-circle"></i>
+        {% trans "Klik op play om de opname te beluisteren. Klik opnieuw om te stoppen." %}
       </div>
 
     </div>
   </div>
+
 </div>
+
+<!-- stable hidden audio element -->
+<audio id="hiddenPlayer" preload="none" style="display:none"></audio>
 
 {% endblock %}
 
@@ -113,18 +106,27 @@
   const historyBody = document.getElementById("historyBody");
   const player = document.getElementById("hiddenPlayer");
 
-  // Keep stable identity per recording
-  // key = filename (best unique)
+  const liveBadge = document.getElementById("liveBadge");
+  const liveEmpty = document.getElementById("liveEmpty");
+  const liveBox = document.getElementById("liveBox");
+  const liveAlias = document.getElementById("liveAlias");
+  const liveVehicleVector = document.getElementById("liveVehicleVector");
+  const liveSince = document.getElementById("liveSince");
+  const liveNode = document.getElementById("liveNode");
+
   const rowsByKey = new Map();
 
-  // Current playback state
-  let currentKey = null;        // filename that is playing (or null)
+  let currentKey = null;
   let currentUrl = null;
+
+  // live state (single radio assumption)
+  let liveVisible = false;
+  let liveHideTimer = null;
 
   function formatAliasOrIssi(ev) {
     const alias = ev?.issi?.alias || ev?.alias;
     const issi = ev?.issi?.number || ev?.issi;
-    return alias && alias.trim().length ? alias : (issi ?? "—");
+    return (alias && String(alias).trim().length) ? alias : (issi ?? "—");
   }
 
   function getVehicle(ev) {
@@ -144,14 +146,12 @@
   }
 
   function fmtTime(ts) {
-    // ts is unix seconds
     if (!ts) return "—";
     const d = new Date(ts * 1000);
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   }
 
   function recordingUrl(ev) {
-    // Prefer media_url if you add it later
     if (ev.media_url) return ev.media_url;
     if (!ev.filename) return null;
     return `/media/recordings/${encodeURIComponent(ev.filename)}`;
@@ -172,18 +172,15 @@
   }
 
   function stopPlayback() {
-    if (currentKey) {
-      setButtonState(currentKey, false);
-    }
+    if (currentKey) setButtonState(currentKey, false);
     player.pause();
-    player.removeAttribute("src"); // force unload
+    player.removeAttribute("src");
     player.load();
     currentKey = null;
     currentUrl = null;
   }
 
   async function startPlayback(key, url) {
-    // stop previous if any
     if (currentKey && currentKey !== key) {
       setButtonState(currentKey, false);
     }
@@ -197,7 +194,6 @@
       await player.play();
       setButtonState(key, true);
     } catch (e) {
-      // Autoplay can fail; user gesture should allow it though
       console.warn("play failed", e);
       setButtonState(key, false);
       currentKey = null;
@@ -205,19 +201,60 @@
     }
   }
 
-  // If audio ends naturally -> reset button
   player.addEventListener("ended", () => {
     if (currentKey) setButtonState(currentKey, false);
     currentKey = null;
     currentUrl = null;
   });
 
-  // Build or update a row WITHOUT replacing DOM nodes (prevents playback glitches)
+  function showLive(ev) {
+    // cancel hide timer if any
+    if (liveHideTimer) {
+      clearTimeout(liveHideTimer);
+      liveHideTimer = null;
+    }
+
+    liveVisible = true;
+    liveBadge.className = "badge bg-danger";
+    liveBadge.textContent = "ON AIR";
+
+    liveEmpty.classList.add("d-none");
+    liveBox.classList.remove("d-none");
+
+    const alias = formatAliasOrIssi(ev);
+    const veh = getVehicle(ev);
+    const vec = getVector(ev);
+
+    liveAlias.textContent = alias;
+
+    // only show vehicle/vector if they exist
+    const parts = [];
+    if (veh && veh !== "—") parts.push(veh);
+    if (vec && vec !== "—") parts.push(vec);
+    liveVehicleVector.textContent = parts.length ? parts.join(" · ") : "—";
+
+    liveSince.textContent = fmtTime(ev.ts);
+    liveNode.textContent = ev.node_id || "—";
+  }
+
+  function hideLiveWithDelay() {
+    liveHideTimer = setTimeout(() => {
+      liveVisible = false;
+
+      liveBadge.className = "badge bg-secondary";
+      liveBadge.textContent = "Idle";
+
+      liveBox.classList.add("d-none");
+      liveEmpty.classList.remove("d-none");
+    }, 2000);
+  }
+
   function upsertStopRow(ev) {
     const key = ev.filename || `${ev.node_id || "node"}:${ev.ts || Date.now()}`;
     const url = recordingUrl(ev);
 
     let row = rowsByKey.get(key);
+
     const alias = formatAliasOrIssi(ev);
     const veh = getVehicle(ev);
     const vec = getVector(ev);
@@ -227,6 +264,7 @@
     if (!row) {
       row = document.createElement("tr");
       row.dataset.key = key;
+
       row.innerHTML = `
         <td class="text-nowrap" data-col="time"></td>
         <td data-col="alias"></td>
@@ -245,30 +283,27 @@
         </td>
       `;
 
-      // prepend newest first
       historyBody.insertBefore(row, historyBody.firstChild);
       rowsByKey.set(key, row);
 
-      // keep only last 20
       while (historyBody.children.length > 20) {
         const last = historyBody.lastElementChild;
         if (!last) break;
         const lastKey = last.dataset.key;
-        // If removing the currently playing row -> stop playback
+
         if (lastKey && lastKey === currentKey) stopPlayback();
+
         rowsByKey.delete(lastKey);
         last.remove();
       }
     }
 
-    // Update text cells
     row.querySelector("[data-col='time']").textContent = t;
     row.querySelector("[data-col='alias']").textContent = alias;
-    row.querySelector("[data-col='vehicle']").textContent = veh;
-    row.querySelector("[data-col='vector']").textContent = vec;
+    row.querySelector("[data-col='vehicle']").textContent = (veh && veh !== "—") ? veh : "—";
+    row.querySelector("[data-col='vector']").textContent = (vec && vec !== "—") ? vec : "—";
     row.querySelector("[data-col='duration']").textContent = dur;
 
-    // Update url if needed, but DO NOT reset playback if it's the same row playing
     const btn = row.querySelector("button[data-action='toggle']");
     if (btn) {
       if (url) {
@@ -276,13 +311,11 @@
         btn.dataset.url = url;
       }
       if (key === currentKey) {
-        // keep pause icon if playing
         setButtonState(key, !player.paused);
       }
     }
   }
 
-  // Event delegation for play/pause buttons
   historyBody.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-action='toggle']");
     if (!btn) return;
@@ -293,11 +326,8 @@
 
     // toggle same recording
     if (currentKey === key) {
-      if (!player.paused) {
-        stopPlayback();
-      } else {
-        startPlayback(key, url);
-      }
+      if (!player.paused) stopPlayback();
+      else startPlayback(key, url);
       return;
     }
 
@@ -305,13 +335,21 @@
     startPlayback(key, url);
   });
 
-  // WS handling: only store STOP in history
   ws.onmessage = (event) => {
     let ev;
     try { ev = JSON.parse(event.data); } catch { return; }
 
+    if (ev.type === "tx_start") {
+      showLive(ev);
+      return;
+    }
+
     if (ev.type === "tx_stop") {
       upsertStopRow(ev);
+
+      // live box disappears after 2s
+      if (liveVisible) hideLiveWithDelay();
+      return;
     }
   };
 
