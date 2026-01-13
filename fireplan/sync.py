@@ -36,7 +36,7 @@ def sync_fireplan_fleet():
         Vehicle.objects.update_or_create(
             id=rec["id"],
             defaults={
-                "number": rec.get("number", ""),
+                "number": rec.get("alphacode", ""),
                 "num_letter": rec.get("numLettre", "") or "",
                 "num_value": rec.get("num", 0) or 0,
                 "plate": rec.get("plate", "") or "",

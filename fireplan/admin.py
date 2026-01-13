@@ -1,8 +1,25 @@
+# fireplan/admin.py
+
+from __future__ import annotations
+
 from django.contrib import admin, messages
 from .models import *
 from .sync import sync_fireplan_fleet, sync_vectors
 
 from .auth_admin import *
+from .sync_inventory import sync_closed_inventories_portable_radio_teis
+
+
+@admin.action(description="Sync inventories (incremental)")
+def sync_inventories_incremental(modeladmin, request, queryset):
+    inserted = sync_closed_inventories_portable_radio_teis(full_sync=False)
+    messages.success(request, f"Inserted inventories: {inserted}")
+
+
+@admin.action(description="Sync inventories (FULL)")
+def sync_inventories_full(modeladmin, request, queryset):
+    inserted = sync_closed_inventories_portable_radio_teis(full_sync=True)
+    messages.success(request, f"Inserted inventories: {inserted}")
 
 
 @admin.register(Vehicle)
@@ -100,3 +117,44 @@ class ResourceTypeCodeAdmin(admin.ModelAdmin):
 class StatusCodeAdmin(admin.ModelAdmin):
     list_display = ("code", "description")
     search_fields = ("code", "description")
+
+class FireplanInventoryRadioInline(admin.TabularInline):
+    model = FireplanInventoryRadio
+    extra = 0
+    fields = ("tei", "radio")
+    autocomplete_fields = ("radio",)
+    readonly_fields = ()
+    show_change_link = True
+
+
+@admin.register(FireplanInventory)
+class FireplanInventoryAdmin(admin.ModelAdmin):
+    list_display = (
+        "vehicle_alpha_code",
+        "closed_at",
+        "done_by_full_name",
+    )
+    ordering = ("-closed_at",)
+    search_fields = (
+        "vehicle_alpha_code",
+        "done_by_full_name",
+        "uuid",
+    )
+    inlines = [FireplanInventoryRadioInline]
+    actions = [sync_inventories_incremental, sync_inventories_full]
+
+
+@admin.register(FireplanInventoryRadio)
+class FireplanInventoryRadioAdmin(admin.ModelAdmin):
+    list_display = (
+        "inventory",
+        "tei",
+        "radio",
+    )
+    search_fields = (
+        "tei",
+        "inventory__vehicle_alpha_code",
+        "inventory__uuid",
+    )
+    autocomplete_fields = ("inventory", "radio")
+    ordering = ("-id",)

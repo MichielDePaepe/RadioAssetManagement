@@ -1,4 +1,7 @@
 # fireplan/models.py
+
+from __future__ import annotations
+
 from django.conf import settings
 from django.db import models
 from django.utils.html import format_html
@@ -142,5 +145,68 @@ class Vector(models.Model):
         return f"{self.resourceCode} ({self.name})"
 
 
+class FireplanInventory(models.Model):
+    uuid = models.UUIDField(primary_key=True)
+
+    vehicle_alpha_code = models.CharField(max_length=16, db_index=True)
+
+    vehicle = models.ForeignKey(
+        "fireplan.Vehicle",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="inventories",
+    )
+
+    closed_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    done_by_full_name = models.CharField(max_length=128, blank=True, default="")
+    overseen_by_full_name = models.CharField(max_length=128, blank=True, default="")
+
+    root_inventoried_container_uuid = models.UUIDField(null=True, blank=True, db_index=True)
+
+    synced_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        if self.closed_at:
+            return f"{self.vehicle_alpha_code} – {self.closed_at:%Y-%m-%d %H:%M}"
+        return f"{self.vehicle_alpha_code} – {self.uuid}"
 
 
+class FireplanInventoryRadio(models.Model):
+    """
+    0..N radios per inventory.
+    We store:
+      - tracked_item_id (Fireplan trackedItem.id) so you can link to radio.models.Radio.fireplan_id
+      - optional FK to Radio if found at sync time
+      - TEI (trackedItem.serialNumber)
+    """
+    inventory = models.ForeignKey(
+        FireplanInventory,
+        on_delete=models.CASCADE,
+        related_name="radios",
+    )
+
+    container_uuid = models.UUIDField(db_index=True)
+    item_uuid = models.UUIDField(db_index=True)
+
+    tracked_item_id = models.IntegerField(db_index=True, null=True, blank=True)
+    tei = models.CharField(max_length=64, db_index=True)
+
+    radio = models.ForeignKey(
+        "radio.Radio",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="fireplan_inventory_radios",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["inventory", "item_uuid"],
+                name="uniq_fireplan_inventory_radio_item",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.tei} ({self.inventory.vehicle_alpha_code})"
