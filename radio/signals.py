@@ -17,4 +17,5 @@ def on_issi_saved(sender, instance: ISSI, **kwargs) -> None:
         .first()
     )
     if sub and sub.radio_id:
-        enqueue_roip_sync_for_tei(sub.radio_id)
+        pass
+        # enqueue_roip_sync_for_tei(sub.radio_id)
