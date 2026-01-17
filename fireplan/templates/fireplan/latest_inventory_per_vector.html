@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load radio_selector_tags static %}
+
+{% block content %}
+
+<h2>Latest inventory per vector (last 7 days)</h2>
+<p class="text-muted">Since: {{ since|date:"Y-m-d H:i" }}</p>
+
+<table class="table table-sm align-middle">
+  <thead>
+    <tr>
+      <th>Vector</th>
+      <th style="width:140px;">Vehicle</th>
+      <th style="width:160px;">Date</th>
+      <th>Radio</th>
+      <th style="width:240px;">Done by</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in latest_rows %}
+      {% with v=row.vector inv=row.inventory veh=row.vehicle %}
+        {% if inv.radios.all %}
+          {% for ir in inv.radios.all %}
+            {% with r=ir.radio %}
+              <tr>
+                <td>
+                  {% if v %}
+                    <span class="fw-semibold">{{ v.name }}</span>
+                    {% if v.name %}<span class="text-muted"> — {{ v.resourceCode }}</span>{% endif %}
+                  {% else %}
+                    <span class="text-muted">(no vector)</span>
+                  {% endif %}
+                </td>
+
+                <td class="fw-semibold">
+                  {% if veh %}
+                    {{ veh.call_sign|default:veh.number }}
+                  {% else %}
+                    {{ inv.vehicle_alpha_code }}
+                  {% endif %}
+                </td>
+
+                <td class="text-muted">{{ inv.closed_at|date:"Y-m-d H:i" }}</td>
+
+                <td>
+                  {% if r %}
+                    <span class="fw-semibold">{{ r.subscription.issi.alias|default:"(no alias)" }}</span>
+                    <span class="text-muted">— {{ r.subscription.issi.number }}</span>
+                  {% else %}
+                    <span class="fw-semibold">{{ ir.tei }}</span>
+                    <span class="text-muted">— not linked</span>
+                  {% endif %}
+                </td>
+
+                <td>{{ inv.done_by_full_name|default:"(unknown)" }}</td>
+              </tr>
+            {% endwith %}
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td>
+              {% if v %}
+                <span class="fw-semibold">{{ v.resourceCode }}</span>
+                {% if v.name %}<span class="text-muted"> — {{ v.name }}</span>{% endif %}
+              {% else %}
+                <span class="text-muted">(no vector)</span>
+              {% endif %}
+            </td>
+
+            <td class="fw-semibold">
+              {% if veh %}
+                {{ veh.call_sign|default:veh.number }}
+              {% else %}
+                {{ inv.vehicle_alpha_code }}
+              {% endif %}
+            </td>
+
+            <td class="text-muted">{{ inv.closed_at|date:"Y-m-d H:i" }}</td>
+            <td class="text-muted">No radios</td>
+            <td>{{ inv.done_by_full_name|default:"(unknown)" }}</td>
+          </tr>
+        {% endif %}
+      {% endwith %}
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

@@ -39,4 +39,5 @@ urlpatterns += i18n_patterns(
     path('printer/', include('printer.urls')),
     path('astrid/', include('astrid.urls')),
     path('roip/', include("roip.urls", namespace='roip')),
+    path('fireplan/', include("fireplan.urls", namespace='fireplan')),
 )
