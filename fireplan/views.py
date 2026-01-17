@@ -27,18 +27,18 @@ class LatestInventoryPerVectorView(TemplateView):
 
         latest_per_vector: dict[str, dict] = {}
 
-		for inv in inventories:
-		    veh = inv.vehicle
-		    vector = getattr(veh, "vector", None) if veh else None
-		    key = vector.resourceCode if vector else None
+        for inv in inventories:
+            veh = inv.vehicle
+            vector = getattr(veh, "vector", None) if veh else None
+            key = vector.resourceCode if vector else None
 
-		    if key not in latest_per_vector:
-		        latest_per_vector[key] = {"vector": vector, "vehicle": veh, "inventory": inv}
+            if key not in latest_per_vector:
+                latest_per_vector[key] = {"vector": vector, "vehicle": veh, "inventory": inv}
 
 
         ctx["since"] = since
         ctx["latest_rows"] = sorted(
-		    latest_per_vector.values(),
-		    key=lambda r: (r["vector"].resourceCode if r["vector"] else "")
-		)
+            latest_per_vector.values(),
+            key=lambda r: (r["vector"].resourceCode if r["vector"] else "")
+        )
         return ctx
