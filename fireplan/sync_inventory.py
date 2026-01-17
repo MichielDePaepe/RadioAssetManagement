@@ -62,15 +62,27 @@ def sync_closed_inventories_portable_radio_teis(
     first = 0
 
     for _ in range(max_pages):
-        list_path = f"/fr/api/inventory/inventories-type/close?first={first}&rows={page_size}"
+        filters = "{}"
+        sort = '[{"field":"closedAt","order":-1}]'
+
+        list_path = (
+            f"/fr/api/inventory/inventories-type/close"
+            f"?first={first}&rows={page_size}"
+            f"&filters={filters}"
+            f"&multiSortMeta={sort}"
+        )
         r = fp.get(list_path)
         r.raise_for_status()
 
         records = (r.json() or {}).get("records", [])
+
         if not records:
             break
 
         records.sort(key=lambda x: x.get("closedAt") or "", reverse=True)
+
+        for rec in records:
+            pass#print(rec)
 
         page_uuids = [rec.get("uuid") for rec in records if rec.get("uuid")]
         existing = set(
@@ -80,6 +92,8 @@ def sync_closed_inventories_portable_radio_teis(
         should_stop = False
 
         for rec in records:
+            #print(rec)
+
             inventory_uuid = rec["uuid"]
             if not inventory_uuid:
                 continue
