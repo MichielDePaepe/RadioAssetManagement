@@ -79,11 +79,6 @@ def sync_closed_inventories_portable_radio_teis(
         if not records:
             break
 
-        records.sort(key=lambda x: x.get("closedAt") or "", reverse=True)
-
-        for rec in records:
-            pass#print(rec)
-
         page_uuids = [rec.get("uuid") for rec in records if rec.get("uuid")]
         existing = set(
             FireplanInventory.objects.filter(uuid__in=page_uuids).values_list("uuid", flat=True)
@@ -92,8 +87,7 @@ def sync_closed_inventories_portable_radio_teis(
         should_stop = False
 
         for rec in records:
-            #print(rec)
-
+            
             inventory_uuid = rec["uuid"]
             if not inventory_uuid:
                 continue

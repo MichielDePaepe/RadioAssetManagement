@@ -15,10 +15,27 @@
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav me-2">
 
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'organization:list_posts' %}">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle"
+             href="#"
+             id="navbarInventoryDropdown"
+             role="button"
+             data-bs-toggle="dropdown"
+             aria-expanded="false">
             <i class="bi bi-list-check"></i> {% trans "Inventory" %}
           </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarInventoryDropdown">
+            <li>
+              <a class="dropdown-item" href="{% url 'organization:list_posts' %}">
+                <i class="bi bi-building me-2"></i>{% trans "Posts" %}
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{% url 'fireplan:latest_inventory_per_vector' %}">
+                <i class="fa fa-truck-medical me-2"></i>{% trans "Ziekenwagens" %}
+              </a>
+            </li>
+          </ul>
         </li>
 
         {% if user.is_authenticated %}
