@@ -41,6 +41,6 @@ class LatestInventoryPerVectorView(TemplateView):
         ctx["since"] = since
         ctx["latest_rows"] = sorted(
             latest_per_vector.values(),
-            key=lambda r: (r["vector"].resourceCode if r["vector"] else "")
+            key=lambda r: (r["vector"].name if r["vector"] else "")
         )
         return ctx
