@@ -87,7 +87,7 @@ def sync_closed_inventories_portable_radio_teis(
         should_stop = False
 
         for rec in records:
-            
+
             inventory_uuid = rec["uuid"]
             if not inventory_uuid:
                 continue
@@ -114,7 +114,11 @@ def sync_closed_inventories_portable_radio_teis(
             html_path = f"/fr/inventory/close/{inventory_uuid}/inventoried-item/list"
             r2 = fp.get(html_path)
             r2.raise_for_status()
-            root_uuid = extract_root_container_uuid(r2.text)
+
+            m = ROOT_UUID_RE.search(r2.text)
+            if not m:
+                raise ValueError("Could not find rootInventoriedContainerUuid in HTML.")
+            root_uuid = m.group("uuid")
 
             containers_path = (
                 f"/fr/api/inventory/close/{root_uuid}/inventoried-item/inventoried-container/list"

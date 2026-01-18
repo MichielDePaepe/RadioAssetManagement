@@ -15,6 +15,8 @@ from pathlib import Path
 import dj_database_url
 
 from django.templatetags.static import static
+from celery.schedules import crontab
+
 
 from environ import Env
 env = Env()
@@ -277,3 +279,13 @@ MQTT_USERNAME = os.getenv("MQTT_USERNAME", "roip")
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
 ROIP_MQTT_TOPIC = os.getenv("ROIP_MQTT_TOPIC", "roip/+/events")
 ROIP_CHANNEL_GROUP = os.getenv("ROIP_CHANNEL_GROUP", "live_tx")
+
+
+
+
+CELERY_BEAT_SCHEDULE = {
+    "sync-inventories-hourly": {
+        "task": "fireplan.tasks.sync_inventories",
+        "schedule": crontab(minute=0),  # elk uur
+    },
+}
