@@ -30,6 +30,8 @@ class LatestInventoryPerVectorView(TemplateView):
         for inv in inventories:
             veh = inv.vehicle
             vector = getattr(veh, "vector", None) if veh else None
+            if not vector:
+                continue
             key = vector.resourceCode if vector else None
 
             if key not in latest_per_vector:
