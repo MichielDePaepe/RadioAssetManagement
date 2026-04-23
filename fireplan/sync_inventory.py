@@ -112,7 +112,7 @@ def sync_closed_inventories_portable_radio_teis(
             if vehicle_alpha_code:
                 vehicle_obj = Vehicle.objects.filter(number=vehicle_alpha_code).first()
 
-            html_path = f"/fr/inventory/close/{inventory_uuid}/inventoried-item/list"
+            html_path = f"/fr/api/inventory/close/{inventory_uuid}/inventoried-item/list"
             r2 = fp.get(html_path)
             r2.raise_for_status()
 
