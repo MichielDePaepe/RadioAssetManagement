@@ -116,17 +116,7 @@ def sync_closed_inventories_portable_radio_teis(
             r2 = fp.get(html_path)
             r2.raise_for_status()
 
-            m = ROOT_UUID_RE.search(r2.text)
-            if not m:
-                raise ValueError("Could not find rootInventoriedContainerUuid in HTML.")
-            root_uuid = m.group("uuid")
-
-            containers_path = (
-                f"/fr/api/inventory/close/{root_uuid}/inventoried-item/inventoried-container/list"
-            )
-            r3 = fp.get(containers_path)
-            r3.raise_for_status()
-            container_records = (r3.json() or {}).get("records", [])
+            container_records = (r2.json() or {}).get("records", [])
             container = next(
                 (c for c in container_records if c.get("nameFr") == container_name_fr),
                 None,
@@ -148,9 +138,9 @@ def sync_closed_inventories_portable_radio_teis(
                     container_uuid = container["uuid"]
 
                     items_path = f"/fr/api/inventory/close/{container_uuid}/inventoried-item/list"
-                    r4 = fp.get(items_path)
-                    r4.raise_for_status()
-                    item_records = (r4.json() or {}).get("records", [])
+                    r3 = fp.get(items_path)
+                    r3.raise_for_status()
+                    item_records = (r3.json() or {}).get("records", [])
 
                     for item in item_records:
                         itype = item.get("itemType") or {}
