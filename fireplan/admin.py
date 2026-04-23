@@ -126,6 +126,25 @@ class FireplanInventoryRadioInline(admin.TabularInline):
     readonly_fields = ()
     show_change_link = True
 
+class FireplanInventoryVectorFilter(admin.SimpleListFilter):
+    title = "Vector"
+    parameter_name = "vector"
+
+    def lookups(self, request, model_admin):
+        vectors = (
+            Vector.objects
+            .filter(inventories__isnull=False)
+            .distinct()
+            .order_by("name")
+            .values_list("pk", "name")
+        )
+        return [(pk, name or str(pk)) for pk, name in vectors]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(vector_id=self.value())
+        return queryset
+
 
 @admin.register(FireplanInventory)
 class FireplanInventoryAdmin(admin.ModelAdmin):
@@ -146,6 +165,7 @@ class FireplanInventoryAdmin(admin.ModelAdmin):
     readonly_fields = ("vector_name",)
     inlines = [FireplanInventoryRadioInline]
     actions = [sync_inventories_incremental, sync_inventories_full]
+    list_filter = (FireplanInventoryVectorFilter,)
 
     def vector_name(self, obj):
         return obj.vector.name if obj.vector else "-"
