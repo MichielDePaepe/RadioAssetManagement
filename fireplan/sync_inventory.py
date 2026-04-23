@@ -6,8 +6,9 @@ import re
 from typing import Optional
 
 from dateutil import parser
+from datetime import timedelta
 from django.db import transaction
-from django.utils.timezone import make_aware
+from django.utils import timezone   
 from urllib.parse import quote
 import json
 import logging
@@ -35,7 +36,7 @@ def parse_fireplan_datetime(value: Optional[str]):
         return None
     dt = parser.parse(value)
     if dt.tzinfo is None:
-        dt = make_aware(dt)
+        dt = timezone.make_aware(dt)
     return dt
 
 
@@ -109,8 +110,17 @@ def sync_closed_inventories_portable_radio_teis(
             overseen_by_full_name = rec.get("overseenByFullName") or ""
 
             vehicle_obj = None
+            vector_obj = None
+
             if vehicle_alpha_code:
                 vehicle_obj = Vehicle.objects.filter(number=vehicle_alpha_code).first()
+
+            if (
+                closed_at
+                and closed_at >= timezone.now() - timedelta(hours=12)
+                and vehicle_obj is not None
+            ):
+                vector_obj = getattr(vehicle_obj, "vector", None)
 
             html_path = f"/fr/api/inventory/inventories-type/close/{inventory_uuid}/inventoried-container/tree"
             r2 = fp.get(html_path)
@@ -129,7 +139,7 @@ def sync_closed_inventories_portable_radio_teis(
                     uuid=inventory_uuid,
                     vehicle_alpha_code=vehicle_alpha_code,
                     vehicle=vehicle_obj,
-                    
+                    vector=vector_obj,
                     closed_at=closed_at,
                     done_by_full_name=done_by_full_name,
                     overseen_by_full_name=overseen_by_full_name,
