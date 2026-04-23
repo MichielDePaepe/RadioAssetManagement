@@ -158,6 +158,14 @@ class FireplanInventory(models.Model):
         related_name="inventories",
     )
 
+    vector = models.ForeignKey(
+        "fireplan.Vector",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="inventories",
+    )
+
     closed_at = models.DateTimeField(null=True, blank=True, db_index=True)
     done_by_full_name = models.CharField(max_length=128, blank=True, default="")
     overseen_by_full_name = models.CharField(max_length=128, blank=True, default="")

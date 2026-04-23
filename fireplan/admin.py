@@ -131,6 +131,7 @@ class FireplanInventoryRadioInline(admin.TabularInline):
 class FireplanInventoryAdmin(admin.ModelAdmin):
     list_display = (
         "vehicle_alpha_code",
+        "vector_name",
         "closed_at",
         "done_by_full_name",
     )
@@ -139,9 +140,16 @@ class FireplanInventoryAdmin(admin.ModelAdmin):
         "vehicle_alpha_code",
         "done_by_full_name",
         "uuid",
+        "vector__name",
+        "vector__abbreviation",
     )
+    readonly_fields = ("vector_name",)
     inlines = [FireplanInventoryRadioInline]
     actions = [sync_inventories_incremental, sync_inventories_full]
+
+    def vector_name(self, obj):
+        return obj.vector.name if obj.vector else "-"
+    vector_name.short_description = "Vector"
 
 
 @admin.register(FireplanInventoryRadio)

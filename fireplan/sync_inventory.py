@@ -8,6 +8,7 @@ from typing import Optional
 from dateutil import parser
 from django.db import transaction
 from django.utils.timezone import make_aware
+from urllib.parse import quote
 import logging
 logger = logging.getLogger(__name__)
 
@@ -62,9 +63,8 @@ def sync_closed_inventories_portable_radio_teis(
     first = 0
 
     for _ in range(max_pages):
-        filters = "{}"
-        sort = '[{"field":"closedAt","order":-1}]'
-
+        filters = quote(json.dumps({}))
+        sort = quote(json.dumps([{"field": "closedAt", "order": -1}]))
         list_path = (
             f"/fr/api/inventory/inventories-type/close"
             f"?first={first}&rows={page_size}"
@@ -136,6 +136,7 @@ def sync_closed_inventories_portable_radio_teis(
                     uuid=inventory_uuid,
                     vehicle_alpha_code=vehicle_alpha_code,
                     vehicle=vehicle_obj,
+                    
                     closed_at=closed_at,
                     done_by_full_name=done_by_full_name,
                     overseen_by_full_name=overseen_by_full_name,
