@@ -122,6 +122,8 @@ def sync_closed_inventories_portable_radio_teis(
                 None,
             )
 
+            root_uuid = container_records[0]["id"]
+
             with transaction.atomic():
                 inv_obj = FireplanInventory.objects.create(
                     uuid=inventory_uuid,
@@ -135,32 +137,33 @@ def sync_closed_inventories_portable_radio_teis(
                 )
 
                 if container:
-                    container_uuid = container["uuid"]
+                    container_uuid = container["id"]
 
-                    items_path = f"/fr/api/inventory/close/{container_uuid}/inventoried-item/list"
+                    items_path = f"/fr/api/inventory/inventories-type/close/inventoried-container/{container_uuid}/inventoried-item/list"
                     r3 = fp.get(items_path)
                     r3.raise_for_status()
                     item_records = (r3.json() or {}).get("records", [])
 
                     for item in item_records:
-                        itype = item.get("itemType") or {}
-                        if itype.get("nameFr") != item_type_name_fr:
+                        if item.get("nameFr") != item_type_name_fr:
                             continue
 
-                        tracked = item.get("trackedItem") or {}
-                        tracked_item_id = tracked.get("id")
-                        tei = tracked.get("serialNumber")
+                        tei = item.get("trackedItemSerialNumber")
                         if not tei:
                             continue
 
                         radio_obj = None
-                        if tracked_item_id is not None:
-                            radio_obj = Radio.objects.filter(fireplan_id=tracked_item_id).first()
+                        if tei is not None:
+                            radio_obj = Radio.objects.filter(TEI=int(tei)).first()
+
+                        tracked_item_id = None
+                        if radio_obj:
+                            tracked_item_id = radio_obj.fireplan_id
 
                         FireplanInventoryRadio.objects.create(
                             inventory=inv_obj,
                             container_uuid=container_uuid,
-                            item_uuid=item["uuid"],
+                            item_uuid=item["id"],
                             tracked_item_id=tracked_item_id,
                             tei=str(tei),
                             radio=radio_obj,
