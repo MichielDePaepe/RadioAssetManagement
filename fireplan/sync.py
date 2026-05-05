@@ -238,29 +238,11 @@ def sync_vectors():
 
 
 
+
 def sync_fireplan_id():
     fp = FireplanClient()
 
     url = f"{fp.BASE}/fr/api/inventory/qr-codes"
-
-    filters = {
-        "id": {
-            "operator": "and",
-            "constraints": [{"value": None, "matchMode": "contains"}],
-        },
-        "name": {"value": None, "matchMode": "in"},
-        "internalReference": {"value": None, "matchMode": "in"},
-        "serialNumber": {"value": None, "matchMode": "in"},
-        "type": {"value": None, "matchMode": "in"},
-        "qrCode": {
-            "operator": "and",
-            "constraints": [{"value": None, "matchMode": "contains"}],
-        },
-        "createdAt": {
-            "operator": "and",
-            "constraints": [{"value": None, "matchMode": "dateIs"}],
-        },
-    }
 
     headers = {
         "Accept": "application/json, text/plain, */*",
@@ -269,38 +251,69 @@ def sync_fireplan_id():
     }
 
     pattern = re.compile(
-        r"https://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)"
+        r"https://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)$"
     )
 
-    result = []
-    first = 0
-    rows = 500
+    radio_names = [
+        "Radio mobile Astrid",
+        "Radio portable Astrid",
+        "Portable ATEX",
+    ]
 
-    while True:
+    result = []
+
+    for radio_name in radio_names:
+        filters = {
+            "id": {
+                "operator": "and",
+                "constraints": [{"value": None, "matchMode": "contains"}],
+            },
+            "name": {
+                "value": [radio_name],
+                "matchMode": "in",
+            },
+            "serialNumber": {
+                "value": None,
+                "matchMode": "in",
+            },
+            "type": {
+                "value": None,
+                "matchMode": "in",
+            },
+            "qrCode": {
+                "operator": "and",
+                "constraints": [{"value": None, "matchMode": "contains"}],
+            },
+            "createdAt": {
+                "operator": "and",
+                "constraints": [{"value": None, "matchMode": "dateIs"}],
+            },
+        }
+
         params = {
-            "first": first,
-            "rows": rows,
+            "first": 0,
+            "rows": 5000,
             "filters": json.dumps(filters, separators=(",", ":")),
             "multiSortMeta": "[]",
         }
 
         r = fp.session.get(url, params=params, headers=headers)
+
+        if r.status_code >= 500:
+            logger.warning(
+                "Fireplan API error for %s: %s - %s",
+                radio_name,
+                r.status_code,
+                r.text[:500],
+            )
+            continue
+
         r.raise_for_status()
 
         data = r.json()
         records = data.get("records", [])
 
-        if not records:
-            break
-
         for rec in records:
-            if rec.get("name") not in [
-                "Radio mobile Astrid",
-                "Radio portable Astrid",
-                "Portable ATEX",
-            ]:
-                continue
-
             qr_code = rec.get("qrCode") or ""
             match = pattern.match(qr_code)
 
@@ -308,7 +321,6 @@ def sync_fireplan_id():
                 continue
 
             serial_number = rec.get("serialNumber")
-
             if not serial_number:
                 continue
 
@@ -329,14 +341,12 @@ def sync_fireplan_id():
             result.append({
                 "TEI": serial_number,
                 "fireplan_id": fireplan_id,
+                "name": radio_name,
             })
 
-        if len(records) < rows:
-            break
-
-        first += rows
-
     return result
+
+
 
 
 # def sync_fireplan_id():
