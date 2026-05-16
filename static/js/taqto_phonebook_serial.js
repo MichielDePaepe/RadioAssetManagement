@@ -22,7 +22,6 @@
     gateMessage: document.getElementById("serialGateMessage"),
     flagHelp: document.getElementById("serialFlagHelp"),
     serialOrigin: document.getElementById("serialOrigin"),
-    serialOriginCopied: document.getElementById("serialOriginCopied"),
     tei: document.getElementById("teiValue"),
     issi: document.getElementById("issiValue"),
     alias: document.getElementById("aliasValue"),
@@ -122,10 +121,6 @@
         input.select();
         document.execCommand("copy");
         input.remove();
-      }
-      if (els.serialOriginCopied) {
-        els.serialOriginCopied.classList.remove("d-none");
-        window.setTimeout(() => els.serialOriginCopied.classList.add("d-none"), 1800);
       }
     } catch (error) {
       showNotice(`Kopieren mislukt: ${error.message}`, "warning");
