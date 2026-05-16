@@ -90,6 +90,14 @@
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="taqtoDropdown">
 
             {% if perms.taqto.can_download_contacts %}
+              <li>
+                <a class="dropdown-item" href="{% url 'taqto:phonebook_serial' %}">
+                  <i class="bi bi-usb-plug"></i> {% trans "Update radio phonebook" %}
+                </a>
+              </li>
+
+              <li><hr class="dropdown-divider"></li>
+
               <!-- Titel als "disabled" dropdown-item -->
               <li>
                 <span class="dropdown-item text-muted disabled" style="pointer-events:none;">

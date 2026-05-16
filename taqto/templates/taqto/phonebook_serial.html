@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Taqto phonebook updater{% endblock %}
+
+{% block extra_head %}
+<style>
+  :root {
+    --siamu-red: #E30613;
+    --siamu-grey: #939399;
+    --siamu-blue: #005195;
+    --siamu-yellow: #FFE600;
+    --siamu-green: #66BBB0;
+    --console-bg: #041006;
+    --console-green: #39ff88;
+  }
+
+  .taqto-shell {
+    font-family: Barlow, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .taqto-header {
+    border-bottom: 1px solid #e7e7e7;
+    padding: .25rem 0 1rem;
+  }
+
+  .taqto-panel {
+    border: 1px solid #dedede;
+    border-radius: 6px;
+    background: #fff;
+  }
+
+  .radio-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 1rem 1.25rem;
+  }
+
+  .radio-meta-item {
+    border-bottom: 1px solid #e7e7e7;
+    padding: .35rem 0 .65rem;
+  }
+
+  .radio-meta-label {
+    color: #666;
+    font-size: .78rem;
+    text-transform: uppercase;
+  }
+
+  .radio-meta-value {
+    font-weight: 700;
+    min-height: 1.4rem;
+  }
+
+  .log-toggle {
+    border: 0;
+    background: transparent;
+    color: #555;
+    font-weight: 600;
+    padding: .25rem 0;
+  }
+
+  .log-toggle:hover,
+  .log-toggle:focus {
+    color: #111;
+    text-decoration: underline;
+  }
+
+  .taqto-action {
+    border-color: #6c757d;
+    color: #333;
+    background: #fff;
+  }
+
+  .taqto-action:hover,
+  .taqto-action:focus {
+    border-color: #333;
+    color: #111;
+    background: #f4f4f4;
+  }
+
+  .discipline-pill {
+    color: #666;
+    font-size: .85rem;
+    font-weight: 600;
+  }
+
+  .discipline-pill.fire {
+    color: #666;
+  }
+
+  .at-console {
+    position: relative;
+    height: 420px;
+    overflow: hidden;
+    border-radius: 6px;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(57, 255, 136, .16), transparent 24%),
+      linear-gradient(90deg, rgba(57, 255, 136, .04) 1px, transparent 1px),
+      linear-gradient(rgba(57, 255, 136, .07) 50%, rgba(0, 0, 0, 0) 50%),
+      var(--console-bg);
+    background-size: auto, 28px 28px, 100% 6px;
+    color: var(--console-green);
+    font: 0.86rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    padding: 1rem;
+    text-shadow: 0 0 8px rgba(57, 255, 136, .55);
+    box-shadow: inset 0 0 24px rgba(57, 255, 136, .2), 0 0 0 1px rgba(57, 255, 136, .2);
+  }
+
+  .log-line.tx { color: #8fffc0; }
+  .log-line.rx { color: #c4ffd8; }
+  .log-line.warn { color: #FFE600; }
+  .log-line.error { color: #ff7b7b; }
+
+  .at-console::selection {
+    background: rgba(57, 255, 136, .24);
+  }
+
+  .at-console-lines {
+    height: 100%;
+    overflow: auto;
+    padding-right: 3.25rem;
+    scrollbar-gutter: stable;
+  }
+
+  .matrix-clear {
+    position: absolute;
+    top: .65rem;
+    right: 1.6rem;
+    z-index: 2;
+    border: 1px solid rgba(57, 255, 136, .55);
+    color: var(--console-green);
+    background: rgba(4, 16, 6, .86);
+    border-radius: 4px;
+    padding: .25rem .45rem;
+    line-height: 1;
+    text-shadow: 0 0 8px rgba(57, 255, 136, .65);
+    box-shadow: inset 0 0 12px rgba(57, 255, 136, .16);
+  }
+
+  .matrix-clear:hover,
+  .matrix-clear:focus {
+    color: #d7ffe4;
+    border-color: #d7ffe4;
+    background: rgba(10, 36, 16, .96);
+  }
+
+  .progress {
+    height: 1.15rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{{ phonebook_payload|json_script:"phonebook-data" }}
+<div class="taqto-shell">
+  <div class="taqto-header mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+      <div>
+        <h1 class="h3 mb-1">Radio phonebook updater</h1>
+        <p class="text-muted mb-0">THR880i PEI via Web Serial</p>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <button class="btn taqto-action"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#atLogCollapse"
+                aria-expanded="false"
+                aria-controls="atLogCollapse"
+                title="AT-log console">
+          <i class="bi bi-terminal"></i>
+        </button>
+        <button id="connectBtn" class="btn taqto-action">
+          <i class="bi bi-usb-plug"></i> Verbind met seriële poort
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="serialUnsupported" class="alert alert-warning d-none">
+    Web Serial is niet beschikbaar in deze browser. Gebruik Chrome of Edge op een veilige context.
+  </div>
+
+  <section class="taqto-panel p-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <h2 class="h5 mb-0">Radio status</h2>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <button id="refreshBtn" class="btn taqto-action" disabled>
+          <i class="bi bi-arrow-clockwise"></i> Lees opnieuw
+        </button>
+      </div>
+    </div>
+    <div class="radio-meta">
+      <div class="radio-meta-item"><div class="radio-meta-label">TEI</div><div id="teiValue" class="radio-meta-value">-</div></div>
+      <div class="radio-meta-item"><div class="radio-meta-label">ISSI</div><div id="issiValue" class="radio-meta-value">-</div></div>
+      <div class="radio-meta-item"><div class="radio-meta-label">Alias</div><div id="aliasValue" class="radio-meta-value">-</div></div>
+      <div class="radio-meta-item"><div class="radio-meta-label">Type</div><div id="modelValue" class="radio-meta-value">-</div></div>
+      <div class="radio-meta-item"><div class="radio-meta-label">Software</div><div id="revisionValue" class="radio-meta-value">-</div></div>
+      <div class="radio-meta-item"><div class="radio-meta-label">Phonebook</div><div id="phonebookValue" class="radio-meta-value">-</div></div>
+    </div>
+  </section>
+
+  <section class="taqto-panel p-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <h2 class="h5 mb-0">Voortgang</h2>
+      <button id="updateBtn" class="btn taqto-action" disabled>
+        <i class="bi bi-journal-arrow-up"></i> Schrijf phonebook
+      </button>
+    </div>
+    <div class="progress mb-2" role="progressbar" aria-label="Phonebook update">
+      <div id="progressBar" class="progress-bar bg-danger" style="width: 0%">0%</div>
+    </div>
+    <div class="d-flex justify-content-between text-muted small">
+      <span id="progressStatus">Nog niet gestart</span>
+      <span id="etaStatus">ETA -</span>
+    </div>
+  </section>
+
+  <section id="atLogCollapse" class="taqto-panel p-3 collapse">
+      <div id="atLog" class="at-console" aria-live="polite">
+        <button id="clearLogBtn" class="matrix-clear" type="button" title="Log wissen">
+          <i class="bi bi-trash3"></i>
+        </button>
+        <div id="atLogLines" class="at-console-lines"></div>
+      </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="{% static 'js/taqto_phonebook_serial.js' %}"></script>
+{% endblock %}
