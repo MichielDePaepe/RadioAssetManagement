@@ -28,6 +28,7 @@
     model: document.getElementById("modelValue"),
     revision: document.getElementById("revisionValue"),
     phonebook: document.getElementById("phonebookValue"),
+    notice: document.getElementById("serialNotice"),
     progressBar: document.getElementById("progressBar"),
     progressStatus: document.getElementById("progressStatus"),
     etaStatus: document.getElementById("etaStatus"),
@@ -56,6 +57,16 @@
   function renderContacts() {
   }
 
+  function showNotice(message, level = "warning") {
+    els.notice.className = `alert alert-${level} mb-3`;
+    els.notice.textContent = message;
+  }
+
+  function hideNotice() {
+    els.notice.className = "alert alert-warning d-none mb-3";
+    els.notice.textContent = "";
+  }
+
   function getSerialSupportMessage() {
     if (!window.isSecureContext) {
       return {
@@ -78,6 +89,7 @@
       els.gate.classList.add("d-none");
       els.app.classList.remove("d-none");
       els.connectBtn.disabled = false;
+      els.progressStatus.textContent = "Web Serial beschikbaar";
       return;
     }
 
@@ -195,14 +207,31 @@
       return;
     }
 
-    state.port = await navigator.serial.requestPort();
-    await state.port.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: "none", flowControl: "hardware" });
-    state.writer = state.port.writable.getWriter();
-    readLoop();
-    els.refreshBtn.disabled = false;
-    els.updateBtn.disabled = false;
-    log("WARN", "Seriële poort verbonden op 9600 8N1 RTS/CTS");
-    await initializeRadio();
+    hideNotice();
+    els.connectBtn.disabled = true;
+    els.progressStatus.textContent = "Kies een seriële poort in de browser...";
+
+    try {
+      state.port = await navigator.serial.requestPort();
+      els.progressStatus.textContent = "Seriële poort openen...";
+      await state.port.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: "none", flowControl: "hardware" });
+      state.writer = state.port.writable.getWriter();
+      readLoop();
+      els.refreshBtn.disabled = false;
+      els.updateBtn.disabled = false;
+      els.progressStatus.textContent = "Verbonden, radio uitlezen...";
+      log("WARN", "Seriële poort verbonden op 9600 8N1 RTS/CTS");
+      await initializeRadio();
+      showNotice("Seriële poort verbonden.", "success");
+    } catch (error) {
+      const message = error.name === "NotFoundError"
+        ? "Geen seriële poort gekozen. Klik opnieuw op verbinden en selecteer de radio."
+        : `Verbinden mislukt: ${error.message || error.name}`;
+      showNotice(message, "danger");
+      els.progressStatus.textContent = "Niet verbonden";
+      log("ERROR", message);
+      els.connectBtn.disabled = false;
+    }
   }
 
   async function initializeRadio() {
@@ -313,9 +342,15 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  els.connectBtn.addEventListener("click", () => connect().catch((error) => log("ERROR", error.message)));
-  els.refreshBtn.addEventListener("click", () => refreshStatus().catch((error) => log("ERROR", error.message)));
-  els.updateBtn.addEventListener("click", () => updatePhonebook().catch((error) => log("ERROR", error.message)));
+  els.connectBtn.addEventListener("click", () => connect());
+  els.refreshBtn.addEventListener("click", () => refreshStatus().catch((error) => {
+    showNotice(`Status lezen mislukt: ${error.message}`, "danger");
+    log("ERROR", error.message);
+  }));
+  els.updateBtn.addEventListener("click", () => updatePhonebook().catch((error) => {
+    showNotice(`Phonebook schrijven mislukt: ${error.message}`, "danger");
+    log("ERROR", error.message);
+  }));
   els.clearLogBtn.addEventListener("click", () => {
     els.logLines.innerHTML = "";
   });
