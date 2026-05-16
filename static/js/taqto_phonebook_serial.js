@@ -22,6 +22,7 @@
     gateMessage: document.getElementById("serialGateMessage"),
     flagHelp: document.getElementById("serialFlagHelp"),
     serialOrigin: document.getElementById("serialOrigin"),
+    serialOriginCopied: document.getElementById("serialOriginCopied"),
     tei: document.getElementById("teiValue"),
     issi: document.getElementById("issiValue"),
     alias: document.getElementById("aliasValue"),
@@ -58,11 +59,13 @@
   }
 
   function showNotice(message, level = "warning") {
+    if (!els.notice) return;
     els.notice.className = `alert alert-${level} mb-3`;
     els.notice.textContent = message;
   }
 
   function hideNotice() {
+    if (!els.notice) return;
     els.notice.className = "alert alert-warning d-none mb-3";
     els.notice.textContent = "";
   }
@@ -86,21 +89,47 @@
   function updateSerialSupportState() {
     const supportProblem = getSerialSupportMessage();
     if (!supportProblem) {
-      els.gate.classList.add("d-none");
-      els.app.classList.remove("d-none");
+      if (els.gate) els.gate.classList.add("d-none");
+      if (els.app) els.app.classList.remove("d-none");
       els.connectBtn.disabled = false;
       els.progressStatus.textContent = "Web Serial beschikbaar";
       return;
     }
 
-    els.app.classList.add("d-none");
-    els.gate.classList.remove("d-none");
-    els.gateMessage.textContent = supportProblem.message;
+    if (els.app) els.app.classList.add("d-none");
+    if (els.gate) els.gate.classList.remove("d-none");
+    if (els.gateMessage) els.gateMessage.textContent = supportProblem.message;
     els.connectBtn.disabled = true;
 
     const showFlagHelp = supportProblem.reason === "insecure" && /Chrome|Chromium|Edg\//.test(navigator.userAgent);
-    els.flagHelp.classList.toggle("d-none", !showFlagHelp);
-    els.serialOrigin.textContent = window.location.origin;
+    if (els.flagHelp) els.flagHelp.classList.toggle("d-none", !showFlagHelp);
+    if (els.serialOrigin) els.serialOrigin.textContent = window.location.origin;
+
+    if (!els.gate) {
+      showNotice(supportProblem.message, "warning");
+    }
+  }
+
+  async function copyOrigin() {
+    const origin = window.location.origin;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(origin);
+      } else {
+        const input = document.createElement("input");
+        input.value = origin;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+      }
+      if (els.serialOriginCopied) {
+        els.serialOriginCopied.classList.remove("d-none");
+        window.setTimeout(() => els.serialOriginCopied.classList.add("d-none"), 1800);
+      }
+    } catch (error) {
+      showNotice(`Kopieren mislukt: ${error.message}`, "warning");
+    }
   }
 
   function setProgress(done, total, status, startedAt) {
@@ -354,6 +383,9 @@
   els.clearLogBtn.addEventListener("click", () => {
     els.logLines.innerHTML = "";
   });
+  if (els.serialOrigin) {
+    els.serialOrigin.addEventListener("click", copyOrigin);
+  }
 
   updateSerialSupportState();
   renderContacts();
