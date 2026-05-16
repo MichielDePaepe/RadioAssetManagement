@@ -28,6 +28,7 @@
     model: document.getElementById("modelValue"),
     revision: document.getElementById("revisionValue"),
     phonebook: document.getElementById("phonebookValue"),
+    connectionTitle: document.getElementById("connectionTitle"),
     notice: document.getElementById("serialNotice"),
     progressBar: document.getElementById("progressBar"),
     progressStatus: document.getElementById("progressStatus"),
@@ -69,6 +70,10 @@
     els.notice.textContent = "";
   }
 
+  function setConnectionStatus(message) {
+    els.connectionTitle.textContent = message;
+  }
+
   function getSerialSupportMessage() {
     if (!window.isSecureContext) {
       return {
@@ -91,6 +96,7 @@
       if (els.gate) els.gate.classList.add("d-none");
       if (els.app) els.app.classList.remove("d-none");
       els.connectBtn.disabled = false;
+      setConnectionStatus("Niet verbonden");
       els.progressStatus.textContent = "Web Serial beschikbaar";
       return;
     }
@@ -233,6 +239,7 @@
 
     hideNotice();
     els.connectBtn.disabled = true;
+    setConnectionStatus("Verbinden...");
     els.progressStatus.textContent = "Kies een seriële poort in de browser...";
 
     try {
@@ -244,14 +251,15 @@
       els.refreshBtn.disabled = false;
       els.updateBtn.disabled = false;
       els.progressStatus.textContent = "Verbonden, radio uitlezen...";
+      setConnectionStatus("Verbonden");
       log("WARN", "Seriële poort verbonden op 9600 8N1 RTS/CTS");
       await initializeRadio();
-      showNotice("Seriële poort verbonden.", "success");
     } catch (error) {
       const message = error.name === "NotFoundError"
         ? "Geen seriële poort gekozen. Klik opnieuw op verbinden en selecteer de radio."
         : `Verbinden mislukt: ${error.message || error.name}`;
       showNotice(message, "danger");
+      setConnectionStatus("Niet verbonden");
       els.progressStatus.textContent = "Niet verbonden";
       log("ERROR", message);
       els.connectBtn.disabled = false;
