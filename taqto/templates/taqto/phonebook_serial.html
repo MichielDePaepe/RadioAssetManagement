@@ -149,12 +149,57 @@
   .progress {
     height: 1.15rem;
   }
+
+  .serial-gate {
+    min-height: 62vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .serial-gate-card {
+    max-width: 760px;
+    border: 1px solid #dedede;
+    border-radius: 6px;
+    background: #fff;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .06);
+  }
+
+  .origin-copy {
+    display: inline-block;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f8f9fa;
+    padding: .3rem .5rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 {{ phonebook_payload|json_script:"phonebook-data" }}
-<div class="taqto-shell">
+<div id="serialGate" class="serial-gate d-none">
+  <div class="serial-gate-card text-center">
+    <i class="bi bi-exclamation-triangle h1 text-warning"></i>
+    <h1 class="h4 mt-3">Web Serial kan hier niet starten</h1>
+    <p id="serialGateMessage" class="text-muted mb-4"></p>
+
+    <div id="serialFlagHelp" class="text-start d-none">
+      <h2 class="h6">Tijdelijke Chrome-oplossing voor deze interne site</h2>
+      <ol class="mb-3">
+        <li>Open <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>.</li>
+        <li>Voeg deze origin toe: <span id="serialOrigin" class="origin-copy"></span></li>
+        <li>Zet de flag op <strong>Enabled</strong> en herstart Chrome.</li>
+      </ol>
+      <p class="small text-muted mb-0">
+        Gebruik dit alleen op de programmeer-pc's. HTTPS blijft de nette oplossing.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div id="serialApp" class="taqto-shell">
   <div class="taqto-header mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
       <div>
@@ -176,10 +221,6 @@
         </button>
       </div>
     </div>
-  </div>
-
-  <div id="serialUnsupported" class="alert alert-warning d-none">
-    Web Serial is niet beschikbaar in deze browser. Gebruik Chrome of Edge op een veilige context.
   </div>
 
   <section class="taqto-panel p-3 mb-4">

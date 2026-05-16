@@ -17,7 +17,11 @@
     refreshBtn: document.getElementById("refreshBtn"),
     updateBtn: document.getElementById("updateBtn"),
     clearLogBtn: document.getElementById("clearLogBtn"),
-    unsupported: document.getElementById("serialUnsupported"),
+    app: document.getElementById("serialApp"),
+    gate: document.getElementById("serialGate"),
+    gateMessage: document.getElementById("serialGateMessage"),
+    flagHelp: document.getElementById("serialFlagHelp"),
+    serialOrigin: document.getElementById("serialOrigin"),
     tei: document.getElementById("teiValue"),
     issi: document.getElementById("issiValue"),
     alias: document.getElementById("aliasValue"),
@@ -50,6 +54,41 @@
   }
 
   function renderContacts() {
+  }
+
+  function getSerialSupportMessage() {
+    if (!window.isSecureContext) {
+      return {
+        reason: "insecure",
+        message: "Deze interne site draait via HTTP. Browsers laten Web Serial alleen toe via HTTPS of localhost.",
+      };
+    }
+    if (!("serial" in navigator)) {
+      return {
+        reason: "browser",
+        message: "Deze browser ondersteunt Web Serial niet. Gebruik Chrome of Edge op desktop; Safari, Firefox en iOS ondersteunen dit niet.",
+      };
+    }
+    return null;
+  }
+
+  function updateSerialSupportState() {
+    const supportProblem = getSerialSupportMessage();
+    if (!supportProblem) {
+      els.gate.classList.add("d-none");
+      els.app.classList.remove("d-none");
+      els.connectBtn.disabled = false;
+      return;
+    }
+
+    els.app.classList.add("d-none");
+    els.gate.classList.remove("d-none");
+    els.gateMessage.textContent = supportProblem.message;
+    els.connectBtn.disabled = true;
+
+    const showFlagHelp = supportProblem.reason === "insecure" && /Chrome|Chromium|Edg\//.test(navigator.userAgent);
+    els.flagHelp.classList.toggle("d-none", !showFlagHelp);
+    els.serialOrigin.textContent = window.location.origin;
   }
 
   function setProgress(done, total, status, startedAt) {
@@ -150,8 +189,9 @@
   }
 
   async function connect() {
-    if (!("serial" in navigator)) {
-      els.unsupported.classList.remove("d-none");
+    const unsupportedMessage = getSerialSupportMessage();
+    if (unsupportedMessage) {
+      updateSerialSupportState();
       return;
     }
 
@@ -280,6 +320,6 @@
     els.logLines.innerHTML = "";
   });
 
-  if (!("serial" in navigator)) els.unsupported.classList.remove("d-none");
+  updateSerialSupportState();
   renderContacts();
 }());
