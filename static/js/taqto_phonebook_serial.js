@@ -81,6 +81,12 @@
     setSelectedPhonebook(checkedChoice ? checkedChoice.value : state.selectedPhonebook);
   }
 
+  function setPhonebookChoiceDisabled(disabled) {
+    for (const choice of els.phonebookChoices) {
+      choice.disabled = disabled;
+    }
+  }
+
   function showNotice(message, level = "warning") {
     if (!els.notice) return;
     els.notice.className = `alert alert-${level} mb-3`;
@@ -365,6 +371,7 @@
     state.busy = true;
     els.updateBtn.disabled = true;
     els.refreshBtn.disabled = true;
+    setPhonebookChoiceDisabled(true);
     const deleteFrom = state.contacts.length + 1;
     const deleteUntil = Math.max(state.usedSlots, state.contacts.length);
     const deleteCount = Math.max(0, deleteUntil - state.contacts.length);
@@ -402,6 +409,7 @@
       state.busy = false;
       els.updateBtn.disabled = false;
       els.refreshBtn.disabled = false;
+      setPhonebookChoiceDisabled(false);
     }
   }
 
