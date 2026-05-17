@@ -9,6 +9,8 @@
     selectedPhonebook: "fire",
     totalSlots: 0,
     usedSlots: 0,
+    radioPresent: false,
+    pollTimer: null,
     busy: false,
   };
 
@@ -89,6 +91,22 @@
   }
 
   function renderContacts() {
+  }
+
+  function clearRadioStatus() {
+    renderTei("");
+    els.issi.textContent = "-";
+    els.alias.textContent = "-";
+    els.model.textContent = "-";
+    els.revision.textContent = "-";
+    els.phonebook.textContent = "-";
+    state.usedSlots = 0;
+    state.totalSlots = 0;
+    els.updateBtn.disabled = true;
+    els.refreshBtn.disabled = true;
+    if (els.phonebookSuggestion) {
+      els.phonebookSuggestion.textContent = "Voorstel wordt bepaald na uitlezen van ISSI.";
+    }
   }
 
   function setSelectedPhonebook(phonebook, options = {}) {
@@ -238,9 +256,10 @@
     if (!state.writer) throw new Error("Geen seriële verbinding");
 
     const timeoutMs = options.timeoutMs || 4500;
+    const silent = options.silent || false;
     const encoder = new TextEncoder();
     state.buffer = "";
-    log("TX", command);
+    if (!silent) log("TX", command);
     await state.writer.write(encoder.encode(`${command}\r`));
 
     const started = Date.now();
@@ -249,15 +268,67 @@
       const normalized = state.buffer.replace(/\r/g, "\n");
       if (/(^|\n)OK\s*(\n|$)/.test(normalized) || /(^|\n)ERROR\s*(\n|$)/.test(normalized) || /\+CME ERROR|\+CMS ERROR/.test(normalized)) {
         const lines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
-        for (const line of lines) log("RX", line);
+        if (!silent) {
+          for (const line of lines) log("RX", line);
+        }
         if (lines.some((line) => line === "ERROR" || line.startsWith("+CME ERROR") || line.startsWith("+CMS ERROR"))) {
           throw new Error(`${command} gaf ERROR`);
         }
         return lines.filter((line) => line !== "OK" && line !== command);
       }
     }
-    log("WARN", `${command} timeout`);
+    if (!silent) log("WARN", `${command} timeout`);
     throw new Error(`${command} timeout`);
+  }
+
+  async function probeRadio() {
+    await sendCommand("AT", { timeoutMs: 1000, silent: true });
+  }
+
+  function markRadioAbsent() {
+    if (state.radioPresent) {
+      log("WARN", "Geen antwoord meer op AT; radio afwezig");
+    }
+    state.radioPresent = false;
+    clearRadioStatus();
+    setConnectionStatus("Poort open");
+    els.progressStatus.textContent = "Wachten op radio...";
+  }
+
+  async function handleRadioDetected() {
+    state.radioPresent = true;
+    setConnectionStatus("Radio gedetecteerd");
+    els.progressStatus.textContent = "Radio gedetecteerd, status uitlezen...";
+    state.busy = true;
+    try {
+      await sendCommand("ATE0");
+      await sendCommand("ATV1");
+      await sendCommand("AT+CMEE=1");
+    } finally {
+      state.busy = false;
+    }
+    await refreshStatus();
+  }
+
+  async function pollRadioPresence() {
+    if (!state.writer || state.busy) return;
+
+    try {
+      await probeRadio();
+      if (!state.radioPresent) {
+        await handleRadioDetected();
+      }
+    } catch (error) {
+      markRadioAbsent();
+    }
+  }
+
+  function startRadioPolling() {
+    if (state.pollTimer) window.clearInterval(state.pollTimer);
+    state.pollTimer = window.setInterval(() => {
+      pollRadioPresence().catch((error) => log("ERROR", error.message));
+    }, 2000);
+    pollRadioPresence().catch((error) => log("ERROR", error.message));
   }
 
   async function commandWithFallback(commands, parser) {
@@ -306,12 +377,12 @@
       await state.port.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: "none", flowControl: "hardware" });
       state.writer = state.port.writable.getWriter();
       readLoop();
-      els.refreshBtn.disabled = false;
-      els.updateBtn.disabled = false;
-      els.progressStatus.textContent = "Verbonden, radio uitlezen...";
-      setConnectionStatus("Verbonden");
-      log("WARN", "Seriële poort verbonden op 9600 8N1 RTS/CTS");
-      await initializeRadio();
+      clearRadioStatus();
+      els.connectBtn.disabled = true;
+      els.progressStatus.textContent = "Seriële poort open, wachten op radio...";
+      setConnectionStatus("Poort open");
+      log("WARN", "Seriële poort open op 9600 8N1 RTS/CTS");
+      startRadioPolling();
     } catch (error) {
       const message = error.name === "NotFoundError"
         ? "Geen seriële poort gekozen. Klik opnieuw op verbinden en selecteer de radio."
@@ -324,16 +395,8 @@
     }
   }
 
-  async function initializeRadio() {
-    await sendCommand("AT");
-    await sendCommand("ATE0");
-    await sendCommand("ATV1");
-    await sendCommand("AT+CMEE=1");
-    await refreshStatus();
-  }
-
   async function refreshStatus() {
-    if (state.busy) return;
+    if (state.busy || !state.radioPresent) return;
     state.busy = true;
     els.refreshBtn.disabled = true;
     els.updateBtn.disabled = true;
@@ -356,10 +419,11 @@
       els.model.textContent = model || "-";
       els.revision.textContent = revision || "-";
       els.phonebook.textContent = parseCpbs(cpbs);
+      els.updateBtn.disabled = false;
     } finally {
       state.busy = false;
       els.refreshBtn.disabled = false;
-      els.updateBtn.disabled = false;
+      els.updateBtn.disabled = !state.radioPresent;
     }
   }
 
@@ -385,7 +449,7 @@
   }
 
   async function updatePhonebook() {
-    if (state.busy) return;
+    if (state.busy || !state.radioPresent) return;
     syncSelectedPhonebookFromForm();
     if (!state.contacts.length) {
       log("WARN", "Geen contacten om te schrijven");
