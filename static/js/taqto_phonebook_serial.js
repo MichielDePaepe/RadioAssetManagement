@@ -76,6 +76,11 @@
     }
   }
 
+  function syncSelectedPhonebookFromForm() {
+    const checkedChoice = Array.from(els.phonebookChoices).find((choice) => choice.checked);
+    setSelectedPhonebook(checkedChoice ? checkedChoice.value : state.selectedPhonebook);
+  }
+
   function showNotice(message, level = "warning") {
     if (!els.notice) return;
     els.notice.className = `alert alert-${level} mb-3`;
@@ -350,10 +355,12 @@
 
   async function updatePhonebook() {
     if (state.busy) return;
+    syncSelectedPhonebookFromForm();
     if (!state.contacts.length) {
       log("WARN", "Geen contacten om te schrijven");
       return;
     }
+    hideNotice();
 
     state.busy = true;
     els.updateBtn.disabled = true;
@@ -370,6 +377,8 @@
       if (state.totalSlots && state.contacts.length > state.totalSlots) {
         throw new Error(`Phonebook heeft ${state.totalSlots} plaatsen, maar ${state.contacts.length} contacten moeten geschreven worden`);
       }
+      const phonebookLabel = state.selectedPhonebook === "medical" ? "geel medisch" : "rood brandweer";
+      log("WARN", `Start schrijven ${phonebookLabel} phonebook (${state.contacts.length} contacten)`);
       for (const contact of state.contacts) {
         const command = `AT+CPBW=${contact.index},"${sanitizeAtText(contact.number)}",${contact.type},"${sanitizeAtText(contact.name)}"`;
         await sendCommand(command, { timeoutMs: 6500 });
@@ -383,7 +392,7 @@
         setProgress(done, total, `Wis oude entry ${index}`, startedAt);
       }
 
-      setProgress(total, total, `${state.selectedPhonebook} phonebook bijgewerkt`, startedAt);
+      setProgress(total, total, `${phonebookLabel} phonebook bijgewerkt`, startedAt);
       await refreshStatus();
     } catch (error) {
       log("ERROR", error.message);
