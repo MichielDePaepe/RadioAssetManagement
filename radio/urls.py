@@ -7,6 +7,8 @@ app_name = 'radio'
 
 urlpatterns = [
     path('find/', FindRadioView.as_view(), name='find'),
+    path('issi/', ISSIAliasListView.as_view(), name='issi_aliases'),
+    path('issi/<int:pk>/edit/', ISSIAliasUpdateView.as_view(), name='issi_alias_edit'),
     path('<int:pk>/', RadioDetailView.as_view(), name='detail'),
     path('create/', RadioCreateView.as_view(), name='create'),
     path('<int:tei>/card/', RadioCardView.as_view(), name='card'),

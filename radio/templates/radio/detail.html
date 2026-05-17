@@ -35,7 +35,16 @@
       </tr>
       <tr>
         <th scope="row" class="bg-light">ISSI</th>
-        <td>{{ radio.ISSI }}</td>
+        <td>
+          {% if radio.subscription.issi %}
+            <a href="{% url 'radio:issi_alias_edit' radio.subscription.issi.number %}?next={{ request.get_full_path|urlencode }}"
+               class="text-decoration-none">
+              {{ radio.ISSI }}
+            </a>
+          {% else %}
+            <span class="text-muted">-</span>
+          {% endif %}
+        </td>
       </tr>
       <tr>
         <th scope="row" class="bg-light">Alias</th>

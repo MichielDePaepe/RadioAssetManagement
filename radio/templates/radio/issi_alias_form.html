@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+  <h1 class="mb-3">ISSI {{ issi.number }}</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next_url }}">
+
+    <div class="row">
+      <div class="col-lg-6">
+        <table class="table table-bordered">
+          <tbody>
+            <tr>
+              <th scope="row" class="bg-light">{% trans "ISSI" %}</th>
+              <td class="font-monospace">{{ issi.number }}</td>
+            </tr>
+            <tr>
+              <th scope="row" class="bg-light">{% trans "Alias" %}</th>
+              <td>
+                {{ form.alias }}
+                {% if form.alias.errors %}
+                  <div class="invalid-feedback d-block">
+                    {{ form.alias.errors|join:", " }}
+                  </div>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row" class="bg-light">{% trans "Klant" %}</th>
+              <td>{{ issi.customer|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th scope="row" class="bg-light">{% trans "Discipline" %}</th>
+              <td>{{ issi.discipline|default:"-" }}</td>
+            </tr>
+            <tr>
+              <th scope="row" class="bg-light">{% trans "Radio" %}</th>
+              <td>
+                {% if issi.subscription.radio %}
+                  <a href="{% url 'radio:detail' issi.subscription.radio.pk %}">
+                    {{ issi.subscription.radio.tei_str }}
+                  </a>
+                {% else %}
+                  <span class="text-muted">-</span>
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-lg"></i> {% trans "Opslaan" %}
+      </button>
+      <a href="{{ next_url }}" class="btn btn-outline-secondary">
+        {% trans "Annuleren" %}
+      </a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

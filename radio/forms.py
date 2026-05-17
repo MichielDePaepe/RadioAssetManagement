@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import gettext as _
 
-from .models import Radio, TEIRange
+from .models import ISSI, Radio, TEIRange
 
 
 class RadioForm(forms.ModelForm):
@@ -35,3 +35,17 @@ class RadioForm(forms.ModelForm):
 
 	    return tei_int
 
+
+class ISSIAliasForm(forms.ModelForm):
+    class Meta:
+        model = ISSI
+        fields = ["alias"]
+        widgets = {
+            "alias": forms.TextInput(
+                attrs={
+                    "class": "form-control form-control-sm",
+                    "maxlength": 12,
+                    "placeholder": _("Alias"),
+                }
+            )
+        }

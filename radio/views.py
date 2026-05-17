@@ -1,9 +1,9 @@
 from django.views import View
-from django.views.generic import TemplateView
+from django.views.generic import ListView, TemplateView
 from django.http import JsonResponse, Http404, HttpResponseBadRequest, HttpResponse
 from django.template.loader import render_to_string
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.detail import DetailView
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -14,6 +14,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.utils.translation import gettext as _
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
+from django.utils.http import url_has_allowed_host_and_scheme
 from itertools import chain
 
 
@@ -62,6 +63,86 @@ class RadioCreateView(CreateView):
         response = super().form_valid(form)
         messages.success(self.request, f"{self.object.model} with TEI {self.object.TEI} added successfully!")
         return response
+
+
+class ISSIAliasListView(LoginRequiredMixin, ListView):
+    model = ISSI
+    template_name = "radio/issi_alias_list.html"
+    context_object_name = "issis"
+    paginate_by = 100
+
+    def get_queryset(self):
+        qs = ISSI.objects.select_related(
+            "customer",
+            "discipline",
+            "subscription__radio",
+        )
+
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            filters = (
+                Q(alias__icontains=query)
+                | Q(customer__name__icontains=query)
+                | Q(discipline__name__icontains=query)
+            )
+            if query.isdigit():
+                filters |= Q(number=int(query))
+            qs = qs.filter(filters)
+
+        sort = self.request.GET.get("sort", "number")
+        allowed_sorts = {
+            "number",
+            "-number",
+            "alias",
+            "-alias",
+            "customer__name",
+            "-customer__name",
+            "discipline__name",
+            "-discipline__name",
+        }
+        if sort not in allowed_sorts:
+            sort = "number"
+
+        return qs.order_by(sort)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["q"] = self.request.GET.get("q", "").strip()
+        context["current_sort"] = self.request.GET.get("sort", "number")
+        context["columns"] = [
+            ("number", _("ISSI")),
+            ("alias", _("Alias")),
+            ("customer__name", _("Customer")),
+            ("discipline__name", _("Discipline")),
+        ]
+        return context
+
+
+class ISSIAliasUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = ISSI
+    form_class = ISSIAliasForm
+    template_name = "radio/issi_alias_form.html"
+    context_object_name = "issi"
+    permission_required = "radio.change_issi"
+
+    def form_valid(self, form):
+        messages.success(self.request, _("Alias voor ISSI {issi} bijgewerkt.").format(issi=self.object.number))
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        next_url = self.request.POST.get("next") or self.request.GET.get("next")
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={self.request.get_host()}):
+            return next_url
+        return reverse("radio:issi_alias_edit", kwargs={"pk": self.object.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        next_url = self.request.GET.get("next", "")
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={self.request.get_host()}):
+            context["next_url"] = next_url
+        else:
+            context["next_url"] = reverse("radio:issi_aliases")
+        return context
 
 
 @method_decorator(csrf_exempt, name='dispatch')

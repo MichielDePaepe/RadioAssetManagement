@@ -45,6 +45,7 @@
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="radioDropdown">
               <li><a class="dropdown-item" href="{% url 'radio:find' %}"><i class="bi bi-search"></i> {% trans "Find" %}</a></li>
+              <li><a class="dropdown-item" href="{% url 'radio:issi_aliases' %}"><i class="bi bi-person-vcard"></i> ISSI</a></li>
               {% if perms.radio.add_radio %}
               <li><a class="dropdown-item" href="{% url 'radio:create' %}"><i class="bi bi-plus-circle"></i> {% trans "Add radio" %}</a></li>
               {% endif %}

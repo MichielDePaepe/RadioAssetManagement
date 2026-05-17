@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+    <h1 class="mb-0">ISSI</h1>
+
+    <form method="get" class="d-flex gap-2" role="search">
+      <input type="search"
+             name="q"
+             value="{{ q }}"
+             class="form-control"
+             placeholder="{% trans 'Zoek ISSI, alias, klant of discipline' %}"
+             aria-label="{% trans 'Zoek ISSI, alias, klant of discipline' %}">
+      <button type="submit" class="btn btn-outline-primary text-nowrap">
+        <i class="bi bi-search"></i> {% trans "Zoeken" %}
+      </button>
+      {% if q %}
+        <a href="{% url 'radio:issi_aliases' %}" class="btn btn-outline-secondary" title="{% trans 'Wis zoekopdracht' %}">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover table-sm align-middle">
+      <thead class="table-light align-middle">
+        <tr>
+          {% for col, label in columns %}
+            <th scope="col" class="text-nowrap">
+              {% if current_sort == col %}
+                <a href="?sort=-{{ col }}{% if q %}&q={{ q|urlencode }}{% endif %}"
+                   class="text-decoration-none text-dark fw-semibold d-flex justify-content-between align-items-center">
+                  <span>{{ label }}</span>
+                  <i class="bi bi-caret-up-fill text-secondary"></i>
+                </a>
+              {% elif current_sort == '-'|add:col %}
+                <a href="?sort={{ col }}{% if q %}&q={{ q|urlencode }}{% endif %}"
+                   class="text-decoration-none text-dark fw-semibold d-flex justify-content-between align-items-center">
+                  <span>{{ label }}</span>
+                  <i class="bi bi-caret-down-fill text-secondary"></i>
+                </a>
+              {% else %}
+                <a href="?sort={{ col }}{% if q %}&q={{ q|urlencode }}{% endif %}"
+                   class="text-decoration-none text-dark fw-semibold d-flex justify-content-between align-items-center">
+                  <span>{{ label }}</span>
+                  <i class="bi bi-caret-down text-muted opacity-25"></i>
+                </a>
+              {% endif %}
+            </th>
+          {% endfor %}
+          <th scope="col">{% trans "Radio" %}</th>
+          <th scope="col" class="text-end">{% trans "Actie" %}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for issi in issis %}
+          <tr>
+            <td class="font-monospace">{{ issi.number }}</td>
+            <td>
+              {% if issi.alias %}
+                {{ issi.alias }}
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>{{ issi.customer|default:"-" }}</td>
+            <td>{{ issi.discipline|default:"-" }}</td>
+            <td>
+              {% if issi.subscription.radio %}
+                <a href="{% url 'radio:detail' issi.subscription.radio.pk %}" class="text-decoration-none">
+                  {{ issi.subscription.radio.tei_str }}
+                </a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              {% if perms.radio.change_issi %}
+                <a href="{% url 'radio:issi_alias_edit' issi.number %}"
+                   class="btn btn-outline-primary btn-sm"
+                   title="{% trans 'Alias aanpassen' %}"
+                   aria-label="{% trans 'Alias aanpassen' %}">
+                  <i class="bi bi-pencil"></i>
+                </a>
+              {% else %}
+                <span class="text-muted">{% trans "Alleen lezen" %}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted">{% trans "Geen ISSI's gevonden." %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+    <nav aria-label="{% trans 'Paginatie' %}">
+      <ul class="pagination pagination-sm justify-content-end">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+              {% trans "Vorige" %}
+            </a>
+          </li>
+        {% endif %}
+        <li class="page-item disabled">
+          <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}">
+              {% trans "Volgende" %}
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+</div>
+
+{% endblock %}
