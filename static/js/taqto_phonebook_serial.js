@@ -379,6 +379,7 @@
       }
       const phonebookLabel = state.selectedPhonebook === "medical" ? "geel medisch" : "rood brandweer";
       log("WARN", `Start schrijven ${phonebookLabel} phonebook (${state.contacts.length} contacten)`);
+      els.progressStatus.textContent = `Start schrijven ${phonebookLabel} phonebook`;
       for (const contact of state.contacts) {
         const command = `AT+CPBW=${contact.index},"${sanitizeAtText(contact.number)}",${contact.type},"${sanitizeAtText(contact.name)}"`;
         await sendCommand(command, { timeoutMs: 6500 });

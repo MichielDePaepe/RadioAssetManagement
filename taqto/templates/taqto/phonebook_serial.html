@@ -56,14 +56,17 @@
   .phonebook-choice {
     display: flex;
     flex-wrap: wrap;
-    gap: .35rem;
+    gap: .75rem;
     align-items: center;
   }
 
-  .phonebook-choice .btn {
-    --bs-btn-padding-y: .28rem;
-    --bs-btn-padding-x: .55rem;
-    --bs-btn-font-size: .88rem;
+  .phonebook-choice .form-check {
+    margin-bottom: 0;
+    min-height: 0;
+  }
+
+  .phonebook-choice .form-check-label {
+    font-size: .92rem;
   }
 
   .log-toggle {
@@ -259,7 +262,7 @@
       <div class="radio-meta-item"><div class="radio-meta-label">Alias</div><div id="aliasValue" class="radio-meta-value">-</div></div>
       <div class="radio-meta-item"><div class="radio-meta-label">Type</div><div id="modelValue" class="radio-meta-value">-</div></div>
       <div class="radio-meta-item"><div class="radio-meta-label">Software</div><div id="revisionValue" class="radio-meta-value">-</div></div>
-      <div class="radio-meta-item"><div class="radio-meta-label">Phonebook</div><div id="phonebookValue" class="radio-meta-value">-</div></div>
+      <div class="radio-meta-item"><div class="radio-meta-label">Huidige phonebook bezetting</div><div id="phonebookValue" class="radio-meta-value">-</div></div>
     </div>
   </section>
 
@@ -267,12 +270,15 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
       <h2 id="connectionTitle" class="h5 mb-0">Niet verbonden</h2>
       <div class="d-flex flex-wrap align-items-center gap-2">
-        <div class="phonebook-choice" role="group" aria-label="Te schrijven phonebook">
-          <input class="btn-check" type="radio" name="phonebookChoice" id="phonebookFire" value="fire" checked autocomplete="off">
-          <label class="btn taqto-action" for="phonebookFire">Rood</label>
-
-          <input class="btn-check" type="radio" name="phonebookChoice" id="phonebookMedical" value="medical" autocomplete="off">
-          <label class="btn taqto-action" for="phonebookMedical">Geel</label>
+        <div class="phonebook-choice" aria-label="Te schrijven phonebook">
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="phonebookChoice" id="phonebookFire" value="fire" checked>
+            <label class="form-check-label" for="phonebookFire">Rood</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="phonebookChoice" id="phonebookMedical" value="medical">
+            <label class="form-check-label" for="phonebookMedical">Geel</label>
+          </div>
         </div>
         <button id="updateBtn" class="btn taqto-action" disabled>
           <i class="bi bi-journal-arrow-up"></i> Schrijf phonebook
@@ -302,5 +308,5 @@
 {% endblock %}
 
 {% block extra_script %}
-<script src="{% static 'js/taqto_phonebook_serial.js' %}"></script>
+<script src="{% static 'js/taqto_phonebook_serial.js' %}?v=20260517-phonebook-choice"></script>
 {% endblock %}
