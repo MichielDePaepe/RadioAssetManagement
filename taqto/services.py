@@ -1,6 +1,7 @@
 from django.db.models import Q
+from django.urls import reverse
 
-from radio.models import Discipline, ISSI
+from radio.models import Discipline, ISSI, Radio
 
 
 DISCIPLINE_TYPES = {
@@ -53,3 +54,14 @@ def get_issi_radio_lookup():
         }
         for number, alias, discipline_type in rows
     }
+
+
+def get_radio_detail_lookup():
+    lookup = {}
+    for tei in Radio.objects.values_list("TEI", flat=True):
+        tei_str = str(tei)
+        url = reverse("radio:detail", kwargs={"pk": tei})
+        lookup[tei_str] = url
+        lookup[tei_str.zfill(14)] = url
+        lookup[f"{tei_str.zfill(14)}0"] = url
+    return lookup

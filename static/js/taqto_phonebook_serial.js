@@ -57,6 +57,37 @@
     return digits.length > 7 ? digits.slice(-7) : digits;
   }
 
+  function findRadioDetailUrl(tei) {
+    const digits = String(tei || "").replace(/\D/g, "");
+    const candidates = [digits];
+    if (digits.length === 15 && digits.endsWith("0")) candidates.push(digits.slice(0, -1));
+    const numeric = String(Number.parseInt(digits, 10));
+    if (numeric !== "NaN") {
+      candidates.push(numeric, numeric.padStart(14, "0"), `${numeric.padStart(14, "0")}0`);
+    }
+    for (const candidate of candidates) {
+      if (payload.radio_detail_lookup && payload.radio_detail_lookup[candidate]) {
+        return payload.radio_detail_lookup[candidate];
+      }
+    }
+    return "";
+  }
+
+  function renderTei(tei) {
+    const value = tei || "-";
+    const detailUrl = findRadioDetailUrl(value);
+    els.tei.textContent = "";
+    if (!detailUrl) {
+      els.tei.textContent = value;
+      return;
+    }
+    const link = document.createElement("a");
+    link.href = detailUrl;
+    link.textContent = value;
+    link.className = "link-dark";
+    els.tei.appendChild(link);
+  }
+
   function renderContacts() {
   }
 
@@ -320,7 +351,7 @@
 
       const issi = normalizeIssi(issiRaw);
       selectPhonebookForIssi(issi);
-      els.tei.textContent = tei || "-";
+      renderTei(tei);
       els.issi.textContent = issi || "-";
       els.model.textContent = model || "-";
       els.revision.textContent = revision || "-";

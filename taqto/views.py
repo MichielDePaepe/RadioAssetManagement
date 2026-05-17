@@ -10,6 +10,7 @@ from .services import (
     get_phonebook_contacts,
     get_phonebook_issi_queryset,
     get_issi_radio_lookup,
+    get_radio_detail_lookup,
 )
 
 
@@ -46,5 +47,6 @@ class PhonebookSerialView(LoginRequiredMixin, PermissionRequiredMixin, TemplateV
                 "medical": get_phonebook_contacts("medical"),
             },
             "issi_lookup": get_issi_radio_lookup(),
+            "radio_detail_lookup": get_radio_detail_lookup(),
         }
         return context
