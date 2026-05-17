@@ -53,6 +53,13 @@
     min-height: 1.4rem;
   }
 
+  .phonebook-choice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+  }
+
   .log-toggle {
     border: 0;
     background: transparent;
@@ -247,6 +254,20 @@
       <div class="radio-meta-item"><div class="radio-meta-label">Type</div><div id="modelValue" class="radio-meta-value">-</div></div>
       <div class="radio-meta-item"><div class="radio-meta-label">Software</div><div id="revisionValue" class="radio-meta-value">-</div></div>
       <div class="radio-meta-item"><div class="radio-meta-label">Phonebook</div><div id="phonebookValue" class="radio-meta-value">-</div></div>
+      <div class="radio-meta-item">
+        <div class="radio-meta-label">Te schrijven phonebook</div>
+        <div class="phonebook-choice mt-1">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="phonebookChoice" id="phonebookFire" value="fire" checked>
+            <label class="form-check-label" for="phonebookFire">Rood (brandweer)</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="phonebookChoice" id="phonebookMedical" value="medical">
+            <label class="form-check-label" for="phonebookMedical">Geel (medisch)</label>
+          </div>
+        </div>
+        <div id="phonebookSuggestion" class="small text-muted mt-1">Voorstel wordt bepaald na uitlezen van ISSI.</div>
+      </div>
     </div>
   </section>
 

@@ -7,6 +7,7 @@
     buffer: "",
     contacts: payload.contacts.fire,
     selectedPhonebook: "fire",
+    phonebookManuallySelected: false,
     totalSlots: 0,
     usedSlots: 0,
     busy: false,
@@ -28,6 +29,8 @@
     model: document.getElementById("modelValue"),
     revision: document.getElementById("revisionValue"),
     phonebook: document.getElementById("phonebookValue"),
+    phonebookChoices: document.querySelectorAll('input[name="phonebookChoice"]'),
+    phonebookSuggestion: document.getElementById("phonebookSuggestion"),
     connectionTitle: document.getElementById("connectionTitle"),
     notice: document.getElementById("serialNotice"),
     progressBar: document.getElementById("progressBar"),
@@ -56,6 +59,21 @@
   }
 
   function renderContacts() {
+  }
+
+  function setSelectedPhonebook(phonebook, options = {}) {
+    const selected = phonebook === "medical" ? "medical" : "fire";
+    state.selectedPhonebook = selected;
+    state.contacts = payload.contacts[selected] || [];
+    for (const choice of els.phonebookChoices) {
+      choice.checked = choice.value === selected;
+    }
+    if (options.manual) {
+      state.phonebookManuallySelected = true;
+      if (els.phonebookSuggestion) {
+        els.phonebookSuggestion.textContent = "Handmatig gekozen.";
+      }
+    }
   }
 
   function showNotice(message, level = "warning") {
@@ -307,10 +325,17 @@
 
   function selectPhonebookForIssi(issi) {
     const radioRecord = payload.issi_lookup[issi] || {};
-    const selected = radioRecord.discipline === "MEDICAL" ? "medical" : "fire";
-    state.selectedPhonebook = selected;
-    state.contacts = payload.contacts[selected];
+    const suggested = radioRecord.discipline === "MEDICAL" ? "medical" : "fire";
+    if (!state.phonebookManuallySelected) {
+      setSelectedPhonebook(suggested);
+    }
     els.alias.textContent = radioRecord.alias || "Niet gevonden in database";
+    if (els.phonebookSuggestion) {
+      const label = suggested === "medical" ? "geel medisch" : "rood brandweer";
+      els.phonebookSuggestion.textContent = state.phonebookManuallySelected
+        ? `Voorstel op basis van ISSI: ${label}. Handmatige keuze blijft behouden.`
+        : `Voorstel op basis van ISSI: ${label}.`;
+    }
     renderContacts();
   }
 
@@ -383,6 +408,11 @@
     showNotice(`Phonebook schrijven mislukt: ${error.message}`, "danger");
     log("ERROR", error.message);
   }));
+  for (const choice of els.phonebookChoices) {
+    choice.addEventListener("change", () => {
+      if (choice.checked) setSelectedPhonebook(choice.value, { manual: true });
+    });
+  }
   els.clearLogBtn.addEventListener("click", () => {
     els.logLines.innerHTML = "";
   });
