@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+  <h1 class="mb-3">{% trans "ISSI toevoegen" %}</h1>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="row">
+      <div class="col-lg-6">
+        <table class="table table-bordered">
+          <tbody>
+            <tr>
+              <th scope="row" class="bg-light">{% trans "ISSI" %}</th>
+              <td>
+                {{ form.number }}
+                {% if form.number.errors %}
+                  <div class="invalid-feedback d-block">
+                    {{ form.number.errors|join:", " }}
+                  </div>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row" class="bg-light">{% trans "Alias" %}</th>
+              <td>
+                {{ form.alias }}
+                {% if form.alias.errors %}
+                  <div class="invalid-feedback d-block">
+                    {{ form.alias.errors|join:", " }}
+                  </div>
+                {% endif %}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-lg"></i> {% trans "Opslaan" %}
+      </button>
+      <a href="{% url 'radio:issi_aliases' %}" class="btn btn-outline-secondary">
+        {% trans "Annuleren" %}
+      </a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

@@ -75,7 +75,7 @@ class ISSIAliasListView(LoginRequiredMixin, ListView):
         qs = ISSI.objects.select_related(
             "customer",
             "discipline",
-            "subscription__radio",
+            "subscription__radio__model",
         )
 
         query = self.request.GET.get("q", "").strip()
@@ -99,6 +99,10 @@ class ISSIAliasListView(LoginRequiredMixin, ListView):
             "-customer__name",
             "discipline__name",
             "-discipline__name",
+            "subscription__radio__model__name",
+            "-subscription__radio__model__name",
+            "subscription__radio__TEI",
+            "-subscription__radio__TEI",
         }
         if sort not in allowed_sorts:
             sort = "number"
@@ -114,8 +118,26 @@ class ISSIAliasListView(LoginRequiredMixin, ListView):
             ("alias", _("Alias")),
             ("customer__name", _("Customer")),
             ("discipline__name", _("Discipline")),
+            ("subscription__radio__model__name", _("Type radio")),
+            ("subscription__radio__TEI", _("TEI")),
         ]
         return context
+
+
+class ISSICreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = ISSI
+    form_class = ISSIForm
+    template_name = "radio/issi_form.html"
+    context_object_name = "issi"
+    permission_required = "radio.add_issi"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, _("ISSI {issi} toegevoegd.").format(issi=self.object.number))
+        return response
+
+    def get_success_url(self):
+        return reverse("radio:issi_alias_edit", kwargs={"pk": self.object.pk})
 
 
 class ISSIAliasUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):

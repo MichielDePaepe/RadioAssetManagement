@@ -7,22 +7,30 @@
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
     <h1 class="mb-0">ISSI</h1>
 
-    <form method="get" class="d-flex gap-2" role="search">
-      <input type="search"
-             name="q"
-             value="{{ q }}"
-             class="form-control"
-             placeholder="{% trans 'Zoek ISSI, alias, klant of discipline' %}"
-             aria-label="{% trans 'Zoek ISSI, alias, klant of discipline' %}">
-      <button type="submit" class="btn btn-outline-primary text-nowrap">
-        <i class="bi bi-search"></i> {% trans "Zoeken" %}
-      </button>
-      {% if q %}
-        <a href="{% url 'radio:issi_aliases' %}" class="btn btn-outline-secondary" title="{% trans 'Wis zoekopdracht' %}">
-          <i class="bi bi-x-lg"></i>
+    <div class="d-flex flex-column flex-md-row gap-2">
+      {% if perms.radio.add_issi %}
+        <a href="{% url 'radio:issi_create' %}" class="btn btn-primary text-nowrap">
+          <i class="bi bi-plus-circle"></i> {% trans "ISSI toevoegen" %}
         </a>
       {% endif %}
-    </form>
+
+      <form method="get" class="d-flex gap-2" role="search">
+        <input type="search"
+               name="q"
+               value="{{ q }}"
+               class="form-control"
+               placeholder="{% trans 'Zoek ISSI, alias, klant of discipline' %}"
+               aria-label="{% trans 'Zoek ISSI, alias, klant of discipline' %}">
+        <button type="submit" class="btn btn-outline-primary text-nowrap">
+          <i class="bi bi-search"></i> {% trans "Zoeken" %}
+        </button>
+        {% if q %}
+          <a href="{% url 'radio:issi_aliases' %}" class="btn btn-outline-secondary" title="{% trans 'Wis zoekopdracht' %}">
+            <i class="bi bi-x-lg"></i>
+          </a>
+        {% endif %}
+      </form>
+    </div>
   </div>
 
   <div class="table-responsive">
@@ -52,7 +60,6 @@
               {% endif %}
             </th>
           {% endfor %}
-          <th scope="col">{% trans "Radio" %}</th>
           <th scope="col" class="text-end">{% trans "Actie" %}</th>
         </tr>
       </thead>
@@ -70,6 +77,13 @@
             </td>
             <td>{{ issi.customer|default:"-" }}</td>
             <td>{{ issi.discipline|default:"-" }}</td>
+            <td>
+              {% if issi.subscription.radio %}
+                {{ issi.subscription.radio.model|default:"-" }}
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
             <td>
               {% if issi.subscription.radio %}
                 <a href="{% url 'radio:detail' issi.subscription.radio.pk %}" class="text-decoration-none">
@@ -94,7 +108,7 @@
           </tr>
         {% empty %}
           <tr>
-            <td colspan="6" class="text-center text-muted">{% trans "Geen ISSI's gevonden." %}</td>
+            <td colspan="7" class="text-center text-muted">{% trans "Geen ISSI's gevonden." %}</td>
           </tr>
         {% endfor %}
       </tbody>

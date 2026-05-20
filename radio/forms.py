@@ -49,3 +49,45 @@ class ISSIAliasForm(forms.ModelForm):
                 }
             )
         }
+
+
+class ISSIForm(forms.ModelForm):
+    number = forms.CharField(
+        max_length=7,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control form-control-sm",
+                "inputmode": "numeric",
+                "maxlength": 7,
+                "placeholder": _("ISSI"),
+            }
+        ),
+    )
+
+    class Meta:
+        model = ISSI
+        fields = ["number", "alias"]
+        widgets = {
+            "alias": forms.TextInput(
+                attrs={
+                    "class": "form-control form-control-sm",
+                    "maxlength": 12,
+                    "placeholder": _("Alias"),
+                }
+            ),
+        }
+
+    def clean_number(self):
+        raw_number = str(self.cleaned_data["number"]).strip()
+
+        if not raw_number.isdigit():
+            raise forms.ValidationError(_("ISSI-nummer mag enkel uit cijfers bestaan"))
+
+        if len(raw_number) != 7:
+            raise forms.ValidationError(_("Lengte van een ISSI-nummer moet 7 digits zijn"))
+
+        number = int(raw_number)
+        if ISSI.objects.filter(pk=number).exists():
+            raise forms.ValidationError(_("ISSI-nummer bestaat al"))
+
+        return number
