@@ -12,6 +12,18 @@ import re
 from dateutil import parser
 
 
+def _vehicle_defaults_from_fireplan_record(rec):
+    return {
+        "number": rec.get("alphacode", "") or "",
+        "num_letter": rec.get("numLettre", "") or "",
+        "num_value": rec.get("num", 0) or 0,
+        "plate": rec.get("plate", "") or "",
+        "utilisation": rec.get("utilisation", "") or "",
+        "chassis": rec.get("chassis", "") or "",
+        "status": rec.get("statut", None),
+    }
+
+
 def sync_fireplan_fleet():
     fp = FireplanClient()   # login gebeurt automatisch
 
@@ -33,23 +45,86 @@ def sync_fireplan_fleet():
     count = 0
 
     for rec in records:
-        Vehicle.objects.update_or_create(
-            id=rec["id"],
-            defaults={
-                "number": rec.get("alphacode", ""),
-                "num_letter": rec.get("numLettre", "") or "",
-                "num_value": rec.get("num", 0) or 0,
-                "plate": rec.get("plate", "") or "",
-                "utilisation": rec.get("utilisation", "") or "",
-                "chassis": rec.get("chassis", "") or "",
-                "status": rec.get("statut", None),
-            },
-        )
+        fireplan_id = rec.get("id")
+        if not fireplan_id:
+            continue
+
+        defaults = _vehicle_defaults_from_fireplan_record(rec)
+
+        vehicle = Vehicle.objects.filter(fireplan_id=fireplan_id).first()
+        if not vehicle and defaults["number"]:
+            vehicle = Vehicle.objects.filter(
+                Q(number=defaults["number"]) |
+                Q(call_sign=defaults["number"]) |
+                Q(number__startswith=defaults["number"] + " -")
+            ).first()
+
+        if vehicle:
+            for field, value in defaults.items():
+                setattr(vehicle, field, value)
+            vehicle.fireplan_id = fireplan_id
+            vehicle.save()
+        else:
+            Vehicle.objects.create(
+                fireplan_id=fireplan_id,
+                **defaults,
+            )
+
         count += 1
 
     return count
 
 
+def _split_vehicle_name(name):
+    match = re.match(r"^([A-Za-z]+)(\d+)$", name or "")
+    if not match:
+        return "", 0
+    return match.group(1), int(match.group(2))
+
+
+def _vehicle_defaults_from_vector_item(item):
+    name = item.get("Name") or item.get("ResourceCode") or item.get("pAbbreviation") or ""
+    first_letter = item.get("firstLetter") or ""
+    parsed_letter, parsed_number = _split_vehicle_name(name)
+
+    numerical_alpha_code = item.get("numericalAlphaCode")
+    try:
+        num_value = int(numerical_alpha_code) if numerical_alpha_code is not None else parsed_number
+    except (TypeError, ValueError):
+        num_value = parsed_number
+
+    utilisation_parts = [
+        item.get("pName") or "",
+        item.get("orderServiceAbbreviation") or "",
+    ]
+    utilisation = " - ".join(part for part in utilisation_parts if part)
+
+    return {
+        "number": name,
+        "num_letter": (first_letter or parsed_letter)[:5],
+        "num_value": num_value or 0,
+        "plate": "",
+        "utilisation": utilisation[:200],
+        "chassis": "",
+        "status": VehicleStatus.ACTIF if item.get("IsActive") else None,
+    }
+
+
+def _match_or_create_vehicle_from_vector_item(item):
+    name = item.get("Name")
+    if not name:
+        return None
+
+    vehicle = Vehicle.objects.filter(
+        Q(number=name) |
+        Q(call_sign=name) |
+        Q(number__startswith=name + " -")
+    ).first()
+
+    if vehicle:
+        return vehicle
+
+    return Vehicle.objects.create(**_vehicle_defaults_from_vector_item(item))
 
 
 def test_resourcesoff():
@@ -96,19 +171,6 @@ def sync_vectors():
     LOGIN_URL = BASE + "/php/login_resources.php"
     AJAX_URL = BASE + "/php/vehicule_ajax.php"
 
-    def _match_vehicle(name: str):
-
-        return Vehicle.objects.filter(
-            Q(number=name) | 
-            Q(number__startswith=name + " -")
-        ).first()
-
-
-    STATUS_PRIORITY = {
-        None: -1,  # geen status = laagste voorkeur
-    }
-
-
     def _get_priority(status_obj):
         """Status object → ranking integer."""
         if status_obj is None:
@@ -154,15 +216,13 @@ def sync_vectors():
                 if not name:
                     continue
 
-                # match voertuig
-                vehicle = _match_vehicle(name)
-                Vehicle.objects.filter(call_sign=name).first()
-                if not vehicle:
-                    continue
-
                 # skip als geen pResourceCode → dit voertuig heeft GEEN vector
                 pcode = item.get("pResourceCode")
                 if not pcode:
+                    continue
+
+                vehicle = _match_or_create_vehicle_from_vector_item(item)
+                if not vehicle:
                     continue
 
                 status_code = item.get("StatusCode")                

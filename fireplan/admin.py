@@ -25,13 +25,15 @@ def sync_inventories_full(modeladmin, request, queryset):
 @admin.register(Vehicle)
 class VehicleAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
+        "fireplan_id",
         "number",
         "utilisation",
         "status",
         "radio"
     )
     list_filter = ("status",)
-    search_fields = ("number", "plate", "id", "chassis", "radio__subscription__issi__number")
+    search_fields = ("number", "plate", "id", "fireplan_id", "chassis", "radio__subscription__issi__number")
     raw_id_fields = ("radio", )
     readonly_fields = ("call_sign", )
     actions = ["sync_fireplan"]

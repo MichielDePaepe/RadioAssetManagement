@@ -17,14 +17,15 @@ class VehicleStatus(models.IntegerChoices):
 
 
 class Vehicle(models.Model):
-    id = models.IntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
+    fireplan_id = models.IntegerField(unique=True, null=True, blank=True)
     number = models.CharField(max_length=50)
     call_sign = models.CharField(max_length=50, blank=True)
-    num_letter = models.CharField(max_length=5)
-    num_value = models.IntegerField()
-    plate = models.CharField(max_length=20)
-    utilisation = models.CharField(max_length=200)
-    chassis = models.CharField(max_length=100)
+    num_letter = models.CharField(max_length=5, blank=True)
+    num_value = models.IntegerField(default=0)
+    plate = models.CharField(max_length=20, blank=True)
+    utilisation = models.CharField(max_length=200, blank=True)
+    chassis = models.CharField(max_length=100, blank=True)
     status = models.IntegerField(
         choices=VehicleStatus.choices,
         null=True,

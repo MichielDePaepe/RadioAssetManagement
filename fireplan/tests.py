@@ -1,4 +1,5 @@
 from uuid import uuid4
+from unittest.mock import Mock, patch
 
 from django.test import TestCase
 from django.urls import reverse
@@ -7,7 +8,8 @@ from django.utils.translation import override
 
 from radio.models import Radio, RadioModel, TEIRange
 
-from .models import FireplanInventory, FireplanInventoryRadio, Vector, Vehicle
+from .models import FireplanInventory, FireplanInventoryRadio, Vector, Vehicle, VehicleStatus
+from .sync import _match_or_create_vehicle_from_vector_item, sync_fireplan_fleet
 from .sync_inventory import find_radio_for_fireplan_tei
 
 
@@ -46,6 +48,59 @@ class FireplanInventoryTEIMatchingTests(TestCase):
         found = find_radio_for_fireplan_tei("000075060235951")
 
         self.assertEqual(found, exact_radio)
+
+
+class VehicleSyncTests(TestCase):
+    def test_vector_item_creates_missing_vehicle_without_fireplan_id(self):
+        item = {
+            "ResourceCode": "2-HBY-020",
+            "Name": "A106",
+            "IsActive": 1,
+            "firstLetter": "A",
+            "pName": "PIT ANDERLECHT 1 BRA",
+            "pAbbreviation": "A-ANDPIT-BRA",
+            "orderServiceAbbreviation": "AND Bracops PIT",
+            "numericalAlphaCode": 106,
+        }
+
+        vehicle = _match_or_create_vehicle_from_vector_item(item)
+
+        self.assertIsNotNone(vehicle)
+        self.assertIsNone(vehicle.fireplan_id)
+        self.assertEqual(vehicle.number, "A106")
+        self.assertEqual(vehicle.call_sign, "A106")
+        self.assertEqual(vehicle.num_letter, "A")
+        self.assertEqual(vehicle.num_value, 106)
+        self.assertEqual(vehicle.status, VehicleStatus.ACTIF)
+        self.assertIn("PIT ANDERLECHT 1 BRA", vehicle.utilisation)
+
+    @patch("fireplan.sync.FireplanClient")
+    def test_fleet_sync_preserves_vehicle_without_fireplan_id(self, client_cls):
+        manual_vehicle = Vehicle.objects.create(number="LOCAL01")
+        response = Mock()
+        response.json.return_value = {
+            "records": [
+                {
+                    "id": 123,
+                    "alphacode": "F123",
+                    "numLettre": "F",
+                    "num": 123,
+                    "plate": "",
+                    "utilisation": "Fireplan",
+                    "chassis": "",
+                    "statut": VehicleStatus.ACTIF,
+                }
+            ]
+        }
+        response.raise_for_status.return_value = None
+        client_cls.return_value.post.return_value = response
+
+        count = sync_fireplan_fleet()
+
+        manual_vehicle.refresh_from_db()
+        self.assertEqual(count, 1)
+        self.assertIsNone(manual_vehicle.fireplan_id)
+        self.assertTrue(Vehicle.objects.filter(fireplan_id=123, number="F123").exists())
 
 
 class FireplanInventoryHistoryViewTests(TestCase):
