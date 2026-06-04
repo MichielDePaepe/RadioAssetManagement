@@ -39,3 +39,5 @@ logs/
 staticfiles/
 *.sqlite3
 *.sqlite3-journal
+celerybeat-schedule.db
+celerybeat-schedule.db-*

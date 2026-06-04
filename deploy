@@ -32,10 +32,16 @@ fi
 
 source ../bin/activate
 
-if [ -n "$(git status --porcelain)" ]; then
-  echo "❌ Production worktree has local changes. Aborting before deploy."
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "❌ Production worktree has tracked local changes. Aborting before deploy."
   git status --short
   exit 1
+fi
+
+UNTRACKED_FILES=$(git ls-files --others --exclude-standard)
+if [ -n "$UNTRACKED_FILES" ]; then
+  echo "ℹ️  Ignoring untracked files during deploy:"
+  echo "$UNTRACKED_FILES"
 fi
 
 echo "🔍 Checking for updates..."
