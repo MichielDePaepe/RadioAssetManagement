@@ -24,6 +24,21 @@ ROOT_UUID_RE = re.compile(
 )
 
 
+def find_radio_for_fireplan_tei(raw_tei) -> Radio | None:
+    tei = str(raw_tei or "").strip()
+    if not tei.isdigit():
+        return None
+
+    radio = Radio.objects.filter(TEI=int(tei)).first()
+    if radio:
+        return radio
+
+    if len(tei) == 14:
+        return Radio.objects.filter(TEI=int(f"{tei}0")).first()
+
+    return None
+
+
 def extract_root_container_uuid(html: str) -> str:
     m = ROOT_UUID_RE.search(html)
     if not m:
@@ -164,7 +179,7 @@ def sync_closed_inventories_portable_radio_teis(
 
                         radio_obj = None
                         if tei is not None:
-                            radio_obj = Radio.objects.filter(TEI=int(tei)).first()
+                            radio_obj = find_radio_for_fireplan_tei(tei)
 
                         tracked_item_id = None
                         if radio_obj:
