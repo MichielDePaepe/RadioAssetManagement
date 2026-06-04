@@ -32,18 +32,19 @@ python manage.py compilemessages
 
 ## Deployment
 
-Voorbeeld van een bash script om te deployen:
+Development: commit en push eerst de lokale wijzigingen:
 ```bash
-source ../bin/activate
-git fetch origin
-git reset --hard origin
-pip install -r requirements.txt
-python manage.py migrate
-python manage.py collectstatic --noinput
-sudo supervisorctl restart django
-sudo systemctl restart nginx
+./commit_and_push "Beschrijf de wijziging"
 ```
 
+Production: voer daarna het deployscript uit op de prod server:
+```bash
+./deploy
+```
+
+Het deployscript maakt alleen een database dump via `./dump_db` wanneer er Django
+migratiebestanden gewijzigd zijn tussen de huidige prod-versie en `origin/main`.
+Zonder migraties wordt de dump overgeslagen om de deploy kort te houden.
 
 ## Environment
 

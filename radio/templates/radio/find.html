@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static radio_selector_tags %}
+{% load static radio_selector_tags i18n %}
 
 
 {% block content %}
@@ -8,7 +8,8 @@
 
     <div class="row g-3">
 
-      {% radio_selector_modal title="Radio zoeken" static=True callback="callback" auto_confirm=True %}
+      {% trans "Radio zoeken" as radio_search_title %}
+      {% radio_selector_modal title=radio_search_title static=True callback="callback" auto_confirm=True %}
 
     </div>
   <div class="row g-3">

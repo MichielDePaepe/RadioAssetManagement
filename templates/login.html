@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block navbar %}
 {% endblock %}
@@ -19,16 +19,16 @@
 
       <!-- Username input -->
       <div class="form-outline mb-4">
-        <input type="text" id="username" name="username" class="form-control" placeholder="Username" required />
+        <input type="text" id="username" name="username" class="form-control" placeholder="{% trans 'Username' %}" required />
       </div>
 
       <!-- Password input -->
       <div class="form-outline mb-4">
-        <input type="password" id="password" name="password" class="form-control" placeholder="Password" required />
+        <input type="password" id="password" name="password" class="form-control" placeholder="{% trans 'Password' %}" required />
       </div>
 
       <!-- Submit button -->
-      <button type="submit" class="btn btn-primary w-100">Login</button>
+      <button type="submit" class="btn btn-primary w-100">{% trans "Login" %}</button>
     </form>
   </div>
 </div>

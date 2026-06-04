@@ -2,7 +2,7 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}Taqto phonebook updater{% endblock %}
+{% block title %}{% trans "Taqto phonebook updater" %}{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -206,18 +206,18 @@
 <div id="serialGate" class="serial-gate d-none">
   <div class="serial-gate-card text-center">
     <i class="bi bi-exclamation-triangle h1 text-warning"></i>
-    <h1 class="h4 mt-3">Web Serial kan hier niet starten</h1>
+    <h1 class="h4 mt-3">{% trans "Web Serial kan hier niet starten" %}</h1>
     <p id="serialGateMessage" class="text-muted mb-4"></p>
 
     <div id="serialFlagHelp" class="text-start d-none">
-      <h2 class="h6">Tijdelijke Chrome-oplossing voor deze interne site</h2>
+      <h2 class="h6">{% trans "Tijdelijke Chrome-oplossing voor deze interne site" %}</h2>
       <ol class="mb-3">
-        <li>Open in een nieuwe tab: <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>.</li>
-        <li>Voeg deze origin toe: <button id="serialOrigin" class="origin-copy" type="button"></button></li>
-        <li>Zet de flag op <strong>Enabled</strong> en herstart Chrome.</li>
+        <li>{% trans "Open in een nieuwe tab" %}: <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>.</li>
+        <li>{% trans "Voeg deze origin toe" %}: <button id="serialOrigin" class="origin-copy" type="button"></button></li>
+        <li>{% trans "Zet de flag op" %} <strong>Enabled</strong> {% trans "en herstart Chrome." %}</li>
       </ol>
       <p class="small text-muted mb-0">
-        Gebruik dit alleen op de programmeer-pc's. HTTPS blijft de nette oplossing.
+        {% trans "Gebruik dit alleen op de programmeer-pc's. HTTPS blijft de nette oplossing." %}
       </p>
     </div>
   </div>
@@ -227,7 +227,7 @@
   <div class="taqto-header mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
       <div>
-        <h1 class="h3 mb-1">Radio phonebook updater</h1>
+        <h1 class="h3 mb-1">{% trans "Radio phonebook updater" %}</h1>
         <p class="text-muted mb-0">THR880i PEI via Web Serial</p>
       </div>
       <div class="d-flex flex-wrap gap-2">
@@ -237,11 +237,11 @@
                 data-bs-target="#atLogCollapse"
                 aria-expanded="false"
                 aria-controls="atLogCollapse"
-                title="AT-log console">
+                title="{% trans 'AT-log console' %}">
           <i class="bi bi-terminal"></i>
         </button>
         <button id="connectBtn" class="btn taqto-action">
-          <i class="bi bi-usb-plug"></i> Verbind met seriële poort
+          <i class="bi bi-usb-plug"></i> {% trans "Verbind met seriële poort" %}
         </button>
       </div>
     </div>
@@ -249,56 +249,56 @@
 
   <section class="taqto-panel p-3 mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-      <h2 class="h5 mb-0">Radio status</h2>
+      <h2 class="h5 mb-0">{% trans "Radio status" %}</h2>
       <div class="d-flex flex-wrap align-items-center gap-2">
         <button id="refreshBtn" class="btn taqto-action" disabled>
-          <i class="bi bi-arrow-clockwise"></i> Lees opnieuw
+          <i class="bi bi-arrow-clockwise"></i> {% trans "Lees opnieuw" %}
         </button>
       </div>
     </div>
     <div class="radio-meta">
       <div class="radio-meta-item"><div class="radio-meta-label">TEI</div><div id="teiValue" class="radio-meta-value">-</div></div>
       <div class="radio-meta-item"><div class="radio-meta-label">ISSI</div><div id="issiValue" class="radio-meta-value">-</div></div>
-      <div class="radio-meta-item"><div class="radio-meta-label">Alias</div><div id="aliasValue" class="radio-meta-value">-</div></div>
-      <div class="radio-meta-item"><div class="radio-meta-label">Type</div><div id="modelValue" class="radio-meta-value">-</div></div>
+      <div class="radio-meta-item"><div class="radio-meta-label">{% trans "Alias" %}</div><div id="aliasValue" class="radio-meta-value">-</div></div>
+      <div class="radio-meta-item"><div class="radio-meta-label">{% trans "Type" %}</div><div id="modelValue" class="radio-meta-value">-</div></div>
       <div class="radio-meta-item"><div class="radio-meta-label">Software</div><div id="revisionValue" class="radio-meta-value">-</div></div>
-      <div class="radio-meta-item"><div class="radio-meta-label">Huidige phonebook bezetting</div><div id="phonebookValue" class="radio-meta-value">-</div></div>
+      <div class="radio-meta-item"><div class="radio-meta-label">{% trans "Huidige phonebook bezetting" %}</div><div id="phonebookValue" class="radio-meta-value">-</div></div>
     </div>
   </section>
 
   <section class="taqto-panel p-3 mb-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-      <h2 id="connectionTitle" class="h5 mb-0">Niet verbonden</h2>
+      <h2 id="connectionTitle" class="h5 mb-0">{% trans "Niet verbonden" %}</h2>
       <div class="d-flex flex-wrap align-items-center gap-2">
-        <div class="phonebook-choice" aria-label="Te schrijven phonebook">
+        <div class="phonebook-choice" aria-label="{% trans 'Te schrijven phonebook' %}">
           <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" name="phonebookChoice" id="phonebookFire" value="fire" checked>
-            <label class="form-check-label" for="phonebookFire" title="Brandweer">🚒</label>
+            <label class="form-check-label" for="phonebookFire" title="{% trans 'Brandweer' %}">🚒</label>
           </div>
           <div class="form-check form-check-inline">
             <input class="form-check-input" type="radio" name="phonebookChoice" id="phonebookMedical" value="medical">
-            <label class="form-check-label" for="phonebookMedical" title="Medisch">🚑</label>
+            <label class="form-check-label" for="phonebookMedical" title="{% trans 'Medisch' %}">🚑</label>
           </div>
         </div>
         <button id="updateBtn" class="btn taqto-action" disabled>
-          <i class="bi bi-journal-arrow-up"></i> Schrijf phonebook
+          <i class="bi bi-journal-arrow-up"></i> {% trans "Schrijf phonebook" %}
         </button>
       </div>
     </div>
     <div id="serialNotice" class="alert alert-warning d-none mb-3"></div>
-    <div id="phonebookSuggestion" class="small text-muted mb-2">Voorstel wordt bepaald na uitlezen van ISSI.</div>
-    <div class="progress mb-2" role="progressbar" aria-label="Phonebook update">
+    <div id="phonebookSuggestion" class="small text-muted mb-2">{% trans "Voorstel wordt bepaald na uitlezen van ISSI." %}</div>
+    <div class="progress mb-2" role="progressbar" aria-label="{% trans 'Phonebook update' %}">
       <div id="progressBar" class="progress-bar bg-danger" style="width: 0%">0%</div>
     </div>
     <div class="d-flex justify-content-between text-muted small">
-      <span id="progressStatus">Nog niet gestart</span>
+      <span id="progressStatus">{% trans "Nog niet gestart" %}</span>
       <span id="etaStatus">ETA -</span>
     </div>
   </section>
 
   <section id="atLogCollapse" class="taqto-panel p-3 collapse">
       <div id="atLog" class="at-console" aria-live="polite">
-        <button id="clearLogBtn" class="matrix-clear" type="button" title="Log wissen">
+        <button id="clearLogBtn" class="matrix-clear" type="button" title="{% trans 'Log wissen' %}">
           <i class="bi bi-trash3"></i>
         </button>
         <div id="atLogLines" class="at-console-lines"></div>

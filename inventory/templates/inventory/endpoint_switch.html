@@ -1,31 +1,31 @@
-{% load static radio_selector_tags %}
 {% extends "base.html" %}
+{% load static radio_selector_tags i18n %}
 {% block content %}
 
-<h3>Wissel radio</h3>
+<h3>{% trans "Wissel radio" %}</h3>
 <div class="mb-2 text-muted">{{ endpoint.container.label }} – {{ endpoint.name }}</div>
 
 <form method="post" class="card card-body" style="max-width: 720px;">
   {% csrf_token %}
   {{ form.endpoint }}
 
-  <label class="form-label">Radio (zoek)</label>
-  <input id="radioSearch" class="form-control" placeholder="TEI / ISSI / alias" autocomplete="off">
+  <label class="form-label">{% trans "Radio zoeken" %}</label>
+  <input id="radioSearch" class="form-control" placeholder="{% trans 'TEI / ISSI / alias' %}" autocomplete="off">
   <div id="radioResults" class="list-group mt-2" style="display:none;"></div>
 
   <div class="mt-3">
-    <label class="form-label">Gekozen radio</label>
+    <label class="form-label">{% trans "Gekozen radio" %}</label>
     {{ form.radio }}
   </div>
 
   <div class="mt-3">
-    <label class="form-label">Note</label>
+    <label class="form-label">{% trans "Note" %}</label>
     {{ form.note }}
   </div>
 
   <div class="mt-3 d-flex gap-2">
-    <button class="btn btn-primary" type="submit">Opslaan</button>
-    <a class="btn btn-outline-secondary" href="{% url 'inventory:endpoint_detail' endpoint.pk %}">Annuleer</a>
+    <button class="btn btn-primary" type="submit">{% trans "Opslaan" %}</button>
+    <a class="btn btn-outline-secondary" href="{% url 'inventory:endpoint_detail' endpoint.pk %}">{% trans "Annuleren" %}</a>
   </div>
 </form>
 

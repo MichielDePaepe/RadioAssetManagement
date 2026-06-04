@@ -1,5 +1,13 @@
 (function () {
   const payload = JSON.parse(document.getElementById("phonebook-data").textContent);
+  const translations = payload.translations || {};
+  function t(key, fallback, values = {}) {
+    let text = translations[key] || fallback;
+    for (const [name, value] of Object.entries(values)) {
+      text = text.replace(`{${name}}`, value);
+    }
+    return text;
+  }
   const state = {
     port: null,
     reader: null,
@@ -105,7 +113,7 @@
     els.updateBtn.disabled = true;
     els.refreshBtn.disabled = true;
     if (els.phonebookSuggestion) {
-      els.phonebookSuggestion.textContent = "Voorstel wordt bepaald na uitlezen van ISSI.";
+      els.phonebookSuggestion.textContent = t("suggestion_pending", "Voorstel wordt bepaald na uitlezen van ISSI.");
     }
   }
 
@@ -118,7 +126,7 @@
     }
     if (options.manual) {
       if (els.phonebookSuggestion) {
-        els.phonebookSuggestion.textContent = "Handmatig gekozen.";
+        els.phonebookSuggestion.textContent = t("manual_choice", "Handmatig gekozen.");
       }
     }
   }
@@ -154,13 +162,13 @@
     if (!window.isSecureContext) {
       return {
         reason: "insecure",
-        message: "Deze interne site draait via HTTP. Browsers laten Web Serial alleen toe via HTTPS of localhost.",
+        message: t("insecure_serial", "Deze interne site draait via HTTP. Browsers laten Web Serial alleen toe via HTTPS of localhost."),
       };
     }
     if (!("serial" in navigator)) {
       return {
         reason: "browser",
-        message: "Deze browser ondersteunt Web Serial niet. Gebruik Chrome of Edge op desktop; Safari, Firefox en iOS ondersteunen dit niet.",
+        message: t("unsupported_serial", "Deze browser ondersteunt Web Serial niet. Gebruik Chrome of Edge op desktop; Safari, Firefox en iOS ondersteunen dit niet."),
       };
     }
     return null;
@@ -172,8 +180,8 @@
       if (els.gate) els.gate.classList.add("d-none");
       if (els.app) els.app.classList.remove("d-none");
       els.connectBtn.disabled = false;
-      setConnectionStatus("Niet verbonden");
-      els.progressStatus.textContent = "Web Serial beschikbaar";
+      setConnectionStatus(t("not_connected", "Niet verbonden"));
+      els.progressStatus.textContent = t("serial_available", "Web Serial beschikbaar");
       return;
     }
 
@@ -205,7 +213,7 @@
         input.remove();
       }
     } catch (error) {
-      showNotice(`Kopieren mislukt: ${error.message}`, "warning");
+      showNotice(t("copy_failed", "Kopiëren mislukt: {error}", { error: error.message }), "warning");
     }
   }
 
@@ -216,14 +224,14 @@
     els.progressStatus.textContent = status;
 
     if (!startedAt || done === 0 || done >= total) {
-      els.etaStatus.textContent = done >= total && total ? "Klaar" : "ETA -";
+      els.etaStatus.textContent = done >= total && total ? t("done", "Klaar") : t("eta_empty", "ETA -");
       return;
     }
 
     const elapsed = (Date.now() - startedAt) / 1000;
     const avg = elapsed / done;
     const remaining = Math.max(0, Math.round(avg * (total - done)));
-    els.etaStatus.textContent = `${formatDuration(remaining)} resterend`;
+    els.etaStatus.textContent = t("remaining", "{duration} resterend", { duration: formatDuration(remaining) });
   }
 
   function formatDuration(seconds) {
@@ -244,7 +252,7 @@
           state.buffer += decoder.decode(value, { stream: true });
         }
       } catch (error) {
-        log("WARN", `Leeslus gestopt: ${error.message}`);
+        log("WARN", t("read_loop_stopped", "Leeslus gestopt: {error}", { error: error.message }));
       } finally {
         state.reader.releaseLock();
         state.reader = null;
@@ -253,7 +261,7 @@
   }
 
   async function sendCommand(command, options = {}) {
-    if (!state.writer) throw new Error("Geen seriële verbinding");
+    if (!state.writer) throw new Error(t("no_serial_connection", "Geen seriële verbinding"));
 
     const timeoutMs = options.timeoutMs || 4500;
     const silent = options.silent || false;
@@ -272,13 +280,13 @@
           for (const line of lines) log("RX", line);
         }
         if (lines.some((line) => line === "ERROR" || line.startsWith("+CME ERROR") || line.startsWith("+CMS ERROR"))) {
-          throw new Error(`${command} gaf ERROR`);
+          throw new Error(t("command_error", "{command} gaf ERROR", { command }));
         }
         return lines.filter((line) => line !== "OK" && line !== command);
       }
     }
     if (!silent) log("WARN", `${command} timeout`);
-    throw new Error(`${command} timeout`);
+    throw new Error(t("command_timeout", "{command} timeout", { command }));
   }
 
   async function probeRadio() {
@@ -287,18 +295,18 @@
 
   function markRadioAbsent() {
     if (state.radioPresent) {
-      log("WARN", "Geen antwoord meer op AT; radio afwezig");
+      log("WARN", t("radio_absent", "Geen antwoord meer op AT; radio afwezig"));
     }
     state.radioPresent = false;
     clearRadioStatus();
-    setConnectionStatus("Poort open");
-    els.progressStatus.textContent = "Wachten op radio...";
+    setConnectionStatus(t("port_open", "Poort open"));
+    els.progressStatus.textContent = t("waiting_radio", "Wachten op radio...");
   }
 
   async function handleRadioDetected() {
     state.radioPresent = true;
-    setConnectionStatus("Radio gedetecteerd");
-    els.progressStatus.textContent = "Radio gedetecteerd, status uitlezen...";
+    setConnectionStatus(t("radio_detected", "Radio gedetecteerd"));
+    els.progressStatus.textContent = t("reading_status", "Radio gedetecteerd, status uitlezen...");
     state.busy = true;
     try {
       await sendCommand("ATE0");
@@ -340,7 +348,7 @@
         if (parsed) return parsed;
       } catch (error) {
         lastError = error;
-        log("WARN", `${command} niet bruikbaar: ${error.message}`);
+        log("WARN", t("command_unusable", "{command} niet bruikbaar: {error}", { command, error: error.message }));
       }
     }
     if (lastError) throw lastError;
@@ -368,28 +376,28 @@
 
     hideNotice();
     els.connectBtn.disabled = true;
-    setConnectionStatus("Verbinden...");
-    els.progressStatus.textContent = "Kies een seriële poort in de browser...";
+    setConnectionStatus(t("connecting", "Verbinden..."));
+    els.progressStatus.textContent = t("choose_port", "Kies een seriële poort in de browser...");
 
     try {
       state.port = await navigator.serial.requestPort();
-      els.progressStatus.textContent = "Seriële poort openen...";
+      els.progressStatus.textContent = t("opening_port", "Seriële poort openen...");
       await state.port.open({ baudRate: 9600, dataBits: 8, stopBits: 1, parity: "none", flowControl: "hardware" });
       state.writer = state.port.writable.getWriter();
       readLoop();
       clearRadioStatus();
       els.connectBtn.disabled = true;
-      els.progressStatus.textContent = "Seriële poort open, wachten op radio...";
-      setConnectionStatus("Poort open");
-      log("WARN", "Seriële poort open op 9600 8N1 RTS/CTS");
+      els.progressStatus.textContent = t("port_waiting_radio", "Seriële poort open, wachten op radio...");
+      setConnectionStatus(t("port_open", "Poort open"));
+      log("WARN", t("port_open_log", "Seriële poort open op 9600 8N1 RTS/CTS"));
       startRadioPolling();
     } catch (error) {
       const message = error.name === "NotFoundError"
-        ? "Geen seriële poort gekozen. Klik opnieuw op verbinden en selecteer de radio."
-        : `Verbinden mislukt: ${error.message || error.name}`;
+        ? t("no_port_selected", "Geen seriële poort gekozen. Klik opnieuw op verbinden en selecteer de radio.")
+        : t("connect_failed", "Verbinden mislukt: {error}", { error: error.message || error.name });
       showNotice(message, "danger");
-      setConnectionStatus("Niet verbonden");
-      els.progressStatus.textContent = "Niet verbonden";
+      setConnectionStatus(t("not_connected", "Niet verbonden"));
+      els.progressStatus.textContent = t("not_connected", "Niet verbonden");
       log("ERROR", message);
       els.connectBtn.disabled = false;
     }
@@ -431,10 +439,10 @@
     const radioRecord = payload.issi_lookup[issi] || {};
     const suggested = radioRecord.discipline === "MEDICAL" ? "medical" : "fire";
     setSelectedPhonebook(suggested);
-    els.alias.textContent = radioRecord.alias || "Niet gevonden in database";
+    els.alias.textContent = radioRecord.alias || t("not_found_database", "Niet gevonden in database");
     if (els.phonebookSuggestion) {
-      const label = suggested === "medical" ? "geel medisch" : "rood brandweer";
-      els.phonebookSuggestion.textContent = `Voorstel op basis van ISSI: ${label}.`;
+      const label = suggested === "medical" ? t("medical_phonebook", "geel medisch") : t("fire_phonebook", "rood brandweer");
+      els.phonebookSuggestion.textContent = t("suggestion_for_issi", "Voorstel op basis van ISSI: {label}.", { label });
     }
     renderContacts();
   }
@@ -452,7 +460,7 @@
     if (state.busy || !state.radioPresent) return;
     syncSelectedPhonebookFromForm();
     if (!state.contacts.length) {
-      log("WARN", "Geen contacten om te schrijven");
+      log("WARN", t("no_contacts", "Geen contacten om te schrijven"));
       return;
     }
     hideNotice();
@@ -471,29 +479,29 @@
     try {
       await sendCommand('AT+CPBS="ME"');
       if (state.totalSlots && state.contacts.length > state.totalSlots) {
-        throw new Error(`Phonebook heeft ${state.totalSlots} plaatsen, maar ${state.contacts.length} contacten moeten geschreven worden`);
+        throw new Error(t("phonebook_capacity_error", "Phonebook heeft {slots} plaatsen, maar {contacts} contacten moeten geschreven worden", { slots: state.totalSlots, contacts: state.contacts.length }));
       }
-      const phonebookLabel = state.selectedPhonebook === "medical" ? "geel medisch" : "rood brandweer";
-      log("WARN", `Start schrijven ${phonebookLabel} phonebook (${state.contacts.length} contacten)`);
-      els.progressStatus.textContent = `Start schrijven ${phonebookLabel} phonebook`;
+      const phonebookLabel = state.selectedPhonebook === "medical" ? t("medical_phonebook", "geel medisch") : t("fire_phonebook", "rood brandweer");
+      log("WARN", t("start_writing_log", "Start schrijven {label} phonebook ({contacts} contacten)", { label: phonebookLabel, contacts: state.contacts.length }));
+      els.progressStatus.textContent = t("start_writing_status", "Start schrijven {label} phonebook", { label: phonebookLabel });
       for (const contact of state.contacts) {
         const command = `AT+CPBW=${contact.index},"${sanitizeAtText(contact.number)}",${contact.type},"${sanitizeAtText(contact.name)}"`;
         await sendCommand(command, { timeoutMs: 6500 });
         done += 1;
-        setProgress(done, total, `Schrijf ${contact.index}/${state.contacts.length}`, startedAt);
+        setProgress(done, total, t("write_contact", "Schrijf {index}/{total}", { index: contact.index, total: state.contacts.length }), startedAt);
       }
 
       for (let index = deleteFrom; index <= deleteUntil; index += 1) {
         await sendCommand(`AT+CPBW=${index}`, { timeoutMs: 6500 });
         done += 1;
-        setProgress(done, total, `Wis oude entry ${index}`, startedAt);
+        setProgress(done, total, t("delete_old_entry", "Wis oude entry {index}", { index }), startedAt);
       }
 
-      setProgress(total, total, `${phonebookLabel} phonebook bijgewerkt`, startedAt);
+      setProgress(total, total, t("phonebook_updated", "{label} phonebook bijgewerkt", { label: phonebookLabel }), startedAt);
       await refreshStatus();
     } catch (error) {
       log("ERROR", error.message);
-      setProgress(done, total, "Update gestopt", startedAt);
+      setProgress(done, total, t("update_stopped", "Update gestopt"), startedAt);
     } finally {
       state.busy = false;
       els.updateBtn.disabled = false;
@@ -508,11 +516,11 @@
 
   els.connectBtn.addEventListener("click", () => connect());
   els.refreshBtn.addEventListener("click", () => refreshStatus().catch((error) => {
-    showNotice(`Status lezen mislukt: ${error.message}`, "danger");
+    showNotice(t("status_read_failed", "Status lezen mislukt: {error}", { error: error.message }), "danger");
     log("ERROR", error.message);
   }));
   els.updateBtn.addEventListener("click", () => updatePhonebook().catch((error) => {
-    showNotice(`Phonebook schrijven mislukt: ${error.message}`, "danger");
+    showNotice(t("phonebook_write_failed", "Phonebook schrijven mislukt: {error}", { error: error.message }), "danger");
     log("ERROR", error.message);
   }));
   for (const choice of els.phonebookChoices) {

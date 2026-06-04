@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Post overview{% endblock %}
+{% block title %}{% trans "Post overview" %}{% endblock %}
 
 {% block content %}
   <div class="container mt-4">
 
-    <h1 class="h3">Kies post</h1>
+    <h1 class="h3">{% trans "Kies post" %}</h1>
 
     <div class="list-group my-4">
       {% for post in posts %}

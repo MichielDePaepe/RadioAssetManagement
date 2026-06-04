@@ -12,15 +12,17 @@
 #   - This script may only run in production (ENVIRONMENT=prod)
 # ============================================================
 
+set -euo pipefail
+
 # Load environment variables from .env if present
 if [ -f .env ]; then
   export $(grep -v '^#' .env | xargs)
 fi
 
 # Abort if ENVIRONMENT is not 'prod'
-if [ "$ENVIRONMENT" != "prod" ]; then
+if [ "${ENVIRONMENT:-}" != "prod" ]; then
   echo "❌ This script can only be executed in the production environment."
-  echo "Current environment: '$ENVIRONMENT'"
+  echo "Current environment: '${ENVIRONMENT:-}'"
   exit 1
 fi
 
@@ -29,6 +31,12 @@ fi
 # ============================================================
 
 source ../bin/activate
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "❌ Production worktree has local changes. Aborting before deploy."
+  git status --short
+  exit 1
+fi
 
 echo "🔍 Checking for updates..."
 git fetch origin
@@ -43,10 +51,28 @@ fi
 
 echo "⬇️  Updates found — deploying latest version..."
 
+echo "📋 Commits to deploy:"
+git --no-pager log --oneline "$LOCAL_HASH..$REMOTE_HASH"
+
+CHANGED_FILES=$(git diff --name-only "$LOCAL_HASH" "$REMOTE_HASH")
+
 # Check if requirements.txt changed between local and origin/main
 REQ_CHANGED=0
-if git diff --name-only "$LOCAL_HASH" "$REMOTE_HASH" | grep -qx "requirements.txt"; then
+if echo "$CHANGED_FILES" | grep -qx "requirements.txt"; then
   REQ_CHANGED=1
+fi
+
+# Check if Django migration files changed between local and origin/main
+MIGRATIONS_CHANGED=0
+if echo "$CHANGED_FILES" | grep -Eq '(^|/)migrations/[0-9][^/]*\.py$'; then
+  MIGRATIONS_CHANGED=1
+fi
+
+if [ "$MIGRATIONS_CHANGED" -eq 1 ]; then
+  echo "🗄️  Migration changes detected — creating database dump before deploy..."
+  ./dump_db
+else
+  echo "🗄️  No migration changes detected — skipping database dump."
 fi
 
 # Reset to the latest version from origin

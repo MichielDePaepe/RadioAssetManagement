@@ -1,27 +1,28 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
   <div>
     <h2 class="mb-1">{{ vector.name|default:vector.resourceCode }}</h2>
-    <p class="text-muted mb-0">Inventarishistoriek voor {{ vector.resourceCode }}</p>
+    <p class="text-muted mb-0">{% blocktrans with code=vector.resourceCode %}Inventarishistoriek voor {{ code }}{% endblocktrans %}</p>
   </div>
 
   <a href="{% url 'fireplan:latest_inventory_per_vector' %}" class="btn btn-outline-secondary btn-sm">
     <i class="bi bi-arrow-left"></i>
-    Overzicht
+    {% trans "Overzicht" %}
   </a>
 </div>
 
 <table class="table table-sm align-middle">
   <thead>
     <tr>
-      <th style="width:140px;">Datum</th>
-      <th style="width:90px;">Uur</th>
-      <th style="width:180px;">Voertuig</th>
-      <th>Radio</th>
-      <th style="width:260px;">Gescand door</th>
+      <th style="width:140px;">{% trans "Datum" %}</th>
+      <th style="width:90px;">{% trans "Uur" %}</th>
+      <th style="width:180px;">{% trans "Voertuig" %}</th>
+      <th>{% trans "Radio" %}</th>
+      <th style="width:260px;">{% trans "Gescand door" %}</th>
     </tr>
   </thead>
   <tbody>
@@ -43,25 +44,27 @@
                 {% with r=ir.radio %}
                   <div>
                     {% if r %}
-                      <span class="fw-semibold">{{ r.subscription.issi.alias|default:"(geen alias)" }}</span>
+                      <span class="fw-semibold">
+                        {% if r.subscription.issi.alias %}{{ r.subscription.issi.alias }}{% else %}{% trans "(geen alias)" %}{% endif %}
+                      </span>
                       <span class="text-muted">— ISSI {{ r.subscription.issi.number }} · TEI {{ r.tei_str }}</span>
                     {% else %}
                       <span class="fw-semibold">{{ ir.tei }}</span>
-                      <span class="text-muted">— niet gelinkt</span>
+                      <span class="text-muted">— {% trans "niet gelinkt" %}</span>
                     {% endif %}
                   </div>
                 {% endwith %}
               {% endfor %}
             </div>
           {% else %}
-            <span class="text-muted">Geen radio's</span>
+            <span class="text-muted">{% trans "Geen radio's" %}</span>
           {% endif %}
         </td>
-        <td>{{ inv.done_by_full_name|default:"(onbekend)" }}</td>
+        <td>{% if inv.done_by_full_name %}{{ inv.done_by_full_name }}{% else %}{% trans "(onbekend)" %}{% endif %}</td>
       </tr>
     {% empty %}
       <tr>
-        <td colspan="5" class="text-muted">Geen inventarissen gevonden voor deze vector.</td>
+        <td colspan="5" class="text-muted">{% trans "Geen inventarissen gevonden voor deze vector." %}</td>
       </tr>
     {% endfor %}
   </tbody>

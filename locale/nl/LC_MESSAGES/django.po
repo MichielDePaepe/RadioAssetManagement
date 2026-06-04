@@ -3,16 +3,15 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-20 15:00+0200\n"
+"POT-Creation-Date: 2026-06-04 10:03+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: nl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -31,14 +30,12 @@ msgid "VISSI & VTEI"
 msgstr "VISSI & VTEI"
 
 #: astrid/models.py:13
-#, fuzzy
-#| msgid "Activation request"
 msgid "Activation"
-msgstr "Activatieaanvraag"
+msgstr "Activatie"
 
 #: astrid/models.py:51
 msgid "Both old and new radio must be set for VTEI."
-msgstr "Zowel de oude als nieuwe radio moeten ingesteld zijn voor VTEI."
+msgstr "Zowel oude als nieuwe radio moeten ingesteld zijn voor VTEI."
 
 #: astrid/models.py:55
 msgid "ISSI old, ISSI new and radio must be set for VISSI."
@@ -62,17 +59,15 @@ msgstr "Aanvraag geverifieerd en afgesloten"
 
 #: astrid/models.py:162
 msgid "Heeft toegang tot MyAstrid"
-msgstr ""
+msgstr "Heeft toegang tot MyAstrid"
 
 #: astrid/models.py:163
 msgid "Kan een aanvraag valideren"
-msgstr ""
+msgstr "Kan een aanvraag valideren"
 
 #: astrid/templates/astrid/activation_request.html:6
-#, fuzzy
-#| msgid "Overzicht van Astrid aanvragen"
 msgid "Activatie aanvragen"
-msgstr "Overzicht van Astrid aanvragen"
+msgstr "Activatie aanvragen"
 
 #: astrid/templates/astrid/activation_request.html:10
 msgid ""
@@ -80,24 +75,29 @@ msgid ""
 "    Aanvraag om een radio te activeren met een nieuw abonnement.\n"
 "    "
 msgstr ""
+"\n"
+"    Aanvraag om een radio te activeren met een nieuw abonnement.\n"
+"    "
 
 #: astrid/templates/astrid/activation_request.html:22
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:15
+#: fireplan/templates/fireplan/vector_inventory_history.html:24
+#: helpdesk/templates/helpdesk/ticket_detail.html:154
 #: radio/templates/radio/decommissioning_request.html:22
 #: radio/templates/radio/issi_alias_form.html:41
 msgid "Radio"
-msgstr ""
+msgstr "Radio"
 
-#: astrid/templates/astrid/activation_request.html:37 radio/forms.py:64
+#: astrid/templates/astrid/activation_request.html:37 radio/forms.py:57
 #: radio/templates/radio/issi_alias_form.html:18
-#: radio/templates/radio/issi_form.html:17 radio/views.py:117
-#, fuzzy
-#| msgid "VISSI"
+#: radio/templates/radio/issi_form.html:17
+#: radio/templates/radio/selector/input.html:6 radio/views.py:139
 msgid "ISSI"
-msgstr "VISSI"
+msgstr "ISSI"
 
 #: astrid/templates/astrid/activation_request.html:38
 msgid "ISSI die geactiveerd moet worden"
-msgstr ""
+msgstr "ISSI die geactiveerd moet worden"
 
 #: astrid/templates/astrid/activation_request.html:44
 #: astrid/templates/astrid/vtei_request.html:52
@@ -118,30 +118,32 @@ msgid ""
 "    %(type)s request #%(id)s\n"
 "  "
 msgstr ""
+"\n"
+"    %(type)s-aanvraag #%(id)s\n"
+"  "
 
 #: astrid/templates/astrid/request_detail.html:16
+#: helpdesk/templates/helpdesk/ticket_detail.html:38
+#: helpdesk/templates/helpdesk/ticket_detail.html:55
 msgid "Description"
-msgstr ""
+msgstr "Beschrijving"
 
 #: astrid/templates/astrid/request_detail.html:25
 msgid "SIAMU ticket"
-msgstr ""
+msgstr "SIAMU-ticket"
 
 #: astrid/templates/astrid/request_detail.html:41
-#, fuzzy
-#| msgid "Oude radio"
 msgid "TEI oude radio"
-msgstr "Oude radio"
+msgstr "TEI oude radio"
 
-#: astrid/templates/astrid/request_detail.html:66 radio/views.py:122
+#: astrid/templates/astrid/request_detail.html:66
+#: radio/templates/radio/selector/input.html:14 radio/views.py:144
 msgid "TEI"
 msgstr "TEI"
 
 #: astrid/templates/astrid/request_detail.html:68
-#, fuzzy
-#| msgid "Nieuwe radio"
 msgid "TEI nieuwe radio"
-msgstr "Nieuwe radio"
+msgstr "TEI nieuwe radio"
 
 #: astrid/templates/astrid/request_detail.html:92
 #: astrid/templates/astrid/request_overview.html:16
@@ -153,57 +155,59 @@ msgstr "Oude ISSI"
 msgid "Nieuwe ISSI"
 msgstr "Nieuwe ISSI"
 
-#: astrid/templates/astrid/request_detail.html:128 radio/forms.py:48
-#: radio/forms.py:71 radio/templates/radio/issi_alias_form.html:22
-#: radio/templates/radio/issi_form.html:28 radio/views.py:118
+#: astrid/templates/astrid/request_detail.html:128 radio/forms.py:43
+#: radio/forms.py:70 radio/templates/radio/issi_alias_form.html:22
+#: radio/templates/radio/issi_form.html:28
+#: radio/templates/radio/selector/input.html:22 radio/views.py:140
 #: roip/templates/roip/live_tx.html:71
+#: taqto/templates/taqto/phonebook_serial.html:262
 msgid "Alias"
-msgstr ""
+msgstr "Alias"
 
 #: astrid/templates/astrid/request_detail.html:147
 #: astrid/templates/astrid/request_detail.html:153
 #: astrid/templates/astrid/request_overview.html:21
 msgid "Astrid ticket"
-msgstr ""
+msgstr "Astrid-ticket"
+
+#: astrid/templates/astrid/request_detail.html:148
+msgid "Ticket nummer"
+msgstr "Ticketnummer"
 
 #: astrid/templates/astrid/request_detail.html:170
 msgid "Opmerkingen"
-msgstr ""
+msgstr "Opmerkingen"
 
 #: astrid/templates/astrid/request_detail.html:196
 #: astrid/templates/astrid/request_detail.html:218
 #: astrid/templates/astrid/request_detail.html:240
-#, fuzzy
-#| msgid "Nieuwe radio"
 msgid "Nieuwe opmerking"
-msgstr "Nieuwe radio"
+msgstr "Nieuwe opmerking"
 
 #: astrid/templates/astrid/request_detail.html:203
 msgid "Aanvraag ingediend"
-msgstr ""
+msgstr "Aanvraag ingediend"
 
 #: astrid/templates/astrid/request_detail.html:206
 #: astrid/templates/astrid/request_detail.html:228
 msgid "Aanvraag geweigerd"
-msgstr ""
+msgstr "Aanvraag geweigerd"
 
 #: astrid/templates/astrid/request_detail.html:225
 msgid "Aanvraag verwerkt"
-msgstr ""
+msgstr "Aanvraag verwerkt"
 
 #: astrid/templates/astrid/request_detail.html:247
 msgid "Radio is working"
-msgstr ""
+msgstr "Radio werkt"
 
 #: astrid/templates/astrid/request_detail.html:250
-#, fuzzy
-#| msgid "Radio not found"
 msgid "Radio does not work"
-msgstr "Radio niet gevonden"
+msgstr "Radio werkt niet"
 
 #: astrid/templates/astrid/request_overview.html:6
 msgid "Overzicht van Astrid aanvragen"
-msgstr "Overzicht van Astrid aanvragen"
+msgstr "Overzicht van Astrid-aanvragen"
 
 #: astrid/templates/astrid/request_overview.html:13
 msgid "ID"
@@ -257,178 +261,386 @@ msgstr "Oude radio"
 msgid "Nieuwe radio"
 msgstr "Nieuwe radio"
 
-#: astrid/views.py:159
+#: astrid/templates/astrid/vtei_request.html:53
+#, python-format
+msgid "Aanvraag gekoppeld aan ticket #%(ticket_id)s – %(ticket_title)s"
+msgstr "Aanvraag gekoppeld aan ticket #%(ticket_id)s – %(ticket_title)s"
+
+#: astrid/templates/astrid/vtei_request.html:59
+msgid "Aanvragen"
+msgstr "Aanvragen"
+
+#: astrid/views.py:157
 msgid "Both an old and a new radio need to be selected."
-msgstr "Zowel de oude als nieuwe radio moeten geselecteerd zijn."
+msgstr "Zowel een oude als een nieuwe radio moeten geselecteerd zijn."
 
-#: astrid/views.py:165
+#: astrid/views.py:163
 msgid "The radio selected as old radio has no subscription."
-msgstr "De oude radio heeft geen abonnement"
+msgstr "De geselecteerde oude radio heeft geen abonnement."
 
-#: astrid/views.py:168
+#: astrid/views.py:166
 msgid "The radio selected as new radio already has a subscription."
-msgstr "De nieuwe radio heeft reeds een abonnement"
+msgstr "De geselecteerde nieuwe radio heeft al een abonnement."
 
-#: astrid/views.py:180
+#: astrid/views.py:178
 #, python-brace-format
 msgid ""
 "There is already an open Astrid request for one of the radios: <a "
 "href='{url}'>#{id}</a>"
 msgstr ""
+"Er is al een open Astrid-aanvraag voor een van de radio's: <a "
+"href='{url}'>#{id}</a>"
 
-#: astrid/views.py:206
-#, fuzzy
-#| msgid "VTEI request successful"
+#: astrid/views.py:204
 msgid "VTEI request succesvol aangemaakt"
-msgstr "VTEI aanvraag successvol"
+msgstr "VTEI-aanvraag succesvol aangemaakt"
 
-#: astrid/views.py:228 radio/views.py:457
-#, fuzzy
-#| msgid "Both an old and a new radio need to be selected."
+#: astrid/views.py:226 radio/views.py:475
 msgid "A radio needs to be selected."
-msgstr "Zowel de oude als nieuwe radio moeten geselecteerd zijn."
+msgstr "Er moet een radio geselecteerd worden."
 
-#: astrid/views.py:236
-#, fuzzy, python-brace-format
-#| msgid "The radio selected as new radio already has a subscription."
+#: astrid/views.py:234
+#, python-brace-format
 msgid "The selected <a href='{url}'>radio</a> already has a subscription."
-msgstr "De nieuwe radio heeft reeds een abonnement"
+msgstr "De geselecteerde <a href='{url}'>radio</a> heeft al een abonnement."
 
-#: astrid/views.py:243
+#: astrid/views.py:241
 msgid "A ISSI needs to be provided."
-msgstr ""
+msgstr "Er moet een ISSI opgegeven worden."
 
-#: astrid/views.py:251
+#: astrid/views.py:249
 #, python-brace-format
 msgid "The ISSI <a href='{url}'>{issi}</a> is already activated."
-msgstr ""
+msgstr "De ISSI <a href='{url}'>{issi}</a> is al geactiveerd."
 
-#: astrid/views.py:258 radio/views.py:477
-#, fuzzy, python-brace-format
-#| msgid "The old radio has an open request ticket: {tickets}"
+#: astrid/views.py:256 radio/views.py:495
+#, python-brace-format
 msgid ""
 "The <a href='{radio_url}'>radio</a> has an open request ticket: <a "
 "href='{ticket_url}'>#{ticket_id}</a>"
-msgstr "De oude radio heeft al een open request ticket: {tickets}"
+msgstr ""
+"De <a href='{radio_url}'>radio</a> heeft een open aanvraagticket: <a "
+"href='{ticket_url}'>#{ticket_id}</a>"
 
-#: astrid/views.py:264
-#, fuzzy, python-brace-format
-#| msgid "The old radio has an open request ticket: {tickets}"
+#: astrid/views.py:262
+#, python-brace-format
 msgid ""
 "The ISSI is already used in an open request ticket: <a "
 "href='{ticket_url}'>#{ticket_id}</a>"
-msgstr "De oude radio heeft al een open request ticket: {tickets}"
+msgstr ""
+"De ISSI wordt al gebruikt in een open aanvraagticket: <a "
+"href='{ticket_url}'>#{ticket_id}</a>"
 
-#: astrid/views.py:275
-#, fuzzy
-#| msgid "Activation request"
+#: astrid/views.py:273
 msgid "Activation request successful"
-msgstr "Activatieaanvraag"
+msgstr "Activatieaanvraag succesvol aangemaakt"
 
-#: astrid/views.py:322
+#: astrid/views.py:320
 msgid "Geen astrid ticket nummer opgegeven"
-msgstr ""
+msgstr "Geen Astrid-ticketnummer opgegeven"
 
-#: astrid/views.py:331
+#: astrid/views.py:329
 msgid "Geef een reden op waarom de aanvraag geweigerd werd"
-msgstr ""
+msgstr "Geef een reden op waarom de aanvraag geweigerd werd"
 
-#: astrid/views.py:342
-#, fuzzy
-#| msgid "Request verified and closed"
+#: astrid/views.py:340
 msgid "Request refused by astrid"
-msgstr "Aanvraag geverifieerd en afgesloten"
+msgstr "Aanvraag geweigerd door Astrid"
 
-#: astrid/views.py:349
+#: astrid/views.py:347
 msgid "Opmerking mag niet leeg zijn"
-msgstr ""
+msgstr "Opmerking mag niet leeg zijn"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:6
+msgid "Latest inventory per vector"
+msgstr "Laatste inventaris per vector"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:7
+msgid "Since"
+msgstr "Sinds"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:12
+#: roip/templates/roip/live_tx.html:73
+msgid "Vector"
+msgstr "Vector"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:13
+msgid "Vehicle"
+msgstr "Voertuig"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:14
+msgid "Date"
+msgstr "Datum"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:16
+msgid "Done by"
+msgstr "Uitgevoerd door"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:33
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:72
+msgid "(no vector)"
+msgstr "(geen vector)"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:50
+msgid "(no alias)"
+msgstr "(geen alias)"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:55
+msgid "not linked"
+msgstr "niet gelinkt"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:59
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:86
+msgid "(unknown)"
+msgstr "(onbekend)"
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:85
+msgid "No radios"
+msgstr "Geen radio’s"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:9
+#, python-format
+msgid "Inventarishistoriek voor %(code)s"
+msgstr "Inventarishistoriek voor %(code)s"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:14
+msgid "Overzicht"
+msgstr "Overzicht"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:21
+msgid "Datum"
+msgstr "Datum"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:22
+msgid "Uur"
+msgstr "Uur"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:23
+#: roip/templates/roip/live_tx.html:72
+msgid "Voertuig"
+msgstr "Voertuig"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:25
+msgid "Gescand door"
+msgstr "Gescand door"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:48
+msgid "(geen alias)"
+msgstr "(geen alias)"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:53
+msgid "niet gelinkt"
+msgstr "niet gelinkt"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:60
+msgid "Geen radio's"
+msgstr "Geen radio's"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:63
+msgid "(onbekend)"
+msgstr "(onbekend)"
+
+#: fireplan/templates/fireplan/vector_inventory_history.html:67
+msgid "Geen inventarissen gevonden voor deze vector."
+msgstr "Geen inventarissen gevonden voor deze vector."
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:13
+msgid "Nieuw ticket"
+msgstr "Nieuw ticket"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:34
+msgid "Titel"
+msgstr "Titel"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:43
+msgid "Aanmaken"
+msgstr "Aanmaken"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:63
+msgid "Logs"
+msgstr "Logs"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:71
+msgid "System"
+msgstr "Systeem"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:88
+msgid "No logs yet."
+msgstr "Nog geen logs."
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:94
+#: helpdesk/templates/helpdesk/ticket_detail.html:107
+msgid "Log toevoegen"
+msgstr "Log toevoegen"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:120
+msgid "Ticket info"
+msgstr "Ticketinfo"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:134
+#: taqto/templates/taqto/phonebook_serial.html:263
+msgid "Type"
+msgstr "Type"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:144
+msgid "Priority"
+msgstr "Prioriteit"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:177
+msgid "External ref"
+msgstr "Externe referentie"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:187
+msgid "SIAMU"
+msgstr "SIAMU"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:197
+msgid "Assigned to"
+msgstr "Toegewezen aan"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:209
+#: inventory/templates/inventory/endpoint_switch.html:27
+#: radio/templates/radio/issi_alias_form.html:59
+#: radio/templates/radio/issi_form.html:45
+msgid "Opslaan"
+msgstr "Opslaan"
+
+#: helpdesk/templates/helpdesk/ticket_list.html:14
+msgid "Verberg gesloten"
+msgstr "Verberg gesloten"
+
+#: helpdesk/templates/helpdesk/ticket_list.html:20
+msgid "Toon gesloten"
+msgstr "Toon gesloten"
+
+#: helpdesk/templates/helpdesk/ticket_list.html:86
+msgid "Geen tickets gevonden."
+msgstr "Geen tickets gevonden."
 
 #: inventory/models.py:52
 msgid "Dispatching"
-msgstr ""
+msgstr "Dispatching"
 
 #: inventory/models.py:53
 msgid "Reserve cabinet"
-msgstr ""
+msgstr "Reservekast"
 
 #: inventory/models.py:54
 msgid "Stock"
-msgstr ""
+msgstr "Stock"
 
 #: inventory/models.py:55 radio/models.py:127
 msgid "Other"
-msgstr ""
+msgstr "Andere"
 
 #: inventory/models.py:113
 msgid "Primary"
-msgstr ""
+msgstr "Primair"
 
 #: inventory/models.py:114
 msgid "Temporary replacement"
-msgstr ""
+msgstr "Tijdelijke vervanging"
 
 #: inventory/models.py:115
 msgid "Storage"
-msgstr ""
+msgstr "Opslag"
 
 #: inventory/models.py:116
 msgid "Repair"
-msgstr ""
+msgstr "Herstelling"
+
+#: inventory/templates/inventory/container_detail.html:12
+msgid "Endpoint"
+msgstr "Endpoint"
+
+#: inventory/templates/inventory/container_detail.html:13
+msgid "Huidige radio"
+msgstr "Huidige radio"
+
+#: inventory/templates/inventory/container_detail.html:35
+#: inventory/templates/inventory/endpoint_switch.html:5
+msgid "Wissel radio"
+msgstr "Wissel radio"
+
+#: inventory/templates/inventory/endpoint_switch.html:12
+#: radio/templates/radio/find.html:11
+msgid "Radio zoeken"
+msgstr "Radio zoeken"
+
+#: inventory/templates/inventory/endpoint_switch.html:13
+msgid "TEI / ISSI / alias"
+msgstr "TEI / ISSI / alias"
+
+#: inventory/templates/inventory/endpoint_switch.html:17
+msgid "Gekozen radio"
+msgstr "Gekozen radio"
+
+#: inventory/templates/inventory/endpoint_switch.html:22
+msgid "Note"
+msgstr "Notitie"
+
+#: inventory/templates/inventory/endpoint_switch.html:28
+#: radio/templates/radio/issi_alias_form.html:62
+#: radio/templates/radio/issi_form.html:48
+msgid "Annuleren"
+msgstr "Annuleren"
+
+#: organization/templates/organization/post_overview_list.html:4
+msgid "Post overview"
+msgstr "Postoverzicht"
+
+#: organization/templates/organization/post_overview_list.html:9
+msgid "Kies post"
+msgstr "Kies post"
 
 #: radio/forms.py:16
 msgid "TEI must contain only digits."
 msgstr "TEI mag alleen cijfers bevatten."
 
 #: radio/forms.py:19
-msgid "TEI must be 14 or 15 digits long."
-msgstr "TEI moet 14 of 15 cijfers lang zijn."
+msgid "TEI must be 15 digits long."
+msgstr "TEI moet 15 cijfers lang zijn."
 
-#: radio/forms.py:24
-msgid "If 15 digits, last digit must be zero."
-msgstr "Als de TEI 15 cijfers is, moet het laatste cijfer nul zijn."
-
-#: radio/forms.py:31
+#: radio/forms.py:25
 msgid "TEI is not within known TEI ranges."
 msgstr "TEI valt niet binnen bekende TEI-bereiken."
 
-#: radio/forms.py:80 radio/views.py:342
+#: radio/forms.py:79 radio/views.py:362
 msgid "ISSI-nummer mag enkel uit cijfers bestaan"
 msgstr "ISSI-nummer mag alleen uit cijfers bestaan"
 
-#: radio/forms.py:83 radio/views.py:338
+#: radio/forms.py:82 radio/views.py:358
 msgid "Lengte van een ISSI-nummer moet 7 digits zijn"
 msgstr "Lengte van een ISSI-nummer moet 7 cijfers zijn"
 
-#: radio/forms.py:87
+#: radio/forms.py:86
 msgid "ISSI-nummer bestaat al"
 msgstr "ISSI-nummer bestaat al"
 
 #: radio/models.py:124
 msgid "Police"
-msgstr ""
+msgstr "Politie"
 
 #: radio/models.py:125 templates/navbar.html:112
 msgid "Fire"
-msgstr ""
+msgstr "Brandweer"
 
 #: radio/models.py:126 templates/navbar.html:119
 msgid "Medical"
-msgstr ""
+msgstr "Medisch"
 
 #: radio/models.py:191
 msgid "Can create a decommission request"
-msgstr ""
+msgstr "Kan een buitengebruikstellingsaanvraag aanmaken"
 
 #: radio/models.py:195
 msgid "Can approve a decommission request"
-msgstr ""
+msgstr "Kan een buitengebruikstellingsaanvraag goedkeuren"
 
 #: radio/templates/radio/decommissioning_request.html:6
 #: templates/navbar.html:54
-#, fuzzy
-#| msgid "Activation request"
 msgid "Decommissioning request"
-msgstr "Activatieaanvraag"
+msgstr "Buitengebruikstellingsaanvraag"
 
 #: radio/templates/radio/decommissioning_request.html:10
 msgid ""
@@ -436,48 +648,39 @@ msgid ""
 "    Request to decommission a radio.\n"
 "    "
 msgstr ""
+"\n"
+"    Aanvraag om een radio buiten gebruik te stellen.\n"
+"    "
 
 #: radio/templates/radio/detail.html:57
-#, fuzzy
-#| msgid "Acties"
 msgid "Actief"
-msgstr "Acties"
+msgstr "Actief"
 
 #: radio/templates/radio/detail.html:59
 #: radio/templates/radio/radio_card.html:41
 msgid "DMO only"
-msgstr ""
+msgstr "Alleen DMO"
 
 #: radio/templates/radio/detail.html:61
 msgid "Decommissioned"
-msgstr ""
+msgstr "Buitengebruikgesteld"
 
 #: radio/templates/radio/detail.html:63
 #: radio/templates/radio/radio_card.html:37
 msgid "Niet actief"
-msgstr ""
+msgstr "Niet actief"
 
 #: radio/templates/radio/detail.html:151
 msgid "Deze radio heeft geen Fireplan ID, QR-printen niet mogelijk."
-msgstr ""
+msgstr "Deze radio heeft geen Fireplan ID, QR-printen is niet mogelijk."
 
 #: radio/templates/radio/issi_alias_form.html:33
 msgid "Klant"
 msgstr "Klant"
 
-#: radio/templates/radio/issi_alias_form.html:37 radio/views.py:120
+#: radio/templates/radio/issi_alias_form.html:37 radio/views.py:142
 msgid "Discipline"
 msgstr "Discipline"
-
-#: radio/templates/radio/issi_alias_form.html:59
-#: radio/templates/radio/issi_form.html:45
-msgid "Opslaan"
-msgstr "Opslaan"
-
-#: radio/templates/radio/issi_alias_form.html:62
-#: radio/templates/radio/issi_form.html:48
-msgid "Annuleren"
-msgstr "Annuleren"
 
 #: radio/templates/radio/issi_alias_list.html:13
 #: radio/templates/radio/issi_form.html:7
@@ -490,6 +693,9 @@ msgid "Zoek ISSI, alias, klant of discipline"
 msgstr "Zoek ISSI, alias, klant of discipline"
 
 #: radio/templates/radio/issi_alias_list.html:25
+#: radio/templates/radio/selector/input.html:7
+#: radio/templates/radio/selector/input.html:15
+#: radio/templates/radio/selector/input.html:23
 msgid "Zoeken"
 msgstr "Zoeken"
 
@@ -528,167 +734,454 @@ msgstr "Volgende"
 
 #: radio/templates/radio/radio_card.html:66
 msgid "DECOMMISSIONED"
-msgstr ""
+msgstr "BUITENGEBRUIKGESTELD"
 
 #: radio/templates/radio/radio_create.html:5
 msgid "Nieuwe radio toevoegen"
-msgstr "Ajouter une nouvelle radio"
+msgstr "Nieuwe radio toevoegen"
 
 #: radio/templates/radio/radio_create.html:10
 msgid "Toevoegen"
-msgstr "Ajouter"
+msgstr "Toevoegen"
 
 #: radio/templates/radio/radio_create.html:15
 msgid ""
 "Bestaat er nog geen Fireplan ID? Je kan de radio via volgende link toevoegen "
 "in Fireplan:"
 msgstr ""
+"Bestaat er nog geen Fireplan ID? Je kan de radio via volgende link toevoegen "
+"in Fireplan:"
 
 #: radio/templates/radio/radio_create.html:18
 msgid "Voeg radio toe in Fireplan"
-msgstr ""
+msgstr "Voeg radio toe in Fireplan"
+
+#: radio/templates/radio/selector/input.html:31
+msgid "Start scanner"
+msgstr "Start scanner"
+
+#: radio/templates/radio/selector/modal.html:23
+msgid "Sluiten"
+msgstr "Sluiten"
 
 #: radio/templates/radio/selector/modal_body.html:106
 msgid "Vul een waarde in."
-msgstr "Veuillez entrer une valeur."
+msgstr "Vul een waarde in."
 
 #: radio/templates/radio/selector/modal_body.html:130
 msgid "Er is een fout opgetreden bij het zoeken."
-msgstr "Une erreur s'est produite lors de la recherche."
+msgstr "Er is een fout opgetreden bij het zoeken."
 
-#: radio/views.py:119
+#: radio/views.py:72
+#, python-brace-format
+msgid "Radio aangemaakt in Fireplan met ID {fireplan_id}."
+msgstr "Radio aangemaakt in Fireplan met ID {fireplan_id}."
+
+#: radio/views.py:79
+#, python-brace-format
+msgid "Radio kon niet aangemaakt worden in Fireplan: {error}"
+msgstr "Radio kon niet aangemaakt worden in Fireplan: {error}"
+
+#: radio/views.py:141
 msgid "Customer"
 msgstr "Klant"
 
-#: radio/views.py:121
+#: radio/views.py:143
 msgid "Type radio"
 msgstr "Type radio"
 
-#: radio/views.py:136
+#: radio/views.py:158
 #, python-brace-format
 msgid "ISSI {issi} toegevoegd."
 msgstr "ISSI {issi} toegevoegd."
 
-#: radio/views.py:151
+#: radio/views.py:173
 #, python-brace-format
 msgid "Alias voor ISSI {issi} bijgewerkt."
 msgstr "Alias voor ISSI {issi} bijgewerkt."
 
-#: radio/views.py:330
+#: radio/views.py:350
 msgid "type and value required"
 msgstr "type en waarde zijn verplicht"
 
-#: radio/views.py:344
+#: radio/views.py:364
 msgid "ISSI-nummer niet gevonden"
 msgstr "ISSI-nummer niet gevonden"
 
-#: radio/views.py:346
+#: radio/views.py:366
 msgid "Geen radio gevonden met dit ISSI-nummer"
 msgstr "Geen radio gevonden met dit ISSI-nummer"
 
-#: radio/views.py:355
+#: radio/views.py:373
 #, python-brace-format
 msgid "Radio met dit TEI {tei} nummer niet gevonden"
 msgstr "Radio met TEI-nummer {tei} niet gevonden"
 
-#: radio/views.py:362
+#: radio/views.py:380
 #, python-brace-format
 msgid "Geen ISSI gevonden met alias “{alias}”"
-msgstr ""
+msgstr "Geen ISSI gevonden met alias “{alias}”"
 
-#: radio/views.py:369
+#: radio/views.py:387
 msgid "Geen radio gekoppeld aan deze alias"
-msgstr ""
+msgstr "Geen radio gekoppeld aan deze alias"
 
-#: radio/views.py:374
+#: radio/views.py:392
 msgid "Fout bij het zoeken op alias"
-msgstr ""
+msgstr "Fout bij het zoeken op alias"
 
-#: radio/views.py:381
+#: radio/views.py:399
 msgid "invalid lookup type"
 msgstr "Ongeldig opzoektype"
 
-#: radio/views.py:396
+#: radio/views.py:414
 msgid "Radio not found"
 msgstr "Radio niet gevonden"
 
-#: radio/views.py:467
+#: radio/views.py:485
 #, python-brace-format
 msgid "The selected <a href='{url}'>radio</a> is still active."
-msgstr ""
+msgstr "De geselecteerde <a href='{url}'>radio</a> is nog actief."
 
-#: radio/views.py:484
+#: radio/views.py:502
 #, python-brace-format
 msgid ""
 "There is an open decommissioning request (#{ticket_id}) for this <a "
 "href='{url}'>radio</a>"
 msgstr ""
+"Er is een open buitengebruikstellingsaanvraag (#{ticket_id}) voor deze <a "
+"href='{url}'>radio</a>"
 
-#: radio/views.py:489
+#: radio/views.py:507
 msgid "A reason for the decommissioning request is required."
-msgstr ""
+msgstr "Een reden voor de buitengebruikstellingsaanvraag is verplicht."
 
-#: radio/views.py:498
-#, fuzzy
-#| msgid "VTEI request successful"
+#: radio/views.py:516
 msgid "Decommissioning request successful"
-msgstr "VTEI aanvraag successvol"
+msgstr "Buitengebruikstellingsaanvraag succesvol aangemaakt"
 
 #: roip/templates/roip/live_tx.html:14
 msgid "Live uitzending"
-msgstr ""
+msgstr "Live-uitzending"
 
 #: roip/templates/roip/live_tx.html:16
 msgid "Idle"
-msgstr ""
+msgstr "Inactief"
 
 #: roip/templates/roip/live_tx.html:22
 msgid "Geen uitzending"
-msgstr ""
+msgstr "Geen uitzending"
 
 #: roip/templates/roip/live_tx.html:31
 msgid "ON AIR"
-msgstr ""
+msgstr "ON AIR"
 
 #: roip/templates/roip/live_tx.html:60
 msgid "Laatste opnames"
-msgstr ""
+msgstr "Laatste opnames"
 
 #: roip/templates/roip/live_tx.html:62
 msgid "max. 20"
-msgstr ""
+msgstr "max. 20"
 
 #: roip/templates/roip/live_tx.html:70
 msgid "Tijdstip"
-msgstr ""
-
-#: roip/templates/roip/live_tx.html:72
-msgid "Voertuig"
-msgstr ""
-
-#: roip/templates/roip/live_tx.html:73
-msgid "Vector"
-msgstr ""
+msgstr "Tijdstip"
 
 #: roip/templates/roip/live_tx.html:74
 msgid "Lengte"
-msgstr ""
+msgstr "Lengte"
 
 #: roip/templates/roip/live_tx.html:75
 msgid "Opname"
-msgstr ""
+msgstr "Opname"
 
 #: roip/templates/roip/live_tx.html:88
 msgid "Klik op play om te luisteren. Klik opnieuw om te stoppen."
+msgstr "Klik op play om te luisteren. Klik opnieuw om te stoppen."
+
+#: taqto/templates/taqto/phonebook_serial.html:5
+msgid "Taqto phonebook updater"
+msgstr "Taqto phonebook updater"
+
+#: taqto/templates/taqto/phonebook_serial.html:209
+msgid "Web Serial kan hier niet starten"
+msgstr "Web Serial kan hier niet starten"
+
+#: taqto/templates/taqto/phonebook_serial.html:213
+msgid "Tijdelijke Chrome-oplossing voor deze interne site"
+msgstr "Tijdelijke Chrome-oplossing voor deze interne site"
+
+#: taqto/templates/taqto/phonebook_serial.html:215
+msgid "Open in een nieuwe tab"
+msgstr "Open in een nieuwe tab"
+
+#: taqto/templates/taqto/phonebook_serial.html:216
+msgid "Voeg deze origin toe"
+msgstr "Voeg deze origin toe"
+
+#: taqto/templates/taqto/phonebook_serial.html:217
+msgid "Zet de flag op"
+msgstr "Zet de flag op"
+
+#: taqto/templates/taqto/phonebook_serial.html:217
+msgid "en herstart Chrome."
+msgstr "en herstart Chrome."
+
+#: taqto/templates/taqto/phonebook_serial.html:220
+msgid ""
+"Gebruik dit alleen op de programmeer-pc's. HTTPS blijft de nette oplossing."
+msgstr "Gebruik dit alleen op de programmeer-pc's. HTTPS blijft de nette oplossing."
+
+#: taqto/templates/taqto/phonebook_serial.html:230
+msgid "Radio phonebook updater"
+msgstr "Radio phonebook updater"
+
+#: taqto/templates/taqto/phonebook_serial.html:240
+msgid "AT-log console"
+msgstr "AT-logconsole"
+
+#: taqto/templates/taqto/phonebook_serial.html:244
+msgid "Verbind met seriële poort"
+msgstr "Verbind met seriële poort"
+
+#: taqto/templates/taqto/phonebook_serial.html:252
+msgid "Radio status"
+msgstr "Radiostatus"
+
+#: taqto/templates/taqto/phonebook_serial.html:255
+msgid "Lees opnieuw"
+msgstr "Lees opnieuw"
+
+#: taqto/templates/taqto/phonebook_serial.html:265
+msgid "Huidige phonebook bezetting"
+msgstr "Huidige telefoonboekbezetting"
+
+#: taqto/templates/taqto/phonebook_serial.html:271 taqto/views.py:57
+msgid "Niet verbonden"
+msgstr "Niet verbonden"
+
+#: taqto/templates/taqto/phonebook_serial.html:273
+msgid "Te schrijven phonebook"
+msgstr "Te schrijven phonebook"
+
+#: taqto/templates/taqto/phonebook_serial.html:276
+msgid "Brandweer"
+msgstr "Brandweer"
+
+#: taqto/templates/taqto/phonebook_serial.html:280
+msgid "Medisch"
+msgstr "Medisch"
+
+#: taqto/templates/taqto/phonebook_serial.html:284
+msgid "Schrijf phonebook"
+msgstr "Schrijf phonebook"
+
+#: taqto/templates/taqto/phonebook_serial.html:289 taqto/views.py:53
+msgid "Voorstel wordt bepaald na uitlezen van ISSI."
+msgstr "Voorstel wordt bepaald na uitlezen van ISSI."
+
+#: taqto/templates/taqto/phonebook_serial.html:290
+msgid "Phonebook update"
+msgstr "Telefoonboekupdate"
+
+#: taqto/templates/taqto/phonebook_serial.html:294
+msgid "Nog niet gestart"
+msgstr "Nog niet gestart"
+
+#: taqto/templates/taqto/phonebook_serial.html:301
+msgid "Log wissen"
+msgstr "Log wissen"
+
+#: taqto/views.py:54
+msgid "Handmatig gekozen."
+msgstr "Handmatig gekozen."
+
+#: taqto/views.py:55
+msgid ""
+"Deze interne site draait via HTTP. Browsers laten Web Serial alleen toe via "
+"HTTPS of localhost."
 msgstr ""
+"Deze interne site draait via HTTP. Browsers laten Web Serial alleen toe via HTTPS of localhost."
+
+#: taqto/views.py:56
+msgid ""
+"Deze browser ondersteunt Web Serial niet. Gebruik Chrome of Edge op desktop; "
+"Safari, Firefox en iOS ondersteunen dit niet."
+msgstr ""
+"Deze browser ondersteunt Web Serial niet. Gebruik Chrome of Edge op desktop; Safari, Firefox en iOS ondersteunen dit niet."
+
+#: taqto/views.py:58
+msgid "Web Serial beschikbaar"
+msgstr "Web Serial beschikbaar"
+
+#: taqto/views.py:59
+#, python-brace-format
+msgid "Kopiëren mislukt: {error}"
+msgstr "Kopiëren mislukt: {error}"
+
+#: taqto/views.py:60
+msgid "Klaar"
+msgstr "Klaar"
+
+#: taqto/views.py:61
+msgid "ETA -"
+msgstr "ETA -"
+
+#: taqto/views.py:62
+#, python-brace-format
+msgid "{duration} resterend"
+msgstr "{duration} resterend"
+
+#: taqto/views.py:63
+#, python-brace-format
+msgid "Leeslus gestopt: {error}"
+msgstr "Leeslus gestopt: {error}"
+
+#: taqto/views.py:64
+msgid "Geen seriële verbinding"
+msgstr "Geen seriële verbinding"
+
+#: taqto/views.py:65
+#, python-brace-format
+msgid "{command} gaf ERROR"
+msgstr "{command} gaf ERROR"
+
+#: taqto/views.py:66
+#, python-brace-format
+msgid "{command} timeout"
+msgstr "{command} timeout"
+
+#: taqto/views.py:67
+msgid "Geen antwoord meer op AT; radio afwezig"
+msgstr "Geen antwoord meer op AT; radio afwezig"
+
+#: taqto/views.py:68
+msgid "Poort open"
+msgstr "Poort open"
+
+#: taqto/views.py:69
+msgid "Wachten op radio..."
+msgstr "Wachten op radio..."
+
+#: taqto/views.py:70
+msgid "Radio gedetecteerd"
+msgstr "Radio gedetecteerd"
+
+#: taqto/views.py:71
+msgid "Radio gedetecteerd, status uitlezen..."
+msgstr "Radio gedetecteerd, status uitlezen..."
+
+#: taqto/views.py:72
+#, python-brace-format
+msgid "{command} niet bruikbaar: {error}"
+msgstr "{command} niet bruikbaar: {error}"
+
+#: taqto/views.py:73
+msgid "Verbinden..."
+msgstr "Verbinden..."
+
+#: taqto/views.py:74
+msgid "Kies een seriële poort in de browser..."
+msgstr "Kies een seriële poort in de browser..."
+
+#: taqto/views.py:75
+msgid "Seriële poort openen..."
+msgstr "Seriële poort openen..."
+
+#: taqto/views.py:76
+msgid "Seriële poort open, wachten op radio..."
+msgstr "Seriële poort open, wachten op radio..."
+
+#: taqto/views.py:77
+msgid "Seriële poort open op 9600 8N1 RTS/CTS"
+msgstr "Seriële poort open op 9600 8N1 RTS/CTS"
+
+#: taqto/views.py:78
+msgid ""
+"Geen seriële poort gekozen. Klik opnieuw op verbinden en selecteer de radio."
+msgstr "Geen seriële poort gekozen. Klik opnieuw op verbinden en selecteer de radio."
+
+#: taqto/views.py:79
+#, python-brace-format
+msgid "Verbinden mislukt: {error}"
+msgstr "Verbinden mislukt: {error}"
+
+#: taqto/views.py:80
+msgid "Niet gevonden in database"
+msgstr "Niet gevonden in database"
+
+#: taqto/views.py:81
+msgid "geel medisch"
+msgstr "geel medisch"
+
+#: taqto/views.py:82
+msgid "rood brandweer"
+msgstr "rood brandweer"
+
+#: taqto/views.py:83
+#, python-brace-format
+msgid "Voorstel op basis van ISSI: {label}."
+msgstr "Voorstel op basis van ISSI: {label}."
+
+#: taqto/views.py:84
+msgid "Geen contacten om te schrijven"
+msgstr "Geen contacten om te schrijven"
+
+#: taqto/views.py:85
+#, python-brace-format
+msgid ""
+"Phonebook heeft {slots} plaatsen, maar {contacts} contacten moeten "
+"geschreven worden"
+msgstr ""
+"Phonebook heeft {slots} plaatsen, maar {contacts} contacten moeten geschreven worden"
+
+#: taqto/views.py:86
+#, python-brace-format
+msgid "Start schrijven {label} phonebook ({contacts} contacten)"
+msgstr "Start schrijven {label} phonebook ({contacts} contacten)"
+
+#: taqto/views.py:87
+#, python-brace-format
+msgid "Start schrijven {label} phonebook"
+msgstr "Start schrijven {label} phonebook"
+
+#: taqto/views.py:88
+#, python-brace-format
+msgid "Schrijf {index}/{total}"
+msgstr "Schrijf {index}/{total}"
+
+#: taqto/views.py:89
+#, python-brace-format
+msgid "Wis oude entry {index}"
+msgstr "Wis oude entry {index}"
+
+#: taqto/views.py:90
+#, python-brace-format
+msgid "{label} phonebook bijgewerkt"
+msgstr "{label} phonebook bijgewerkt"
+
+#: taqto/views.py:91
+msgid "Update gestopt"
+msgstr "Update gestopt"
+
+#: taqto/views.py:92
+#, python-brace-format
+msgid "Status lezen mislukt: {error}"
+msgstr "Status lezen mislukt: {error}"
+
+#: taqto/views.py:93
+#, python-brace-format
+msgid "Phonebook schrijven mislukt: {error}"
+msgstr "Phonebook schrijven mislukt: {error}"
 
 #: templates/403.html:37
 msgid "Geen toegang"
-msgstr ""
+msgstr "Geen toegang"
 
 #: templates/403.html:38
 msgid "Je hebt geen toestemming om deze pagina te bekijken."
-msgstr ""
+msgstr "Je hebt geen toestemming om deze pagina te bekijken."
 
 #: templates/index.html:9
 msgid "Welkom bij Radio Asset Management"
@@ -698,21 +1191,33 @@ msgstr "Welkom bij Radio Asset Management"
 msgid "Start hier met beheren van de radio’s van Brandweer Brussel"
 msgstr "Start hier met beheren van de radio’s van Brandweer Brussel"
 
+#: templates/login.html:22
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+#: templates/login.html:27
+msgid "Password"
+msgstr "Wachtwoord"
+
+#: templates/login.html:31 templates/navbar.html:166
+msgid "Login"
+msgstr "Aanmelden"
+
 #: templates/navbar.html:25
 msgid "Inventory"
 msgstr "Inventaris"
 
 #: templates/navbar.html:30
 msgid "Posts"
-msgstr ""
+msgstr "Posten"
 
 #: templates/navbar.html:35
 msgid "Ziekenwagens"
-msgstr ""
+msgstr "Ziekenwagens"
 
 #: templates/navbar.html:47
 msgid "Find"
-msgstr "Zoek"
+msgstr "Zoeken"
 
 #: templates/navbar.html:50
 msgid "Add radio"
@@ -720,7 +1225,7 @@ msgstr "Radio toevoegen"
 
 #: templates/navbar.html:70
 msgid "Upload subscriptions"
-msgstr "Upload abonnementen"
+msgstr "Abonnementen uploaden"
 
 #: templates/navbar.html:73
 msgid "VTEI request"
@@ -736,23 +1241,23 @@ msgstr "Activatieaanvraag"
 
 #: templates/navbar.html:77
 msgid "Overzicht van aanvragen"
-msgstr ""
+msgstr "Overzicht van aanvragen"
 
 #: templates/navbar.html:96
 msgid "Update radio phonebook"
-msgstr ""
+msgstr "Radio-telefoonboek bijwerken"
 
 #: templates/navbar.html:105
 msgid "Download contacts"
-msgstr "Download contacten"
+msgstr "Contacten downloaden"
 
 #: templates/navbar.html:136
 msgid "Ticket overview"
-msgstr ""
+msgstr "Ticketoverzicht"
 
 #: templates/navbar.html:146
 msgid "Live"
-msgstr ""
+msgstr "Live"
 
 #: templates/navbar.html:158
 msgid "Admin"
@@ -760,11 +1265,7 @@ msgstr "Admin"
 
 #: templates/navbar.html:161
 msgid "Logout"
-msgstr "Logout"
-
-#: templates/navbar.html:166
-msgid "Login"
-msgstr "Login"
+msgstr "Afmelden"
 
 #: traca/models.py:15
 msgid "Empty"
@@ -772,7 +1273,7 @@ msgstr "Leeg"
 
 #: traca/models.py:16
 msgid "Spare radio"
-msgstr "Reserve radio"
+msgstr "Reserveradio"
 
 #: traca/models.py:17
 msgid "Defecte radio"
@@ -794,6 +1295,9 @@ msgstr "Teruggebracht"
 msgid "Swap"
 msgstr "Wissel"
 
+#~ msgid "If 15 digits, last digit must be zero."
+#~ msgstr "Als de TEI 15 cijfers is, moet het laatste cijfer nul zijn."
+
 #, fuzzy
 #~| msgid "Oude radio"
 #~ msgid "ISSI oude radio"
@@ -805,6 +1309,3 @@ msgstr "Wissel"
 #, python-brace-format
 #~ msgid "The new radio has an open request ticket: {tickets}"
 #~ msgstr "De nieuwe radio heeft al een open request ticket: {tickets}"
-
-#~ msgid "Scanner"
-#~ msgstr "Scanner"

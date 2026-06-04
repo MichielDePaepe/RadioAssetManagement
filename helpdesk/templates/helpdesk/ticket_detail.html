@@ -10,7 +10,7 @@
     {% if ticket %}
       {{ ticket.title }}
     {% else %}
-      Nieuw ticket
+      {% trans "Nieuw ticket" %}
     {% endif %}
   </h2>
 
@@ -31,16 +31,16 @@
         {% csrf_token %}
 
         <!-- T I T E L -->
-        <h4 class="mb-2">Titel</h4>
+        <h4 class="mb-2">{% trans "Titel" %}</h4>
         {{ form.title }}
 
         <!-- D E S C R I P T I O N -->
-        <h4 class="mb-2">Description</h4>
+        <h4 class="mb-2">{% trans "Description" %}</h4>
         {{ form.description }}
 
         <div class="text mt-3">
   <button type="submit" form="ticket-create-form" class="btn btn-primary">
-    <i class="bi bi-check2-circle me-1"></i> Aanmaken
+    <i class="bi bi-check2-circle me-1"></i> {% trans "Aanmaken" %}
   </button>
 </div>
 
@@ -52,7 +52,7 @@
       <!-- ===================================================== -->
 
       <!-- DESCRIPTION -->
-      <h4 class="mb-2">Description</h4>
+      <h4 class="mb-2">{% trans "Description" %}</h4>
       <div class="card shadow-sm mb-3">
         <div class="card-body">
           <p class="card-text">{{ ticket.description|linebreaks }}</p>
@@ -60,7 +60,7 @@
       </div>
 
       <!-- LOGS -->
-      <h4 class="mb-2">Logs</h4>
+      <h4 class="mb-2">{% trans "Logs" %}</h4>
       {% if logs %}
         <div class="list-group">
           {% for log in logs %}
@@ -68,7 +68,7 @@
 
               <small class="text-muted">
                 {{ log.timestamp|date:"d/m/Y H:i" }} —
-                {% if log.user %}{{ log.user }}{% else %}System{% endif %}
+                {% if log.user %}{{ log.user }}{% else %}{% trans "System" %}{% endif %}
               </small>
 
               <div class="mt-1">
@@ -85,13 +85,13 @@
           {% endfor %}
         </div>
       {% else %}
-        <div class="alert alert-secondary">No logs yet.</div>
+        <div class="alert alert-secondary">{% trans "No logs yet." %}</div>
       {% endif %}
 
       <hr>
 
       <!-- LOG TOEVOEGEN -->
-      <h5 class="mt-4">Log toevoegen</h5>
+      <h5 class="mt-4">{% trans "Log toevoegen" %}</h5>
       <form method="post">
         {% csrf_token %}
         <div class="mb-3">
@@ -104,7 +104,7 @@
         </div>
         <div class="text-end">
           <button type="submit" name="add_log" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-1"></i> Log toevoegen
+            <i class="bi bi-plus-circle me-1"></i> {% trans "Log toevoegen" %}
           </button>
         </div>
       </form>
@@ -117,7 +117,7 @@
 <!-- ===================================================== -->
 <div class="col-md-4">
 
-  <h4 class="mb-2">Ticket info</h4>
+  <h4 class="mb-2">{% trans "Ticket info" %}</h4>
 
   <div class="card mb-3">
     <div class="card-body">
@@ -131,7 +131,7 @@
 
         <!-- TYPE -->
         <div class="mb-2">
-          <label class="form-label">Type:</label>
+          <label class="form-label">{% trans "Type" %}:</label>
           {% if ticket %}
             {{ edit_form.ticket_type }}
           {% else %}
@@ -141,7 +141,7 @@
 
         <!-- PRIORITY -->
         <div class="mb-2">
-          <label class="form-label">Priority:</label>
+          <label class="form-label">{% trans "Priority" %}:</label>
           {% if ticket %}
             {{ edit_form.priority }}
           {% else %}
@@ -151,7 +151,7 @@
 
         <!-- RADIO -->
         <div class="mb-2">
-          <label class="form-label">Radio:</label>
+          <label class="form-label">{% trans "Radio" %}:</label>
 
           {% if ticket %}
             <!-- READ ONLY LINK -->
@@ -174,7 +174,7 @@
 
         <!-- EXTERNAL REF -->
         <div class="mb-2">
-          <label class="form-label">External ref:</label>
+          <label class="form-label">{% trans "External ref" %}:</label>
           {% if ticket %}
             {{ edit_form.external_reference }}
           {% else %}
@@ -184,7 +184,7 @@
 
         <!-- SIAMU -->
         <div class="mb-2">
-          <label class="form-label">SIAMU:</label>
+          <label class="form-label">{% trans "SIAMU" %}:</label>
           {% if ticket %}
             {{ edit_form.siamu_ticket }}
           {% else %}
@@ -194,7 +194,7 @@
 
         <!-- ASSIGNED TO -->
         <div class="mb-2">
-          <label class="form-label">Assigned to:</label>
+          <label class="form-label">{% trans "Assigned to" %}:</label>
           {% if ticket %}
             {{ edit_form.assigned_to }}
           {% else %}
@@ -206,7 +206,7 @@
         <!-- OPSLAAN -->
         <div class="text-end mt-3">
           <button type="submit" class="btn btn-primary btn-sm">
-            <i class="bi bi-save me-1"></i> Opslaan
+            <i class="bi bi-save me-1"></i> {% trans "Opslaan" %}
           </button>
         </div>
 

@@ -50,13 +50,13 @@
   <div class="row mt-3">
     <div class="col">
       <label for="request-description">{% trans "Reden" %}</label>
-      <textarea class="form-control" id="request-description" name="request_description" rows="3" placeholder="{% trans 'Omschrijf hier de reden van de aanvraag' %}">{% if ticket %}Aanvraag gekoppeld aan ticket #{{ ticket.id }} – {{ ticket.title }}{% endif %}</textarea>
+      <textarea class="form-control" id="request-description" name="request_description" rows="3" placeholder="{% trans 'Omschrijf hier de reden van de aanvraag' %}">{% if ticket %}{% blocktrans with ticket_id=ticket.id ticket_title=ticket.title %}Aanvraag gekoppeld aan ticket #{{ ticket_id }} – {{ ticket_title }}{% endblocktrans %}{% endif %}</textarea>
     </div>
   </div>
 
   <div class="row mt-3">
     <div class="col text-center">
-      <button type="submit" class="btn btn-primary">Aanvragen</button>
+      <button type="submit" class="btn btn-primary">{% trans "Aanvragen" %}</button>
     </div>
   </div>
 </form>
