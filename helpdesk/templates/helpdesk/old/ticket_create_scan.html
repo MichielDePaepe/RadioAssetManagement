@@ -70,7 +70,7 @@ input.addEventListener('keypress', function (e) {
         window.removeEventListener('blur', () => setTimeout(focusInput, 100));
 
         // rest van je code...
-        const tei = String(data.TEI).padStart(14, '0');
+        const tei = String(data.TEI).padStart(15, '0');
         for (let option of radioSelect.options) {
           if (option.text.includes(tei) || option.value === data.TEI.toString()) {
             option.selected = true;

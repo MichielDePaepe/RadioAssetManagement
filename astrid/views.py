@@ -64,10 +64,8 @@ class UploadSubscriptionsView(LoginRequiredMixin, PermissionRequiredMixin, Templ
                         continue
 
                     try:
-                        # Convert TEI to string and normalize (remove trailing 0 if length is 15)
+                        # Convert TEI to string. TEI is stored as the full 15-digit number.
                         tei_str = str(tei_cell).strip()
-                        if len(tei_str) == 15 and tei_str[-1] == "0":
-                            tei_str = tei_str[0:-1]
                         tei = int(tei_str)
 
                         # Parse ISSI number as integer
@@ -366,7 +364,6 @@ class RequestDetailView(DetailView):
             return redirect(request.path)
 
         return redirect("astrid:request_overview")
-
 
 
 

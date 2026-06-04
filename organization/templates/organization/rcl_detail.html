@@ -14,7 +14,7 @@
     <div 
       class="border rounded p-2 h-100 d-flex flex-column position-relative" 
       data-radio-link-id="{{ radio_link.id }}" 
-      data-forseen-tei="{{radio_link.radio.TEI|stringformat:'014d'}}"
+      data-forseen-tei="{{radio_link.radio.TEI|stringformat:'015d'}}"
       data-scanned="false"> 
 
       <h5 class="text-center mb-3">{{ radio_link.name }}</h5>
@@ -22,7 +22,7 @@
       <div class="overflow-auto text-center">
 
         {% if link.radio %}
-        <div class="radio-card" data-tei="{{link.radio.TEI|stringformat:'014d'}}">
+        <div class="radio-card" data-tei="{{link.radio.TEI|stringformat:'015d'}}">
           <div class="spinner-border m-3" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>

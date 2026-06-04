@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 from .models import *
 from astrid.models import Request
+from fireplan.client import FireplanClient
 from .forms import *
 from printer.models import *
 from .services.printing import RadioPrintingService
@@ -60,6 +61,27 @@ class RadioCreateView(CreateView):
         return reverse('radio:detail', kwargs={'pk': self.object.pk})
 
     def form_valid(self, form):
+        try:
+            fireplan_id, created = FireplanClient().get_or_create_radio_fireplan_id(
+                form.cleaned_data["fireplan_serial_number"]
+            )
+            form.instance.fireplan_id = fireplan_id
+            if created:
+                messages.info(
+                    self.request,
+                    _("Radio aangemaakt in Fireplan met ID {fireplan_id}.").format(
+                        fireplan_id=fireplan_id
+                    ),
+                )
+        except Exception as exc:
+            form.add_error(
+                None,
+                _("Radio kon niet aangemaakt worden in Fireplan: {error}").format(
+                    error=exc
+                ),
+            )
+            return self.form_invalid(form)
+
         response = super().form_valid(form)
         messages.success(self.request, f"{self.object.model} with TEI {self.object.TEI} added successfully!")
         return response
@@ -239,12 +261,10 @@ class FindRadioView(TemplateView):
 
 
         elif tei_value:
-            if len(tei_value) == 15 and int(tei_value[-1]) == 0:
-                tei_value = tei_value[:-1]
             try:
                 radio = Radio.objects.get(pk=tei_value)
             except Radio.DoesNotExist:
-                messages.error(request, f"Radio met dit TEI {tie_value} nummer niet gevonden")
+                messages.error(request, f"Radio met dit TEI {tei_value} nummer niet gevonden")
 
         if radio:
             return redirect("radio:detail", pk=radio.pk)
@@ -347,12 +367,10 @@ class LookupView(View):
 
             elif lookup_type == 'tei':
                 tei_value = value
-                if len(tei_value) == 15 and tei_value[-1] == "0":
-                    tei_value = tei_value[:-1]
                 try:
                     radio = Radio.objects.get(pk=tei_value)
                 except Radio.DoesNotExist:
-                    return JsonResponse({"status": "error", "message": _("Radio met dit TEI {tei} nummer niet gevonden").format(tei=tei_value.zfill(14))}, status=404)
+                    return JsonResponse({"status": "error", "message": _("Radio met dit TEI {tei} nummer niet gevonden").format(tei=tei_value.zfill(15))}, status=404)
 
             elif lookup_type == 'alias':
                 try:

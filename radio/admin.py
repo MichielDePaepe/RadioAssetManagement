@@ -82,7 +82,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
     raw_id_fields = ('radio', 'issi')
 
     def get_tei(self, obj):
-        return str(obj.radio.TEI).zfill(14)
+        return str(obj.radio.TEI).zfill(15)
     get_tei.short_description = 'TEI'
 
     def get_issi(self, obj):
@@ -119,16 +119,13 @@ class RadioAdmin(admin.ModelAdmin):
         stripped_term = search_term.lstrip("0")
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
 
-        if search_term.isdigit() and len(search_term) == 15 and search_term[-1] == "0":
-            stripped_term = search_term[:-1]
-
         if stripped_term.isdigit():
             queryset |= self.model.objects.filter(TEI=int(stripped_term))
 
         return queryset, use_distinct
 
     def get_tei(self, obj):
-        return format_html('<span style="font-family: monospace;">{}</span>', str(obj.TEI).zfill(14))
+        return format_html('<span style="font-family: monospace;">{}</span>', str(obj.TEI).zfill(15))
     get_tei.short_description = 'TEI'
 
     def get_issi_list(self, obj):
@@ -175,11 +172,11 @@ class TEIRangeAdmin(admin.ModelAdmin):
         return super().get_search_results(request, queryset, search_term)
 
     def formatted_min_tei(self, obj):
-        return format_html('<span style="font-family: monospace;">{}</span>', str(obj.min_tei).zfill(14))
+        return format_html('<span style="font-family: monospace;">{}</span>', str(obj.min_tei).zfill(15))
     formatted_min_tei.short_description = 'Min TEI'
 
     def formatted_max_tei(self, obj):
-        return format_html('<span style="font-family: monospace;">{}</span>', str(obj.max_tei).zfill(14))
+        return format_html('<span style="font-family: monospace;">{}</span>', str(obj.max_tei).zfill(15))
     formatted_max_tei.short_description = 'Max TEI'
 
 

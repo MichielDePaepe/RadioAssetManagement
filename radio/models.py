@@ -17,11 +17,11 @@ class Radio(models.Model):
 
     @property
     def tei_str(self):
-        return f"{self.TEI:014d}"
+        return f"{self.TEI:015d}"
 
     @property
     def tei_15_str(self):
-        return f"{self.tei_str}0"
+        return self.tei_str
 
     @property
     def alias(self):
@@ -43,7 +43,7 @@ class Radio(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        tei = f"{self.TEI:014d}"
+        tei = self.tei_str
         if hasattr(self, 'subscription'):
             return "%s - %s" % (tei, str(self.subscription.issi))
         return tei
@@ -195,4 +195,3 @@ class RadioDecommissioningTicket(Ticket):
                 _("Can approve a decommission request"),
             ),
         ]
-
