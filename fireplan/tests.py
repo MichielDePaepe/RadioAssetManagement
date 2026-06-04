@@ -7,7 +7,7 @@ from django.utils.translation import override
 
 from radio.models import Radio, RadioModel, TEIRange
 
-from .models import FireplanInventory, Vector, Vehicle
+from .models import FireplanInventory, FireplanInventoryRadio, Vector, Vehicle
 from .sync_inventory import find_radio_for_fireplan_tei
 
 
@@ -90,3 +90,26 @@ class FireplanInventoryHistoryViewTests(TestCase):
         self.assertContains(response, "Citerne 01")
         self.assertContains(response, "CIT 01")
         self.assertContains(response, "Scanner Test")
+
+    def test_vector_inventory_history_uses_one_table_row_per_inventory(self):
+        FireplanInventoryRadio.objects.create(
+            inventory=self.inventory,
+            container_uuid=uuid4(),
+            item_uuid=uuid4(),
+            tei="000075060235950",
+        )
+        FireplanInventoryRadio.objects.create(
+            inventory=self.inventory,
+            container_uuid=uuid4(),
+            item_uuid=uuid4(),
+            tei="000075190060667",
+        )
+
+        with override("nl"):
+            response = self.client.get(
+                reverse("fireplan:vector_inventory_history", args=[self.vector.pk])
+            )
+
+        self.assertEqual(response.content.decode().count("Scanner Test"), 1)
+        self.assertContains(response, "000075060235950")
+        self.assertContains(response, "000075190060667")
