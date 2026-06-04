@@ -41,6 +41,11 @@ def enrich_event(payload: dict[str, Any]) -> dict[str, Any]:
             "radio__vehicle__vector__service",
             "radio__vehicle__vector__resourceTypeCode",
             "radio__vehicle__vector__statusCode",
+            "issi__vehicle",
+            "issi__vehicle__vector",
+            "issi__vehicle__vector__service",
+            "issi__vehicle__vector__resourceTypeCode",
+            "issi__vehicle__vector__statusCode",
         )
         .filter(issi_id=issi_number)
         .first()
@@ -69,7 +74,7 @@ def enrich_event(payload: dict[str, Any]) -> dict[str, Any]:
         enriched["TEI"] = radio.TEI
         enriched["fireplan_id"] = radio.fireplan_id
 
-        v: Vehicle | None = getattr(radio, "vehicle", None)
+        v: Vehicle | None = getattr(radio, "vehicle", None) or getattr(issi, "vehicle", None)
         if v is not None:
             enriched["vehicle"] = {
                 "id": v.id,
@@ -99,7 +104,19 @@ def enrich_event(payload: dict[str, Any]) -> dict[str, Any]:
         return enriched
 
     # Fallback: ISSI exists without subscription
-    issi = ISSI.objects.select_related("customer", "discipline").filter(number=issi_number).first()
+    issi = (
+        ISSI.objects.select_related(
+            "customer",
+            "discipline",
+            "vehicle",
+            "vehicle__vector",
+            "vehicle__vector__service",
+            "vehicle__vector__resourceTypeCode",
+            "vehicle__vector__statusCode",
+        )
+        .filter(number=issi_number)
+        .first()
+    )
     if issi is not None:
         enriched["issi"] = {
             "number": issi.number,
@@ -108,6 +125,33 @@ def enrich_event(payload: dict[str, Any]) -> dict[str, Any]:
             "discipline": getattr(issi.discipline, "name", None),
         }
         enriched["alias"] = issi.alias
+
+        v: Vehicle | None = getattr(issi, "vehicle", None)
+        if v is not None:
+            enriched["vehicle"] = {
+                "id": v.id,
+                "number": v.number,
+                "call_sign": v.call_sign,
+                "plate": v.plate,
+                "status": v.status,
+                "utilisation": v.utilisation,
+                "chassis": v.chassis,
+            }
+
+            vec: Vector | None = getattr(v, "vector", None)
+            if vec is not None:
+                sc = vec.statusCode
+                enriched["vector"] = {
+                    "resourceCode": vec.resourceCode,
+                    "name": vec.name,
+                    "abbreviation": vec.abbreviation,
+                    "orderServiceAbbreviation": vec.orderServiceAbbreviation,
+                    "service": getattr(vec.service, "code", None),
+                    "resourceTypeCode": getattr(vec.resourceTypeCode, "code", None),
+                    "statusCode": getattr(sc, "code", None),
+                    "statusDescription": getattr(sc, "description", None),
+                    "statusColor": getattr(sc, "color", None),
+                }
 
     return enriched
 

@@ -100,6 +100,9 @@ class IssiLookupApiView(View):
                 "subscription__radio__vehicle__vector__service",
                 "subscription__radio__vehicle__vector__resourceTypeCode",
                 "subscription__radio__vehicle__vector__statusCode",
+                "vehicle__vector__service",
+                "vehicle__vector__resourceTypeCode",
+                "vehicle__vector__statusCode",
             )
             .filter(number=issi_number)
             .first()
@@ -110,7 +113,7 @@ class IssiLookupApiView(View):
 
         subscription = getattr(issi_obj, "subscription", None)
         radio = subscription.radio if subscription else None
-        vehicle = getattr(radio, "vehicle", None) if radio else None
+        vehicle = getattr(radio, "vehicle", None) if radio else getattr(issi_obj, "vehicle", None)
         vector = getattr(vehicle, "vector", None) if vehicle else None
 
         data = {

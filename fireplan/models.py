@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.utils.html import format_html
 
 from .auth_models import *
@@ -38,6 +40,26 @@ class Vehicle(models.Model):
         on_delete=models.SET_NULL,
         related_name="vehicle",
     )
+    issi = models.OneToOneField(
+        "radio.ISSI",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="vehicle",
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=Q(radio__isnull=True) | Q(issi__isnull=True),
+                name="vehicle_radio_or_issi_not_both",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.radio_id and self.issi_id:
+            raise ValidationError("Koppel een voertuig aan een radio of aan een ISSI, niet aan beide.")
 
     def save(self, *args, **kwargs):
         if self.number:

@@ -59,6 +59,36 @@ class IssiLookupApiTests(TestCase):
         self.assertEqual(data["vector"]["resource_code"], "P101")
         self.assertEqual(data["vector"]["status"]["code"], "AVL")
 
+    def test_returns_direct_issi_vehicle_without_radio_details(self):
+        issi = ISSI.objects.create(number=2345678, alias="A106")
+        vehicle = Vehicle.objects.create(
+            number="A106",
+            num_letter="A",
+            num_value=106,
+            utilisation="PIT ANDERLECHT 1 BRA",
+            status=VehicleStatus.ACTIF,
+            issi=issi,
+        )
+        Vector.objects.create(
+            resourceCode="PBANDE01A",
+            vehicle=vehicle,
+            name="PIT ANDERLECHT 1 BRA",
+            abbreviation="A-ANDPIT-BRA",
+        )
+
+        response = self.client.get(
+            reverse("roip_api:issi_lookup", kwargs={"issi": "2345678"}),
+            HTTP_X_API_KEY="test-key",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["issi"]["alias"], "A106")
+        self.assertIsNone(data["subscription"])
+        self.assertIsNone(data["radio"])
+        self.assertEqual(data["vehicle"]["call_sign"], "A106")
+        self.assertEqual(data["vector"]["resource_code"], "PBANDE01A")
+
     def test_accepts_bearer_token(self):
         response = self.client.get(
             reverse("roip_api:issi_lookup", kwargs={"issi": "1234567"}),

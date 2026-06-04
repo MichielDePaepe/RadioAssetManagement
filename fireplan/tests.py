@@ -1,12 +1,13 @@
 from uuid import uuid4
 from unittest.mock import Mock, patch
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import override
 
-from radio.models import Radio, RadioModel, TEIRange
+from radio.models import ISSI, Radio, RadioModel, TEIRange
 
 from .models import FireplanInventory, FireplanInventoryRadio, Vector, Vehicle, VehicleStatus
 from .sync import _match_or_create_vehicle_from_vector_item, sync_fireplan_fleet
@@ -101,6 +102,16 @@ class VehicleSyncTests(TestCase):
         self.assertEqual(count, 1)
         self.assertIsNone(manual_vehicle.fireplan_id)
         self.assertTrue(Vehicle.objects.filter(fireplan_id=123, number="F123").exists())
+
+    def test_vehicle_cannot_have_radio_and_direct_issi(self):
+        radio_model = RadioModel.objects.create(name="Mobile")
+        TEIRange.objects.create(model=radio_model, min_tei=75000000000, max_tei=75999999999)
+        radio = Radio.objects.create(TEI=75000000001)
+        issi = ISSI.objects.create(number=2345678, alias="A106")
+        vehicle = Vehicle(number="A106", radio=radio, issi=issi)
+
+        with self.assertRaises(ValidationError):
+            vehicle.full_clean()
 
 
 class FireplanInventoryHistoryViewTests(TestCase):

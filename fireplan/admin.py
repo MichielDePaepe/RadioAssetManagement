@@ -30,11 +30,21 @@ class VehicleAdmin(admin.ModelAdmin):
         "number",
         "utilisation",
         "status",
+        "issi",
         "radio"
     )
     list_filter = ("status",)
-    search_fields = ("number", "plate", "id", "fireplan_id", "chassis", "radio__subscription__issi__number")
-    raw_id_fields = ("radio", )
+    search_fields = (
+        "number",
+        "plate",
+        "id",
+        "fireplan_id",
+        "chassis",
+        "issi__number",
+        "issi__alias",
+        "radio__subscription__issi__number",
+    )
+    raw_id_fields = ("radio", "issi")
     readonly_fields = ("call_sign", )
     actions = ["sync_fireplan"]
 
