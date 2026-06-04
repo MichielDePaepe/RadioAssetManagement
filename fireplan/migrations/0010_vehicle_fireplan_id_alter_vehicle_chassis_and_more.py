@@ -14,27 +14,22 @@ def ensure_postgres_vehicle_id_sequence(apps, schema_editor):
     if schema_editor.connection.vendor != "postgresql":
         return
 
-    schema_editor.execute(
-        """
-        CREATE SEQUENCE IF NOT EXISTS fireplan_vehicle_id_seq
-        OWNED BY fireplan_vehicle.id;
-        """
-    )
-    schema_editor.execute(
-        """
-        ALTER TABLE fireplan_vehicle
-        ALTER COLUMN id SET DEFAULT nextval('fireplan_vehicle_id_seq');
-        """
-    )
-    schema_editor.execute(
-        """
-        SELECT setval(
-            'fireplan_vehicle_id_seq',
-            COALESCE((SELECT MAX(id) FROM fireplan_vehicle), 1),
-            true
-        );
-        """
-    )
+    with schema_editor.connection.cursor() as cursor:
+        cursor.execute("SELECT pg_get_serial_sequence('fireplan_vehicle', 'id')")
+        sequence_name = cursor.fetchone()[0]
+        if not sequence_name:
+            return
+
+        cursor.execute(
+            """
+            SELECT setval(
+                %s,
+                COALESCE((SELECT MAX(id) FROM fireplan_vehicle), 1),
+                true
+            )
+            """,
+            [sequence_name],
+        )
 
 
 class Migration(migrations.Migration):
