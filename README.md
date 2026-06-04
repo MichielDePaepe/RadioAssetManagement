@@ -44,7 +44,9 @@ Production: voer daarna het deployscript uit op de prod server:
 
 Het deployscript maakt alleen een database dump via `./dump_db` wanneer er Django
 migratiebestanden gewijzigd zijn tussen de huidige prod-versie en `origin/main`.
-Zonder migraties wordt de dump overgeslagen om de deploy kort te houden.
+Zonder migraties wordt de dump overgeslagen om de deploy kort te houden. Na het
+updaten van de code voert het script `migrate` alleen uit wanneer
+`manage.py migrate --plan` effectieve migratie-operaties toont.
 
 ## Environment
 

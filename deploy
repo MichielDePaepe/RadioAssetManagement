@@ -92,8 +92,17 @@ else
   echo "📦 requirements.txt unchanged — skipping pip install."
 fi
 
-# Apply migrations and collect static files
-python manage.py migrate
+# Apply migrations only when Django has planned migration operations
+echo "🧭 Checking migration plan..."
+MIGRATION_PLAN=$(python manage.py migrate --plan)
+if echo "$MIGRATION_PLAN" | grep -q "No planned migration operations"; then
+  echo "🧭 No migrations to apply — skipping migrate."
+else
+  echo "$MIGRATION_PLAN"
+  python manage.py migrate
+fi
+
+# Collect static files
 python manage.py collectstatic --noinput
 
 # Restart services
