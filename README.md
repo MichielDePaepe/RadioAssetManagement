@@ -59,6 +59,7 @@ DEBUG=True
 SECRET_KEY=***
 FIREPLAN_USERNAME=***
 FIREPLAN_PASSWORD=***
+ROIP_API_KEYS=***
 ```
 
 ### Production
@@ -70,7 +71,21 @@ DATABASE_URL=postgres://<pg username>:<pg password>@localhost:5432/<db name>
 ALLOWED_PROD_HOST=<host 1>, <host 2>
 FIREPLAN_USERNAME=***
 FIREPLAN_PASSWORD=***
+ROIP_API_KEYS=<lange random api key 1>, <lange random api key 2>
 ```
+
+## RoIP REST API
+
+De RoIP API is bedoeld voor snelle server-to-server lookups vanuit live tooling.
+Authenticatie gebeurt met een API key via `X-API-Key` of `Authorization: Bearer`.
+
+```http
+GET /api/roip/issi/1234567/
+X-API-Key: <key uit ROIP_API_KEYS>
+```
+
+De response bevat de ISSI-alias, gekoppelde radio/TEI, voertuig, vector en
+vectorstatus. Niet-gekoppelde onderdelen worden als `null` teruggegeven.
 
 ### Secret key
 

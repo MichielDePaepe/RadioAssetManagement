@@ -27,6 +27,7 @@ ENVIRONMENT = env('ENVIRONMENT', default="prod")
 
 FIREPLAN_USERNAME = env("FIREPLAN_USERNAME")
 FIREPLAN_PASSWORD = env("FIREPLAN_PASSWORD")
+ROIP_API_KEYS = env.list("ROIP_API_KEYS", default=[])
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

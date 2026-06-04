@@ -23,6 +23,7 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),  # voor taalwissel
+    path('api/roip/', include('roip.api_urls', namespace='roip_api')),
 ]
 
 urlpatterns += i18n_patterns(
