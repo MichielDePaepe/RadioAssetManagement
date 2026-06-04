@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from .models import FireplanInventory
+from .models import FireplanInventory, Vector
 
 
 class LatestInventoryPerVectorView(TemplateView):
@@ -43,4 +45,26 @@ class LatestInventoryPerVectorView(TemplateView):
             latest_per_vector.values(),
             key=lambda r: (r["vector"].name if r["vector"] else "")
         )
+        return ctx
+
+
+class VectorInventoryHistoryView(TemplateView):
+    template_name = "fireplan/vector_inventory_history.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        vector = get_object_or_404(Vector, pk=kwargs["resource_code"])
+        inventories = (
+            FireplanInventory.objects.filter(
+                Q(vector=vector) | Q(vehicle__vector=vector)
+            )
+            .select_related("vehicle", "vector")
+            .prefetch_related("radios", "radios__radio", "radios__radio__subscription__issi")
+            .order_by("-closed_at", "-synced_at")
+            .distinct()
+        )
+
+        ctx["vector"] = vector
+        ctx["inventories"] = inventories
         return ctx

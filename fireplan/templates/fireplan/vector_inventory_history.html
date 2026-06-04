@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+  <div>
+    <h2 class="mb-1">{{ vector.name|default:vector.resourceCode }}</h2>
+    <p class="text-muted mb-0">Inventarishistoriek voor {{ vector.resourceCode }}</p>
+  </div>
+
+  <a href="{% url 'fireplan:latest_inventory_per_vector' %}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i>
+    Overzicht
+  </a>
+</div>
+
+<table class="table table-sm align-middle">
+  <thead>
+    <tr>
+      <th style="width:150px;">Tijdstip</th>
+      <th style="width:180px;">Voertuig</th>
+      <th>Radio</th>
+      <th style="width:260px;">Gescand door</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for inv in inventories %}
+      {% ifchanged inv.closed_at|date:"Y-m-d" %}
+        <tr class="table-light">
+          <th colspan="4">{{ inv.closed_at|date:"l d/m/Y" }}</th>
+        </tr>
+      {% endifchanged %}
+
+      {% if inv.radios.all %}
+        {% for ir in inv.radios.all %}
+          {% with r=ir.radio %}
+            <tr>
+              <td class="text-muted">{{ inv.closed_at|date:"H:i" }}</td>
+              <td class="fw-semibold">
+                {% if inv.vehicle %}
+                  {{ inv.vehicle.call_sign|default:inv.vehicle.number }}
+                {% else %}
+                  {{ inv.vehicle_alpha_code|default:"-" }}
+                {% endif %}
+              </td>
+              <td>
+                {% if r %}
+                  <span class="fw-semibold">{{ r.subscription.issi.alias|default:"(geen alias)" }}</span>
+                  <span class="text-muted">— ISSI {{ r.subscription.issi.number }} · TEI {{ r.tei_str }}</span>
+                {% else %}
+                  <span class="fw-semibold">{{ ir.tei }}</span>
+                  <span class="text-muted">— niet gelinkt</span>
+                {% endif %}
+              </td>
+              <td>{{ inv.done_by_full_name|default:"(onbekend)" }}</td>
+            </tr>
+          {% endwith %}
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td class="text-muted">{{ inv.closed_at|date:"H:i" }}</td>
+          <td class="fw-semibold">
+            {% if inv.vehicle %}
+              {{ inv.vehicle.call_sign|default:inv.vehicle.number }}
+            {% else %}
+              {{ inv.vehicle_alpha_code|default:"-" }}
+            {% endif %}
+          </td>
+          <td class="text-muted">Geen radio's</td>
+          <td>{{ inv.done_by_full_name|default:"(onbekend)" }}</td>
+        </tr>
+      {% endif %}
+    {% empty %}
+      <tr>
+        <td colspan="4" class="text-muted">Geen inventarissen gevonden voor deze vector.</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

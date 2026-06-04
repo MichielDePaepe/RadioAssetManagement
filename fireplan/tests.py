@@ -1,7 +1,13 @@
+from uuid import uuid4
+
 from django.test import TestCase
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.translation import override
 
 from radio.models import Radio, RadioModel, TEIRange
 
+from .models import FireplanInventory, Vector, Vehicle
 from .sync_inventory import find_radio_for_fireplan_tei
 
 
@@ -40,3 +46,47 @@ class FireplanInventoryTEIMatchingTests(TestCase):
         found = find_radio_for_fireplan_tei("000075060235951")
 
         self.assertEqual(found, exact_radio)
+
+
+class FireplanInventoryHistoryViewTests(TestCase):
+    def setUp(self):
+        self.vehicle = Vehicle.objects.create(
+            id=1,
+            number="CIT 01 - Test",
+            num_letter="CIT",
+            num_value=1,
+            plate="TEST-1",
+            utilisation="Test",
+            chassis="CHASSIS",
+            status=1,
+        )
+        self.vector = Vector.objects.create(
+            resourceCode="CIT01",
+            vehicle=self.vehicle,
+            name="Citerne 01",
+        )
+        self.inventory = FireplanInventory.objects.create(
+            uuid=uuid4(),
+            vehicle_alpha_code=self.vehicle.number,
+            vehicle=self.vehicle,
+            vector=self.vector,
+            closed_at=timezone.now(),
+            done_by_full_name="Scanner Test",
+        )
+
+    def test_overview_links_vector_to_inventory_history(self):
+        with override("nl"):
+            response = self.client.get(reverse("fireplan:latest_inventory_per_vector"))
+            history_url = reverse("fireplan:vector_inventory_history", args=[self.vector.pk])
+
+        self.assertContains(response, history_url)
+
+    def test_vector_inventory_history_shows_vehicle_and_scanner(self):
+        with override("nl"):
+            response = self.client.get(
+                reverse("fireplan:vector_inventory_history", args=[self.vector.pk])
+            )
+
+        self.assertContains(response, "Citerne 01")
+        self.assertContains(response, "CIT 01")
+        self.assertContains(response, "Scanner Test")
