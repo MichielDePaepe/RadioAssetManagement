@@ -42,6 +42,13 @@ class FireplanInventoryTEIMatchingTests(TestCase):
 
         self.assertEqual(found, radio)
 
+    def test_finds_radio_when_fireplan_legacy_tei_is_json_number(self):
+        radio = Radio.objects.create(TEI=75060235950)
+
+        found = find_radio_for_fireplan_tei(7506023595)
+
+        self.assertEqual(found, radio)
+
     def test_exact_match_wins_when_fireplan_tei_is_15_digits(self):
         exact_radio = Radio.objects.create(TEI=75060235951)
         Radio.objects.create(TEI=75060235950)

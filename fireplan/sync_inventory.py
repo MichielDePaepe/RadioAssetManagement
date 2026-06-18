@@ -33,7 +33,7 @@ def find_radio_for_fireplan_tei(raw_tei) -> Radio | None:
     if radio:
         return radio
 
-    if len(tei) == 14:
+    if len(tei) < 15:
         return Radio.objects.filter(TEI=int(f"{tei}0")).first()
 
     return None
