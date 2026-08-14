@@ -136,10 +136,24 @@ class UploadSubscriptionsView(LoginRequiredMixin, PermissionRequiredMixin, Templ
 
 class VTEIRequestCreateView(TemplateView):
     template_name = "astrid/vtei_request.html"
+    mode_request_type = Request.RequestType.VTEI
+
+    def _is_vissi_vtei(self, request):
+        return (
+            self.mode_request_type == Request.RequestType.VISSI_VTEI
+            or request.POST.get("request_type") == Request.RequestType.VISSI_VTEI
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         radio_id = self.request.GET.get("radio")
+        is_vissi_vtei = self._is_vissi_vtei(self.request)
+        context["is_vissi_vtei"] = is_vissi_vtei
+        context["request_type"] = (
+            Request.RequestType.VISSI_VTEI
+            if is_vissi_vtei
+            else Request.RequestType.VTEI
+        )
         context["preselected_radio"] = None
         if radio_id:
             try:
@@ -150,6 +164,11 @@ class VTEIRequestCreateView(TemplateView):
 
     def post(self, request):
         try:
+            request_type = (
+                Request.RequestType.VISSI_VTEI
+                if self._is_vissi_vtei(request)
+                else Request.RequestType.VTEI
+            )
             old_radio_pk = request.POST.get("old-radio")
             new_radio_pk = request.POST.get("new-radio")
 
@@ -181,27 +200,49 @@ class VTEIRequestCreateView(TemplateView):
 
             # Omschrijving vooraf invullen met referentie naar ticket
             description = request.POST.get("request_description", "")
+            new_issi = old_radio.subscription.issi
+
+            if request_type == Request.RequestType.VISSI_VTEI:
+                new_issi_val = request.POST.get("new-issi")
+
+                if not new_issi_val:
+                    raise Exception(_("A new ISSI needs to be provided."))
+
+                new_issi = ISSI.objects.get(pk=int(new_issi_val))
+
+                if hasattr(new_issi, "subscription"):
+                    url = reverse("radio:detail", kwargs={"pk": new_issi.subscription.radio.pk})
+                    raise Exception(
+                        _("The ISSI <a href='{url}'>{issi}</a> is already activated.").format(
+                            url=url,
+                            issi=new_issi,
+                        )
+                    )
+
+                req = Request.objects.filter(
+                    (Q(old_issi=new_issi) | Q(new_issi=new_issi))
+                    & Q(ticket_type__code="ASTRID_REQUEST")
+                ).exclude(status__code="CLOSED").first()
+                if req:
+                    ticket_url = reverse("astrid:request_detail", kwargs={"pk": req.pk})
+                    raise Exception(
+                        _("The ISSI is already used in an open request ticket: <a href='{ticket_url}'>#{ticket_id}</a>").format(
+                            ticket_url=ticket_url,
+                            ticket_id=req.pk,
+                        )
+                    )
 
             # Nieuwe request aanmaken
             new_request = Request.objects.create(
-                request_type=Request.RequestType.VTEI,
+                request_type=request_type,
                 old_radio=old_radio,
                 old_issi=old_radio.subscription.issi,
-                new_issi=old_radio.subscription.issi,
+                new_issi=new_issi,
                 radio=new_radio,
                 description=description,
             )
 
-            # TicketLog aanmaken als ticket bestaat
-            if ticket:
-                TicketLog.objects.create(
-                    ticket=ticket,
-                    user=request.user,
-                    status_after=ticket.status,
-                    note=f"Astrid VTEI request #{new_request.pk} aangemaakt op basis van dit ticket.",
-                )
-
-            messages.success(request, _("VTEI request succesvol aangemaakt"))
+            messages.success(request, _("%(type)s request succesvol aangemaakt") % {"type": request_type})
             return redirect(reverse("astrid:request_detail", kwargs={"pk": new_request.pk}))
 
         except Exception as e:
@@ -210,6 +251,10 @@ class VTEIRequestCreateView(TemplateView):
 
             messages.error(request, str(e))
             return redirect(request.path)
+
+
+class VISSIVTEIRequestCreateView(VTEIRequestCreateView):
+    mode_request_type = Request.RequestType.VISSI_VTEI
 
 
 
@@ -364,7 +409,5 @@ class RequestDetailView(DetailView):
             return redirect(request.path)
 
         return redirect("astrid:request_overview")
-
-
 
 
