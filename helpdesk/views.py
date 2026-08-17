@@ -122,7 +122,7 @@ class TicketListView(ListView):
         if not show_closed:
             qs = qs.exclude(status__code="CLOSED")
 
-        sort = self.request.GET.get("sort", "id")
+        sort = self.request.GET.get("sort", "-id")
 
         allowed = {"id", "title", "ticket_type__name", "status__name", "priority", "updated_at"}
         if sort.lstrip("-") not in allowed:
@@ -146,7 +146,7 @@ class TicketListView(ListView):
         ctx["prio_selected"] = self.request.GET.get("priority", "")
         ctx["type_selected"] = self.request.GET.get("type", "")
         ctx["status_selected"] = self.request.GET.get("status", "")
-        ctx["current_sort"] = self.request.GET.get("sort", "id")
+        ctx["current_sort"] = self.request.GET.get("sort", "-id")
         ctx["show_closed"] = self.request.GET.get("show_closed") == "1"
 
         return ctx

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-{% load i18n %}
+{% load i18n radio_selector_tags %}
 
 <div class="container-fluid mt-4">
 
@@ -72,7 +72,7 @@
                 <a href="{% url 'helpdesk:ticket_detail' t.pk %}">#{{ t.id }}</a>
               {% endif %}
             </td>
-            <td>{{ t.title }}</td>
+            <td>{{ t.title|render_radio_links }}</td>
             <td>{{ t.ticket_type.name }}</td>
             <td>{{ t.status.name }}</td>
             <td>{{ t.get_priority_display }}</td>
