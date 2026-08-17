@@ -13,6 +13,7 @@
 
 <!-- Java Script -->
 <script src="{% static 'js/scanner.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
 <script>
 // --- Scanner initialization ---
@@ -187,6 +188,8 @@ const cameraStopButton = document.getElementById("camera-stop-btn");
 let cameraStream = null;
 let cameraScanTimer = null;
 let cameraDetector = null;
+let cameraCanvas = null;
+let cameraCanvasContext = null;
 let cameraScanInProgress = false;
 
 function isSmartphone() {
@@ -221,14 +224,18 @@ async function startCameraScanning() {
     return;
   }
 
-  if (!window.BarcodeDetector) {
+  const hasBarcodeDetector = Boolean(window.BarcodeDetector);
+  const hasJsQrFallback = typeof window.jsQR === "function";
+  if (!hasBarcodeDetector && !hasJsQrFallback) {
     errorDiv.textContent = "{% trans 'QR-detectie met de camera wordt niet ondersteund door deze browser.' %}";
     start_scanning();
     return;
   }
 
   try {
-    cameraDetector = new BarcodeDetector({ formats: ["qr_code"] });
+    cameraDetector = hasBarcodeDetector ? new BarcodeDetector({ formats: ["qr_code"] }) : null;
+    cameraCanvas = document.createElement("canvas");
+    cameraCanvasContext = cameraCanvas.getContext("2d", { willReadFrequently: true });
     cameraStream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: "environment" } },
       audio: false
@@ -257,6 +264,8 @@ function stopCameraScanning() {
     cameraStream = null;
   }
   cameraVideo.srcObject = null;
+  cameraCanvas = null;
+  cameraCanvasContext = null;
   cameraPanel.style.display = "none";
   if (canShowCameraScanner()) {
     cameraButton.style.display = "block";
@@ -273,7 +282,7 @@ async function scanCameraFrame() {
   cameraScanInProgress = true;
 
   try {
-    const codes = await cameraDetector.detect(cameraVideo);
+    const codes = await detectQrCodes(cameraVideo);
     if (codes.length) {
       const scannedLine = codes[0].rawValue;
       const data = await submitScannedLine(scannedLine);
@@ -290,6 +299,26 @@ async function scanCameraFrame() {
     cameraScanInProgress = false;
     scheduleCameraScan();
   }
+}
+
+async function detectQrCodes(video) {
+  if (cameraDetector) {
+    return cameraDetector.detect(video);
+  }
+
+  if (!cameraCanvasContext || !video.videoWidth || !video.videoHeight || typeof window.jsQR !== "function") {
+    return [];
+  }
+
+  cameraCanvas.width = video.videoWidth;
+  cameraCanvas.height = video.videoHeight;
+  cameraCanvasContext.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
+  const imageData = cameraCanvasContext.getImageData(0, 0, cameraCanvas.width, cameraCanvas.height);
+  const code = window.jsQR(imageData.data, imageData.width, imageData.height, {
+    inversionAttempts: "dontInvert",
+  });
+
+  return code ? [{ rawValue: code.data }] : [];
 }
 
 async function submitScannedLine(scannedLine) {
