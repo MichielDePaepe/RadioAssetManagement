@@ -54,8 +54,10 @@
   }
 
   #radio-selector-camera-video {
-    max-height: 320px;
+    aspect-ratio: 1 / 1;
+    max-height: min(72vw, 360px);
     object-fit: cover;
+    object-position: center center;
     background: #111;
   }
 </style>
