@@ -41,3 +41,6 @@ staticfiles/
 *.sqlite3-journal
 celerybeat-schedule.db
 celerybeat-schedule.db-*
+
+# Local HTTPS certificates generated for LAN deployments
+certs/

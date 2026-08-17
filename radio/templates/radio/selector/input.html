@@ -7,9 +7,16 @@
     gap: .75rem;
   }
 
-  .radio-selector-main {
+  .radio-selector-query-row {
     display: flex;
     gap: .5rem;
+    align-items: stretch;
+  }
+
+  .radio-selector-action-row {
+    display: flex;
+    gap: .5rem;
+    justify-content: center;
     align-items: stretch;
   }
 
@@ -19,14 +26,29 @@
   }
 
   .radio-selector-icon-btn {
-    width: 2.75rem;
-    flex: 0 0 2.75rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
 
-  .radio-selector-camera-mode .radio-selector-main,
+  .radio-selector-action-btn {
+    width: 4.5rem;
+    height: 4.5rem;
+    flex: 0 0 4.5rem;
+    font-size: 1.65rem;
+  }
+
+  .radio-selector-search-btn {
+    width: 3rem;
+    flex: 0 0 3rem;
+  }
+
+  #radio-selector-query {
+    min-height: 3rem;
+  }
+
+  .radio-selector-camera-mode .radio-selector-query-row,
+  .radio-selector-camera-mode .radio-selector-action-row,
   .radio-selector-camera-mode #radio-selector-error {
     display: none !important;
   }
@@ -39,23 +61,26 @@
 </style>
 
 <div class="radio-selector-shell">
-  <div class="radio-selector-main">
+  <div class="radio-selector-query-row">
     <input type="text"
            id="radio-selector-query"
            class="form-control"
-           placeholder="{% trans 'TEI, ISSI, alias of QR-url' %}"
+           placeholder="{% trans 'TEI, ISSI of alias' %}"
            autocomplete="off"
            autocorrect="off"
            autocapitalize="off">
-    <button type="button" class="btn btn-primary radio-selector-icon-btn" id="radio-selector-search-btn" title="{% trans 'Zoeken' %}">
+    <button type="button" class="btn btn-primary radio-selector-icon-btn radio-selector-search-btn" id="radio-selector-search-btn" title="{% trans 'Zoeken' %}">
       <i class="bi bi-search"></i>
     </button>
+  </div>
+
+  <div class="radio-selector-action-row">
     <input type="text" id="radio-selector-scanner-input">
-    <button type="button" class="btn btn-outline-primary radio-selector-icon-btn" id="scan-btn" title="{% trans 'Handscanner' %}">
+    <button type="button" class="btn btn-outline-primary radio-selector-icon-btn radio-selector-action-btn" id="scan-btn" title="{% trans 'Handscanner' %}">
       <i class="bi bi-upc-scan"></i>
     </button>
     <span id="radio-selector-camera-controls" style="display:none;">
-      <button type="button" class="btn btn-outline-primary radio-selector-icon-btn" id="camera-scan-btn" title="{% trans 'Camera' %}">
+      <button type="button" class="btn btn-outline-primary radio-selector-icon-btn radio-selector-action-btn" id="camera-scan-btn" title="{% trans 'Camera' %}">
         <i class="bi bi-camera"></i>
       </button>
     </span>
