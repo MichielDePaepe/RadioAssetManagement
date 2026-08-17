@@ -1,8 +1,45 @@
 <!-- radio/selector/input.html -->
 {% load static i18n %}
 
-<div class="mb-3">
-  <div class="input-group">
+<style>
+  .radio-selector-shell {
+    display: grid;
+    gap: .75rem;
+  }
+
+  .radio-selector-main {
+    display: flex;
+    gap: .5rem;
+    align-items: stretch;
+  }
+
+  #radio-selector-scanner-input {
+    position: absolute;
+    left: -9999px;
+  }
+
+  .radio-selector-icon-btn {
+    width: 2.75rem;
+    flex: 0 0 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .radio-selector-camera-mode .radio-selector-main,
+  .radio-selector-camera-mode #radio-selector-error {
+    display: none !important;
+  }
+
+  #radio-selector-camera-video {
+    max-height: 320px;
+    object-fit: cover;
+    background: #111;
+  }
+</style>
+
+<div class="radio-selector-shell">
+  <div class="radio-selector-main">
     <input type="text"
            id="radio-selector-query"
            class="form-control"
@@ -10,34 +47,29 @@
            autocomplete="off"
            autocorrect="off"
            autocapitalize="off">
-    <button type="button" class="btn btn-primary" id="radio-selector-search-btn">
+    <button type="button" class="btn btn-primary radio-selector-icon-btn" id="radio-selector-search-btn" title="{% trans 'Zoeken' %}">
       <i class="bi bi-search"></i>
-      {% trans "Zoeken" %}
     </button>
+    <input type="text" id="radio-selector-scanner-input">
+    <button type="button" class="btn btn-outline-primary radio-selector-icon-btn" id="scan-btn" title="{% trans 'Handscanner' %}">
+      <i class="bi bi-upc-scan"></i>
+    </button>
+    <span id="radio-selector-camera-controls" style="display:none;">
+      <button type="button" class="btn btn-outline-primary radio-selector-icon-btn" id="camera-scan-btn" title="{% trans 'Camera' %}">
+        <i class="bi bi-camera"></i>
+      </button>
+    </span>
   </div>
-  <div class="form-text text-danger" id="radio-selector-error"></div>
-</div>
 
-<div class="mb-3">
-  <input type="text" id="radio-selector-scanner-input">
-  <button type="button" class="btn btn-success w-100" id="scan-btn">
-    <i class="bi bi-qr-code"></i> {% trans "Start scanner" %}
-  </button>
-  <div class="form-text text-muted mt-1" id="radio-selector-scan-status"></div>
-</div>
-
-<div class="mb-3" id="radio-selector-camera-controls" style="display:none;">
-  <button type="button" class="btn btn-outline-primary w-100" id="camera-scan-btn">
-    <i class="bi bi-camera"></i> {% trans "Scan QR met camera" %}
-  </button>
-  <div id="radio-selector-camera-panel" class="mt-2" style="display:none;">
+  <div id="radio-selector-camera-panel" style="display:none;">
     <video id="radio-selector-camera-video"
            class="w-100 border rounded"
-           style="max-height: 320px; object-fit: cover;"
            muted
            playsinline></video>
     <button type="button" class="btn btn-outline-secondary w-100 mt-2" id="camera-stop-btn">
-      {% trans "Stop camera" %}
+      <i class="bi bi-stop-circle"></i> {% trans "Stop camera" %}
     </button>
   </div>
+
+  <div class="small text-danger d-none" id="radio-selector-error" role="alert"></div>
 </div>
