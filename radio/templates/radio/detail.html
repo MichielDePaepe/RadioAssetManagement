@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load i18n %}
+{% load i18n radio_selector_tags %}
 
 {% block extra_script %}
 
@@ -222,7 +222,7 @@
             {% endif %}
           </td>
           <td>
-            {{ t.title }}
+            {{ t.title|render_radio_links }}
           </td>
           <td>{{ t.ticket_type.name }}</td>
           <td>
