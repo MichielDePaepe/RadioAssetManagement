@@ -13,7 +13,7 @@ from django.db import transaction
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.utils.translation import gettext as _
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.utils.http import url_has_allowed_host_and_scheme
 from itertools import chain
 
@@ -256,6 +256,121 @@ class RadioCreateView(CreateView):
         response = super().form_valid(form)
         messages.success(self.request, f"{self.object.model} with TEI {self.object.TEI} added successfully!")
         return response
+
+
+class RadioListView(LoginRequiredMixin, ListView):
+    model = Radio
+    template_name = "radio/radio_list.html"
+    context_object_name = "radios"
+    paginate_by = 100
+
+    def get_base_queryset(self):
+        return Radio.objects.select_related(
+            "model",
+            "subscription__issi",
+            "subscription__issi__customer",
+            "subscription__issi__discipline",
+        ).annotate(
+            direct_ticket_count=Count("tickets", distinct=True),
+            old_radio_request_count=Count("requests_as_old", distinct=True),
+            ticket_count=Count("tickets", distinct=True) + Count("requests_as_old", distinct=True),
+            status_rank=Case(
+                When(decommissioned=True, then=Value(4)),
+                When(subscription__DMO_only=True, then=Value(2)),
+                When(subscription__active=True, then=Value(1)),
+                default=Value(3),
+                output_field=IntegerField(),
+            ),
+        )
+
+    def get_queryset(self):
+        qs = self.get_base_queryset()
+
+        query = self.request.GET.get("q", "").strip()
+        if query:
+            filters = (
+                Q(model__name__icontains=query)
+                | Q(subscription__issi__alias__icontains=query)
+                | Q(subscription__issi__customer__name__icontains=query)
+                | Q(subscription__issi__discipline__name__icontains=query)
+            )
+            if query.isdigit():
+                filters |= Q(TEI=int(query)) | Q(subscription__issi__number=int(query))
+            qs = qs.filter(filters)
+
+        status = self.request.GET.get("status", "").strip()
+        if status == "active":
+            qs = qs.filter(subscription__active=True, subscription__DMO_only=False, decommissioned=False)
+        elif status == "dmo":
+            qs = qs.filter(subscription__DMO_only=True, decommissioned=False)
+        elif status == "decommissioned":
+            qs = qs.filter(decommissioned=True)
+        elif status == "inactive":
+            qs = qs.filter(decommissioned=False).filter(
+                Q(subscription__isnull=True) | Q(subscription__active=False, subscription__DMO_only=False)
+            )
+
+        model = self.request.GET.get("model", "").strip()
+        if model.isdigit():
+            qs = qs.filter(model_id=int(model))
+
+        sort = self.request.GET.get("sort", "TEI")
+        allowed_sorts = {
+            "TEI",
+            "-TEI",
+            "model__name",
+            "-model__name",
+            "subscription__issi__number",
+            "-subscription__issi__number",
+            "subscription__issi__alias",
+            "-subscription__issi__alias",
+            "status_rank",
+            "-status_rank",
+            "ticket_count",
+            "-ticket_count",
+        }
+        if sort not in allowed_sorts:
+            sort = "TEI"
+
+        return qs.order_by(sort, "TEI")
+
+    def get_status_counts(self):
+        qs = self.get_base_queryset()
+        model = self.request.GET.get("model", "").strip()
+        if model.isdigit():
+            qs = qs.filter(model_id=int(model))
+        return {
+            "all": qs.count(),
+            "active": qs.filter(subscription__active=True, subscription__DMO_only=False, decommissioned=False).count(),
+            "dmo": qs.filter(subscription__DMO_only=True, decommissioned=False).count(),
+            "decommissioned": qs.filter(decommissioned=True).count(),
+            "inactive": qs.filter(decommissioned=False).filter(
+                Q(subscription__isnull=True) | Q(subscription__active=False, subscription__DMO_only=False)
+            ).count(),
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["q"] = self.request.GET.get("q", "").strip()
+        context["current_sort"] = self.request.GET.get("sort", "TEI")
+        context["status"] = self.request.GET.get("status", "").strip()
+        context["selected_model"] = self.request.GET.get("model", "").strip()
+        context["radio_models"] = RadioModel.objects.filter(radio__isnull=False).distinct().order_by("name")
+        context["status_counts"] = self.get_status_counts()
+        context["base_query"] = self.request.GET.copy()
+        context["base_query"].pop("page", None)
+        context["base_query"].pop("status", None)
+        context["base_query"].pop("model", None)
+        context["base_query_string"] = context["base_query"].urlencode()
+        context["columns"] = [
+            ("TEI", _("TEI")),
+            ("model__name", _("Type")),
+            ("status_rank", _("Status")),
+            ("subscription__issi__number", _("ISSI")),
+            ("subscription__issi__alias", _("Alias")),
+            ("ticket_count", _("Tickets")),
+        ]
+        return context
 
 
 class ISSIAliasListView(LoginRequiredMixin, ListView):
@@ -544,27 +659,48 @@ class QRImageView(View):
 
 class DecommissioningRequestView(PermissionRequiredMixin, TemplateView):
     template_name = "radio/decommissioning_request.html"
-    permission_required ="radio.can_create_decommission_requests"
+    permission_required = "radio.can_create_decommission_requests"
 
-    def post(self, request):
+    def get_radio(self):
+        radio_pk = self.kwargs.get("pk")
+        if radio_pk:
+            return get_object_or_404(Radio, pk=radio_pk)
+        return None
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["radio"] = self.get_radio()
+        context["form"] = kwargs.get("form") or DecommissioningRequestForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = DecommissioningRequestForm(request.POST)
+        radio = self.get_radio()
+
         try:
 
-            # Get the selected radio primary key from the POST data
-            radio_pk = request.POST.get("radio")
+            if not form.is_valid():
+                raise Exception(form.errors.as_text())
 
-            # A radio must be selected, otherwise raise an exception
-            if not radio_pk:
-                raise Exception(_("A radio needs to be selected."))
+            if not radio:
+                # Get the selected radio primary key from the POST data
+                radio_pk = request.POST.get("radio")
 
-            # Fetch the radio object from the database
-            radio = Radio.objects.get(pk=int(radio_pk))
+                # A radio must be selected, otherwise raise an exception
+                if not radio_pk:
+                    raise Exception(_("A radio needs to be selected."))
+
+                # Fetch the radio object from the database
+                radio = Radio.objects.get(pk=int(radio_pk))
 
             radio_url = reverse("radio:detail", kwargs={"pk": radio.pk})
 
+            if radio.decommissioned:
+                raise Exception(_("The selected <a href='{url}'>radio</a> is already decommissioned.").format(url=radio_url))
+
             # Prevent decommissioning of an active radio
             if radio.is_active:
-                url = reverse("radio:detail", kwargs={"pk": radio.pk})
-                raise Exception(_("The selected <a href='{url}'>radio</a> is still active.").format(url=url))
+                raise Exception(_("The selected <a href='{url}'>radio</a> is still active.").format(url=radio_url))
 
             # Check if there is already an open ASTRID request ticket linked to this radio
             req = Request.objects.filter(
@@ -579,23 +715,27 @@ class DecommissioningRequestView(PermissionRequiredMixin, TemplateView):
                 )
 
             # Check if there is already an open DECOMMISSIONING request ticket linked to this radio
-            req = Request.objects.filter(radio=radio, ticket_type__code="DECOMMISSIONING").exclude(status__code="CLOSED").first()
+            req = RadioDecommissioningTicket.objects.filter(
+                radio=radio,
+                ticket_type__code="DECOMMISSIONING",
+            ).exclude(status__code="CLOSED").first()
             if req:
-                raise Exception(_("There is an open decommissioning request (#{ticket_id}) for this <a href='{url}'>radio</a>").format(ticket_id=req.pk, url=radio_url))
-            
-            # Check if there is a description
-            description = request.POST.get("description")
-            if not description:
-                raise Exception(_("A reason for the decommissioning request is required."))
+                ticket_url = reverse("helpdesk:ticket_detail", kwargs={"pk": req.pk})
+                raise Exception(
+                    _("There is an open decommissioning request for this <a href='{radio_url}'>radio</a>: <a href='{ticket_url}'>#{ticket_id}</a>")
+                    .format(radio_url=radio_url, ticket_url=ticket_url, ticket_id=req.pk)
+                )
 
             # If no conflicts are found, create a new decommissioning request
-            RadioDecommissioningTicket.objects.create(
+            ticket = RadioDecommissioningTicket.objects.create(
                 radio=radio,
-                description=description,
+                description=form.cleaned_data["description"],
+                created_by=request.user,
             )
 
             # Show a success message to the user
-            messages.success(request, _("Decommissioning request successful"))
+            messages.success(request, _("Decommissioning request created."))
+            return redirect("helpdesk:ticket_detail", pk=ticket.pk)
 
         except PermissionDenied as e:
             # Permission error -> return 403
@@ -604,5 +744,4 @@ class DecommissioningRequestView(PermissionRequiredMixin, TemplateView):
             # Catch all raised exceptions and show them as error messages
             messages.error(request, str(e))
 
-        # Redirect back to the same page after handling the request
-        return redirect(request.path)
+        return self.render_to_response(self.get_context_data(form=form))

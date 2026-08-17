@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="mb-3">
+    <div>
+      <h1 class="h3 mb-1">{% trans "Radio's" %}</h1>
+      <div class="text-muted">{% trans "Overzicht van alle radio's in het systeem, hun status, ISSI en gekoppelde tickets." %}</div>
+    </div>
+  </div>
+
+  <div class="row g-3 align-items-start">
+    <div class="col-xl-9">
+      <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle">
+          <thead class="table-light align-middle">
+            <tr>
+              {% for col, label in columns %}
+                <th scope="col" class="text-nowrap">
+                  {% if current_sort == col %}
+                    <a href="?sort=-{{ col }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if status %}&status={{ status|urlencode }}{% endif %}{% if selected_model %}&model={{ selected_model|urlencode }}{% endif %}"
+                       class="text-decoration-none text-dark fw-semibold d-flex justify-content-between align-items-center">
+                      <span>{{ label }}</span>
+                      <i class="bi bi-caret-up-fill text-secondary"></i>
+                    </a>
+                  {% elif current_sort == '-'|add:col %}
+                    <a href="?sort={{ col }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if status %}&status={{ status|urlencode }}{% endif %}{% if selected_model %}&model={{ selected_model|urlencode }}{% endif %}"
+                       class="text-decoration-none text-dark fw-semibold d-flex justify-content-between align-items-center">
+                      <span>{{ label }}</span>
+                      <i class="bi bi-caret-down-fill text-secondary"></i>
+                    </a>
+                  {% else %}
+                    <a href="?sort={{ col }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if status %}&status={{ status|urlencode }}{% endif %}{% if selected_model %}&model={{ selected_model|urlencode }}{% endif %}"
+                       class="text-decoration-none text-dark fw-semibold d-flex justify-content-between align-items-center">
+                      <span>{{ label }}</span>
+                      <i class="bi bi-caret-down text-muted opacity-25"></i>
+                    </a>
+                  {% endif %}
+                </th>
+              {% endfor %}
+              <th scope="col">{% trans "Laatste locatie" %}</th>
+              <th scope="col" class="text-end">{% trans "Actie" %}</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for radio in radios %}
+              <tr>
+                <td class="font-monospace text-nowrap">
+                  <a href="{% url 'radio:detail' radio.pk %}" class="text-decoration-none">{{ radio.tei_str }}</a>
+                </td>
+                <td>{{ radio.model|default:"-" }}</td>
+                <td>
+                  {% if radio.is_active %}
+                    <span class="badge bg-success">{% trans "Actief" %}</span>
+                  {% elif radio.is_DMO_only %}
+                    <span class="badge bg-info text-dark">{% trans "DMO only" %}</span>
+                  {% elif radio.decommissioned %}
+                    <span class="badge bg-warning text-dark">{% trans "Decommissioned" %}</span>
+                  {% else %}
+                    <span class="badge bg-danger">{% trans "Niet actief" %}</span>
+                  {% endif %}
+                </td>
+                <td class="font-monospace text-nowrap">
+                  {% if radio.subscription.issi %}
+                    <a href="{% url 'radio:issi_alias_edit' radio.subscription.issi.number %}?next={{ request.get_full_path|urlencode }}"
+                       class="text-decoration-none">
+                      {{ radio.ISSI }}
+                    </a>
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if radio.alias %}
+                    {{ radio.alias }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if radio.ticket_count %}
+                    <a href="{% url 'radio:detail' radio.pk %}#tickets" class="badge bg-primary text-decoration-none">
+                      {{ radio.ticket_count }}
+                    </a>
+                  {% else %}
+                    <span class="badge bg-light text-muted border">0</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if radio.inventory_entries.exists %}
+                    {{ radio.inventory_entries.latest.container }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+                <td class="text-end text-nowrap">
+                  <a href="{% url 'radio:detail' radio.pk %}" class="btn btn-outline-primary btn-sm" title="{% trans 'Radio openen' %}">
+                    <i class="bi bi-box-arrow-up-right"></i>
+                  </a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="8" class="text-center text-muted py-4">{% trans "Geen radio's gevonden." %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <aside class="col-xl-3">
+      <div class="card">
+        <div class="card-header bg-light">
+          <h2 class="h6 mb-0">
+            <i class="bi bi-funnel me-1"></i>
+            {% trans "Filters" %}
+          </h2>
+        </div>
+        <div class="card-body">
+          <form method="get" class="mb-3" role="search">
+            {% if status %}
+              <input type="hidden" name="status" value="{{ status }}">
+            {% endif %}
+            {% if selected_model %}
+              <input type="hidden" name="model" value="{{ selected_model }}">
+            {% endif %}
+            {% if current_sort %}
+              <input type="hidden" name="sort" value="{{ current_sort }}">
+            {% endif %}
+            <label for="radio-search-filter" class="form-label mb-1">{% trans "Zoeken" %}</label>
+            <div class="input-group input-group-sm">
+              <input type="search"
+                     id="radio-search-filter"
+                     name="q"
+                     value="{{ q }}"
+                     class="form-control"
+                     placeholder="{% trans 'TEI, ISSI, alias...' %}"
+                     aria-label="{% trans 'Zoek TEI, ISSI, alias, type, klant of discipline' %}">
+              <button type="submit" class="btn btn-outline-primary">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+            {% if q %}
+              <a href="{% url 'radio:list' %}?{% if status %}status={{ status|urlencode }}&{% endif %}{% if selected_model %}model={{ selected_model|urlencode }}&{% endif %}{% if current_sort %}sort={{ current_sort|urlencode }}{% endif %}"
+                 class="btn btn-link btn-sm text-decoration-none px-0">
+                <i class="bi bi-x-lg me-1"></i>
+                {% trans "Zoekopdracht wissen" %}
+              </a>
+            {% endif %}
+          </form>
+
+          <form method="get" class="mb-3">
+            {% if q %}
+              <input type="hidden" name="q" value="{{ q }}">
+            {% endif %}
+            {% if status %}
+              <input type="hidden" name="status" value="{{ status }}">
+            {% endif %}
+            {% if current_sort %}
+              <input type="hidden" name="sort" value="{{ current_sort }}">
+            {% endif %}
+            <label for="radio-model-filter" class="form-label mb-1">{% trans "Type radio" %}</label>
+            <select name="model" id="radio-model-filter" class="form-select form-select-sm" onchange="this.form.submit()">
+              <option value="">{% trans "Alle types" %}</option>
+              {% for model in radio_models %}
+                <option value="{{ model.pk }}" {% if selected_model == model.pk|stringformat:"s" %}selected{% endif %}>
+                  {{ model.name|default:model }}
+                </option>
+              {% endfor %}
+            </select>
+            {% if selected_model %}
+              <a href="{% url 'radio:list' %}?{% if q %}q={{ q|urlencode }}&{% endif %}{% if status %}status={{ status|urlencode }}&{% endif %}{% if current_sort %}sort={{ current_sort|urlencode }}{% endif %}"
+                 class="btn btn-link btn-sm text-decoration-none px-0">
+                <i class="bi bi-x-lg me-1"></i>
+                {% trans "Typefilter wissen" %}
+              </a>
+            {% endif %}
+          </form>
+
+          <div>
+            <div class="form-label mb-1">{% trans "Status" %}</div>
+            <div class="d-grid gap-2">
+              <a href="{% url 'radio:list' %}?{% if base_query_string %}{{ base_query_string }}{% endif %}{% if selected_model %}{% if base_query_string %}&{% endif %}model={{ selected_model|urlencode }}{% endif %}"
+                 class="btn btn-sm d-flex justify-content-between align-items-center {% if not status %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                <span>{% trans "Alle" %}</span>
+                <span class="badge {% if not status %}bg-light text-primary{% else %}bg-primary{% endif %}">{{ status_counts.all }}</span>
+              </a>
+              <a href="?status=active{% if base_query_string %}&{{ base_query_string }}{% endif %}{% if selected_model %}&model={{ selected_model|urlencode }}{% endif %}"
+                 class="btn btn-sm d-flex justify-content-between align-items-center {% if status == 'active' %}btn-success{% else %}btn-outline-success{% endif %}">
+                <span>{% trans "Actief" %}</span>
+                <span class="badge {% if status == 'active' %}bg-light text-success{% else %}bg-success{% endif %}">{{ status_counts.active }}</span>
+              </a>
+              <a href="?status=dmo{% if base_query_string %}&{{ base_query_string }}{% endif %}{% if selected_model %}&model={{ selected_model|urlencode }}{% endif %}"
+                 class="btn btn-sm d-flex justify-content-between align-items-center {% if status == 'dmo' %}btn-info{% else %}btn-outline-info{% endif %}">
+                <span>{% trans "DMO only" %}</span>
+                <span class="badge {% if status == 'dmo' %}bg-light text-info{% else %}bg-info{% endif %}">{{ status_counts.dmo }}</span>
+              </a>
+              <a href="?status=inactive{% if base_query_string %}&{{ base_query_string }}{% endif %}{% if selected_model %}&model={{ selected_model|urlencode }}{% endif %}"
+                 class="btn btn-sm d-flex justify-content-between align-items-center {% if status == 'inactive' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                <span>{% trans "Niet actief" %}</span>
+                <span class="badge {% if status == 'inactive' %}bg-light text-danger{% else %}bg-danger{% endif %}">{{ status_counts.inactive }}</span>
+              </a>
+              <a href="?status=decommissioned{% if base_query_string %}&{{ base_query_string }}{% endif %}{% if selected_model %}&model={{ selected_model|urlencode }}{% endif %}"
+                 class="btn btn-sm d-flex justify-content-between align-items-center {% if status == 'decommissioned' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                <span>{% trans "Decommissioned" %}</span>
+                <span class="badge {% if status == 'decommissioned' %}bg-light text-warning{% else %}bg-warning text-dark{% endif %}">{{ status_counts.decommissioned }}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  {% if is_paginated %}
+    <nav aria-label="{% trans 'Paginatie' %}">
+      <ul class="pagination pagination-sm justify-content-end">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if status %}&status={{ status|urlencode }}{% endif %}{% if selected_model %}&model={{ selected_model|urlencode }}{% endif %}{% if current_sort %}&sort={{ current_sort|urlencode }}{% endif %}">
+              {% trans "Vorige" %}
+            </a>
+          </li>
+        {% endif %}
+        <li class="page-item disabled">
+          <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}{% if status %}&status={{ status|urlencode }}{% endif %}{% if selected_model %}&model={{ selected_model|urlencode }}{% endif %}{% if current_sort %}&sort={{ current_sort|urlencode }}{% endif %}">
+              {% trans "Volgende" %}
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

@@ -31,6 +31,22 @@ class RadioForm(forms.ModelForm):
 	    return tei_int
 
 
+class DecommissioningRequestForm(forms.Form):
+    description = forms.CharField(
+        label=_("Reden"),
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control",
+                "rows": 4,
+                "placeholder": _("Omschrijf waarom deze radio buiten dienst gesteld moet worden."),
+            }
+        ),
+        error_messages={
+            "required": _("Een reden voor de aanvraag is verplicht."),
+        },
+    )
+
+
 class ISSIAliasForm(forms.ModelForm):
     class Meta:
         model = ISSI

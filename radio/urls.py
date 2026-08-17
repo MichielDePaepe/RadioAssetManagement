@@ -7,6 +7,7 @@ app_name = 'radio'
 
 urlpatterns = [
     path('find/', FindRadioView.as_view(), name='find'),
+    path('radios/', RadioListView.as_view(), name='list'),
     path('issi/', ISSIAliasListView.as_view(), name='issi_aliases'),
     path('issi/create/', ISSICreateView.as_view(), name='issi_create'),
     path('issi/<int:pk>/edit/', ISSIAliasUpdateView.as_view(), name='issi_alias_edit'),
@@ -23,5 +24,6 @@ urlpatterns = [
     path('image/<int:pk>_<str:type>.png/', QRImageView.as_view(), name='label_image'),
 
     path("decommissioning/request/", DecommissioningRequestView.as_view(), name="decommissioning_request"),
+    path("<int:pk>/decommissioning/request/", DecommissioningRequestView.as_view(), name="decommissioning_request_for_radio"),
 
 ]

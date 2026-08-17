@@ -4,7 +4,9 @@ from django.views.generic import ListView, DetailView, FormView, CreateView
 from django.views.generic.edit import FormMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy, reverse
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 
 from .forms import *
 from .models import *
@@ -26,10 +28,20 @@ class TicketDetailView(LoginRequiredMixin, DetailView):
         context["logs"] = self.object.logs.select_related("user", "status_before", "status_after")
         context["log_form"] = TicketLogForm(ticket=self.object)  # logformulier
         context["edit_form"] = TicketEditForm(instance=self.object, user=self.request.user)
+        context["decommissioning_ticket"] = RadioDecommissioningTicket.objects.filter(pk=self.object.pk).first()
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+
+        if "approve_decommissioning" in request.POST:
+            if not request.user.has_perm("radio.can_approve_decommission_requests"):
+                raise PermissionDenied
+
+            decommissioning_ticket = get_object_or_404(RadioDecommissioningTicket, pk=self.object.pk)
+            decommissioning_ticket.approve_decommissioning(user=request.user)
+            messages.success(request, "Radio buiten dienst gesteld en ticket gesloten.")
+            return redirect(self.get_success_url())
 
         # --- Bewerken van ticketmeta ---
         if "update_ticket" in request.POST:

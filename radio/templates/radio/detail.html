@@ -1,280 +1,517 @@
 {% extends 'base.html' %}
-{% load i18n radio_selector_tags %}
+{% load i18n radio_selector_tags static %}
 
-{% block extra_script %}
+{% block extra_head %}
+<style>
+  .radio-page {
+    --radio-border: #d8dde6;
+    --radio-soft: #f6f8fb;
+    --radio-ink: #1d2733;
+  }
 
-<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
+  .radio-page .section-card {
+    border: 1px solid var(--radio-border);
+    border-radius: 8px;
+    background: #fff;
+  }
 
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    timeago.render(document.querySelectorAll('.timeago'), 'nl');
-  });
-</script>
+  .radio-page .section-header {
+    border-bottom: 1px solid var(--radio-border);
+    background: var(--radio-soft);
+    padding: .85rem 1rem;
+  }
 
+  .radio-page .radio-hero {
+    border: 1px solid var(--radio-border);
+    border-radius: 8px;
+    background: linear-gradient(180deg, #fff, #f9fafc);
+  }
+
+  .radio-page .radio-title {
+    color: var(--radio-ink);
+    overflow-wrap: anywhere;
+  }
+
+  .radio-page .quick-stat {
+    min-height: 4.75rem;
+    border: 1px solid var(--radio-border);
+    border-radius: 8px;
+    background: #fff;
+    padding: .75rem;
+  }
+
+  .radio-page .quick-stat-label {
+    color: #687385;
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .radio-page .quick-stat-value {
+    color: var(--radio-ink);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .radio-page .detail-list {
+    display: grid;
+    grid-template-columns: minmax(8rem, 13rem) 1fr;
+    gap: .75rem 1rem;
+  }
+
+  .radio-page .detail-label {
+    color: #687385;
+    font-weight: 600;
+  }
+
+  .radio-page .detail-value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .radio-page .label-preview {
+    max-width: 100%;
+    width: auto;
+    border: 1px solid var(--radio-border);
+    border-radius: 4px;
+    background: #fff;
+  }
+
+  .radio-page .label-preview-qr {
+    height: 68px;
+  }
+
+  .radio-page .label-preview-strip {
+    height: 45px;
+  }
+
+  .radio-page .print-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .75rem;
+    align-items: center;
+    padding: .75rem 0;
+    border-top: 1px solid #edf0f5;
+  }
+
+  .radio-page .print-row:first-of-type {
+    border-top: 0;
+  }
+
+  .radio-page .ticket-title {
+    min-width: 16rem;
+  }
+
+  @media (max-width: 767.98px) {
+    .radio-page .detail-list {
+      grid-template-columns: 1fr;
+      gap: .15rem;
+    }
+
+    .radio-page .print-row {
+      grid-template-columns: 1fr;
+    }
+
+    .radio-page .print-row .btn {
+      width: 100%;
+    }
+  }
+</style>
 {% endblock %}
 
 {% block content %}
-
-<h1>Radio info</h1>
-
-<hr>
-
-<div class="d-flex flex-column align-items-center mt-3">
-
-  <!-- Tabel -->
-  <table class="table table-bordered w-auto text-center">
-    <tbody>
-      <tr>
-        <th scope="row" class="bg-light">Type</th>
-        <td>{{ radio.model }}</td>
-      </tr>
-      <tr>
-        <th scope="row" class="bg-light">TEI</th>
-        <td>{{ radio.tei_str }}</td>
-      </tr>
-      <tr>
-        <th scope="row" class="bg-light">ISSI</th>
-        <td>
-          {% if radio.subscription.issi %}
-            <a href="{% url 'radio:issi_alias_edit' radio.subscription.issi.number %}?next={{ request.get_full_path|urlencode }}"
-               class="text-decoration-none">
-              {{ radio.ISSI }}
-            </a>
-          {% else %}
-            <span class="text-muted">-</span>
-          {% endif %}
-        </td>
-      </tr>
-      <tr>
-        <th scope="row" class="bg-light">Alias</th>
-        <td>{{ radio.alias }}</td>
-      </tr>
-      <tr>
-        <th scope="row" class="bg-light">Status</th>
-        <td>
+<div class="radio-page">
+  <div class="radio-hero p-3 p-lg-4 mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3">
+      <div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
           {% if radio.is_active %}
             <span class="badge bg-success">{% trans "Actief" %}</span>
           {% elif radio.is_DMO_only %}
-            <span class="badge bg-info">{% trans "DMO only" %}</span>
+            <span class="badge bg-info text-dark">{% trans "DMO only" %}</span>
           {% elif radio.decommissioned %}
-            <span class="badge bg-warning">{% trans "Decommissioned" %}</span>
+            <span class="badge bg-warning text-dark">{% trans "Decommissioned" %}</span>
           {% else %}
             <span class="badge bg-danger">{% trans "Niet actief" %}</span>
           {% endif %}
-        </td>
-      </tr>
-      {% if radio.container_link %}
-      <tr>
-        <th scope="row" class="bg-light">Voorziene plaats</th>
-        <td>
-          {{ radio.container_link.container }}: {{ radio.container_link.name }}
-          {% if radio.container_link.container.vector.vehicle %}
-            <br>
-            
-            {{ radio.container_link.container.vector.statusCode.status_icon_html }}
-            {{ radio.container_link.container.vector.vehicle.call_sign }}
+
+          {% if radio.model.is_atex %}
+            <span class="badge bg-dark">
+              <img src="{% static 'atex.svg' %}" alt="" style="height: 1em;" class="me-1">
+              ATEX
+            </span>
           {% endif %}
-        </td>
-      </tr>
-      {% endif %}
-
-      {% if radio.vehicle %}
-      <tr>
-        <th scope="row" class="bg-light">Voertuig</th>
-        <td>
-          {{ radio.vehicle }}
-        </td>
-      </tr>
-      {% endif %}
-
-      {% if radio.vehicle.vector %}
-      <tr>
-        <th scope="row" class="bg-light">Vector</th>
-        <td>
-            {{ radio.vehicle.vector.statusCode.status_icon_html }}
-            {{ radio.vehicle.vector.name }}
-        </td>
-      </tr>
-      {% endif %}
-
-      {% if radio.inventory_entries.exists %}
-      <tr>
-        <th scope="row" class="bg-light">Laatst gezien</th>
-        <td>
-          {{ radio.inventory_entries.latest.container }} <br>
-          <time class="timeago" datetime="{{ radio.inventory_entries.latest.timestamp|date:'c' }}"></time>
-        </td>
-      </tr>
-      {% endif %}
-    </tbody>
-  </table>
-
-
-
-
-<div class="card mt-3">
-  <div class="card-header bg-primary text-white">
-    Print labels
-  </div>
-  <div class="card-body">
-
-    <form method="post">
-      {% csrf_token %}
-      <div class="d-flex align-items-end gap-3 mb-3">
-        <div class="flex-grow-1">
-          <label for="printer" class="form-label mb-0">Printer</label>
-          <select name="printer_id" id="printer" class="form-select form-select-sm">
-            {% for p in printers %}
-              <option value="{{ p.id }}">{{ p.name }} ({{ p.device }})</option>
-            {% endfor %}
-          </select>
         </div>
 
-        <div>
-          <label for="copies" class="form-label mb-0">Kopies</label>
-          <input type="number" name="copies" id="copies" value="1" min="1" max="10" class="form-control form-control-sm" style="width: 60px;">
+        <h1 class="h3 radio-title mb-1">
+          {% if radio.alias %}
+            {{ radio.alias }}
+          {% else %}
+            {{ radio.model|default:"Radio" }}
+          {% endif %}
+        </h1>
+        <div class="text-muted">
+          {{ radio.model|default:"Onbekend type" }}
+          <span class="mx-1">/</span>
+          TEI {{ radio.tei_str }}
         </div>
       </div>
 
-      {% if radio.fireplan_id %}
-      <!-- QR code -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <img src="{% url 'radio:label_image' radio.pk 'qr' %}" alt="QR Label" class="img-fluid border" style="height:68px; width:auto;">
-          <button type="submit" name="action" value="qr" class="btn btn-primary btn-print">
-            <i class="bi bi-printer-fill"></i>
-            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-          </button>
+      <div class="d-flex flex-wrap align-items-start gap-2">
+        <a href="{% url 'radio:find' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-search me-1"></i>
+          {% trans "Andere radio zoeken" %}
+        </a>
+        <a href="{% url 'helpdesk:ticket_new_with_radio' radio_pk=radio.pk %}" class="btn btn-primary">
+          <i class="bi bi-plus-circle me-1"></i>
+          {% trans "Nieuw ticket" %}
+        </a>
+      </div>
+    </div>
+
+    <div class="row g-2 mt-3">
+      <div class="col-md-4">
+        <div class="quick-stat">
+          <div class="quick-stat-label">TEI</div>
+          <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="quick-stat-value">{{ radio.tei_str }}</div>
+            <button type="button" class="btn btn-sm btn-outline-secondary js-copy" data-copy-value="{{ radio.tei_str }}" title="{% trans 'Kopieer TEI' %}">
+              <i class="bi bi-clipboard"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="quick-stat">
+          <div class="quick-stat-label">ISSI</div>
+          <div class="d-flex align-items-center justify-content-between gap-2">
+            <div class="quick-stat-value">
+              {% if radio.subscription.issi %}
+                <a href="{% url 'radio:issi_alias_edit' radio.subscription.issi.number %}?next={{ request.get_full_path|urlencode }}" class="text-decoration-none">
+                  {{ radio.ISSI }}
+                </a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </div>
+            {% if radio.ISSI %}
+              <button type="button" class="btn btn-sm btn-outline-secondary js-copy" data-copy-value="{{ radio.ISSI }}" title="{% trans 'Kopieer ISSI' %}">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="quick-stat">
+          <div class="quick-stat-label">{% trans "Tickets" %}</div>
+          <div class="quick-stat-value">{{ tickets|length }}</div>
+          <div class="text-muted small">{% trans "gekoppeld aan deze radio" %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 align-items-start">
+    <div class="col-lg-7">
+      <section class="section-card">
+        <div class="section-header d-flex align-items-center gap-2">
+          <i class="bi bi-info-circle text-primary"></i>
+          <h2 class="h5 mb-0">{% trans "Radio informatie" %}</h2>
+        </div>
+        <div class="p-3 p-lg-4">
+          <div class="detail-list">
+            <div class="detail-label">{% trans "Type" %}</div>
+            <div class="detail-value">{{ radio.model|default:"-" }}</div>
+
+            <div class="detail-label">TEI</div>
+            <div class="detail-value">{{ radio.tei_str }}</div>
+
+            <div class="detail-label">ISSI</div>
+            <div class="detail-value">
+              {% if radio.subscription.issi %}
+                <a href="{% url 'radio:issi_alias_edit' radio.subscription.issi.number %}?next={{ request.get_full_path|urlencode }}" class="text-decoration-none">
+                  {{ radio.ISSI }}
+                </a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </div>
+
+            <div class="detail-label">Alias</div>
+            <div class="detail-value">{{ radio.alias|default:"-" }}</div>
+
+            <div class="detail-label">{% trans "Status" %}</div>
+            <div class="detail-value">
+              {% if radio.is_active %}
+                <span class="badge bg-success">{% trans "Actief" %}</span>
+              {% elif radio.is_DMO_only %}
+                <span class="badge bg-info text-dark">{% trans "DMO only" %}</span>
+              {% elif radio.decommissioned %}
+                <span class="badge bg-warning text-dark">{% trans "Decommissioned" %}</span>
+              {% else %}
+                <span class="badge bg-danger">{% trans "Niet actief" %}</span>
+              {% endif %}
+            </div>
+
+            {% if radio.container_link %}
+              <div class="detail-label">{% trans "Voorziene plaats" %}</div>
+              <div class="detail-value">
+                {{ radio.container_link.container }}: {{ radio.container_link.name }}
+                {% if radio.container_link.container.vector.vehicle %}
+                  <div class="text-muted small mt-1">
+                    {{ radio.container_link.container.vector.statusCode.status_icon_html }}
+                    {{ radio.container_link.container.vector.vehicle.call_sign }}
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+
+            {% if radio.vehicle %}
+              <div class="detail-label">{% trans "Voertuig" %}</div>
+              <div class="detail-value">{{ radio.vehicle }}</div>
+            {% endif %}
+
+            {% if radio.vehicle.vector %}
+              <div class="detail-label">{% trans "Vector" %}</div>
+              <div class="detail-value">
+                {{ radio.vehicle.vector.statusCode.status_icon_html }}
+                {{ radio.vehicle.vector.name }}
+              </div>
+            {% endif %}
+
+            {% if radio.inventory_entries.exists %}
+              <div class="detail-label">{% trans "Laatst gezien" %}</div>
+              <div class="detail-value">
+                {{ radio.inventory_entries.latest.container }}
+                <div class="text-muted small">
+                  <time class="timeago" datetime="{{ radio.inventory_entries.latest.timestamp|date:'c' }}">
+                    {{ radio.inventory_entries.latest.timestamp|date:"d/m/Y H:i" }}
+                  </time>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="col-lg-5">
+      <section class="section-card">
+        <div class="section-header d-flex align-items-center gap-2">
+          <i class="bi bi-printer text-primary"></i>
+          <h2 class="h5 mb-0">{% trans "Labels printen" %}</h2>
+        </div>
+        <div class="p-3 p-lg-4">
+          <form method="post" id="print-label-form">
+            {% csrf_token %}
+
+            <div class="row g-2 mb-3">
+              <div class="col-sm-8">
+                <label for="printer" class="form-label">{% trans "Printer" %}</label>
+                <select name="printer_id" id="printer" class="form-select form-select-sm" {% if not printers %}disabled{% endif %}>
+                  {% for p in printers %}
+                    <option value="{{ p.id }}">{{ p.name }} ({{ p.device }})</option>
+                  {% empty %}
+                    <option>{% trans "Geen printers beschikbaar" %}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-sm-4">
+                <label for="copies" class="form-label">{% trans "Kopies" %}</label>
+                <input type="number" name="copies" id="copies" value="1" min="1" max="10" class="form-control form-control-sm" {% if not printers %}disabled{% endif %}>
+              </div>
+            </div>
+
+            {% if not printers %}
+              <div class="alert alert-warning mb-3" role="alert">
+                {% trans "Voeg eerst een printer toe om labels te kunnen printen." %}
+              </div>
+            {% endif %}
+
+            {% if radio.fireplan_id %}
+              <div class="print-row">
+                <div>
+                  <div class="fw-semibold mb-1">{% trans "QR-label" %}</div>
+                  <img src="{% url 'radio:label_image' radio.pk 'qr' %}" alt="QR Label" class="label-preview label-preview-qr">
+                </div>
+                <button type="submit" name="action" value="qr" class="btn btn-primary btn-print" {% if not printers %}disabled{% endif %}>
+                  <i class="bi bi-printer-fill me-1"></i>
+                  <span>{% trans "Print" %}</span>
+                  <span class="spinner-border spinner-border-sm d-none ms-1" role="status" aria-hidden="true"></span>
+                </button>
+              </div>
+            {% else %}
+              <div class="alert alert-warning" role="alert">
+                {% trans "Deze radio heeft geen Fireplan ID, QR-printen niet mogelijk." %}
+              </div>
+            {% endif %}
+
+            <div class="print-row">
+              <div>
+                <div class="fw-semibold mb-1">TEI-label</div>
+                <img src="{% url 'radio:label_image' radio.pk 'tei_label' %}" alt="TEI Label" class="label-preview label-preview-strip">
+              </div>
+              <button type="submit" name="action" value="tei" class="btn btn-primary btn-print" {% if not printers %}disabled{% endif %}>
+                <i class="bi bi-printer-fill me-1"></i>
+                <span>{% trans "Print" %}</span>
+                <span class="spinner-border spinner-border-sm d-none ms-1" role="status" aria-hidden="true"></span>
+              </button>
+            </div>
+
+            {% if radio.model.radio_type == 'MOBILE' %}
+              <div class="print-row">
+                <div>
+                  <div class="fw-semibold mb-1">{% trans "Mobiele radio" %}</div>
+                  <img src="{% url 'radio:label_image' radio.pk 'mobile_label' %}" alt="Mobile Label" class="label-preview label-preview-strip">
+                </div>
+                <button type="submit" name="action" value="label" class="btn btn-primary btn-print" {% if not printers %}disabled{% endif %}>
+                  <i class="bi bi-printer-fill me-1"></i>
+                  <span>{% trans "Print" %}</span>
+                  <span class="spinner-border spinner-border-sm d-none ms-1" role="status" aria-hidden="true"></span>
+                </button>
+              </div>
+            {% endif %}
+
+            {% if radio.model.radio_type == 'PORTABLE' and radio.subscription.issi.alias %}
+              <div class="print-row">
+                <div>
+                  <div class="fw-semibold mb-1">{% trans "Alias-label" %}</div>
+                  <img src="{% url 'radio:label_image' radio.pk 'alias_label' %}" alt="Alias Label" class="label-preview label-preview-strip">
+                </div>
+                <button type="submit" name="action" value="alias" class="btn btn-primary btn-print" {% if not printers %}disabled{% endif %}>
+                  <i class="bi bi-printer-fill me-1"></i>
+                  <span>{% trans "Print" %}</span>
+                  <span class="spinner-border spinner-border-sm d-none ms-1" role="status" aria-hidden="true"></span>
+                </button>
+              </div>
+            {% endif %}
+          </form>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <section class="section-card mt-4 mb-4" id="tickets">
+    <div class="section-header d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-ticket-detailed text-primary"></i>
+        <h2 class="h5 mb-0">{% trans "Gelinkte tickets" %}</h2>
+        <span class="badge bg-secondary">{{ tickets|length }}</span>
+      </div>
+      <a href="{% url 'helpdesk:ticket_new_with_radio' radio_pk=radio.pk %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>
+        {% trans "Nieuw ticket" %}
+      </a>
+    </div>
+
+    <div class="p-3">
+      {% if tickets %}
+        <div class="table-responsive">
+          <table class="table table-hover table-sm mb-0 align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col" class="ticket-title">{% trans "Titel" %}</th>
+                <th scope="col">{% trans "Type" %}</th>
+                <th scope="col">{% trans "Status" %}</th>
+                <th scope="col">{% trans "Laatst bijgewerkt" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in tickets %}
+                <tr>
+                  <td class="text-nowrap">
+                    {% if t.ticket_type.code == "ASTRID_REQUEST" %}
+                      <a href="{% url 'astrid:request_detail' t.pk %}">#{{ t.id }}</a>
+                    {% else %}
+                      <a href="{% url 'helpdesk:ticket_detail' t.pk %}">#{{ t.id }}</a>
+                    {% endif %}
+                  </td>
+                  <td>{{ t.title|render_radio_links }}</td>
+                  <td>{{ t.ticket_type.name }}</td>
+                  <td><span class="badge bg-light text-dark border">{{ t.status.name }}</span></td>
+                  <td class="text-nowrap">
+                    <time class="timeago" datetime="{{ t.updated_at|date:'c' }}">
+                      {{ t.updated_at|date:"d/m/Y H:i" }}
+                    </time>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       {% else %}
-        <div class="alert alert-warning text-center" role="alert">
-          {% trans "Deze radio heeft geen Fireplan ID, QR-printen niet mogelijk." %}
+        <div class="text-center py-4">
+          <i class="bi bi-ticket-perforated text-muted fs-2"></i>
+          <p class="text-muted mt-2 mb-3">{% trans "Geen tickets gekoppeld aan deze radio." %}</p>
+          <a href="{% url 'helpdesk:ticket_new_with_radio' radio_pk=radio.pk %}" class="btn btn-outline-primary">
+            <i class="bi bi-plus-circle me-1"></i>
+            {% trans "Ticket aanmaken" %}
+          </a>
         </div>
       {% endif %}
-
-      <!-- TEI -->
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <img src="{% url 'radio:label_image' radio.pk 'tei_label' %}" alt="TEI Label" class="img-fluid border" style="height:45px; width:auto;">
-        <button type="submit" name="action" value="tei" class="btn btn-primary btn-print">
-          <i class="bi bi-printer-fill"></i>
-          <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-        </button>
-      </div>
-
-      {% if radio.model.radio_type == 'MOBILE' %}
-      <!-- Mobile label -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <img src="{% url 'radio:label_image' radio.pk 'mobile_label' %}" alt="Mobile Label" class="img-fluid border" style="height:45px; width:auto;">
-          <button type="submit" name="action" value="label" class="btn btn-primary btn-print">
-            <i class="bi bi-printer-fill"></i>
-            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-          </button>
-        </div>
-      {% endif %}
-
-
-      {% if radio.model.radio_type == 'PORTABLE' and radio.subscription.issi.alias %}
-      <!-- Alias label -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <img src="{% url 'radio:label_image' radio.pk 'alias_label' %}" alt="Alias Label" class="img-fluid border" style="height:45px; width:auto;">
-          <button type="submit" name="action" value="alias" class="btn btn-primary btn-print">
-            <i class="bi bi-printer-fill"></i>
-            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-          </button>
-        </div>
-      {% endif %}
-
-    </form>
-
-  </div>
-</div>
-
-
-<div class="card mt-4 w-100">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <span>Tickets gelinkt aan deze radio</span>
-
-    <a href="{% url 'helpdesk:ticket_new_with_radio' radio_pk=radio.pk %}" 
-       class="btn btn-primary btn-sm">
-      <i class="bi bi-plus-circle"></i> Nieuw ticket
-    </a>
-  </div>
-  <div class="card-body p-3">
-    {% if tickets %}
-    <table class="table table-sm mb-0 align-middle">
-      <thead class="table-light">
-        <tr>
-          <th scope="col">ID</th>
-          <th scope="col">Titel</th>
-          <th scope="col">Type</th>
-          <th scope="col">Status</th>
-          <th scope="col">Laatst bijgewerkt</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for t in tickets %}
-        <tr>
-          <td>
-            {% if t.ticket_type.code == "ASTRID_REQUEST" %}
-              <a href="{% url 'astrid:request_detail' t.pk %}">#{{ t.id }}</a>
-            {% else %}
-              <a href="{% url 'helpdesk:ticket_detail' t.pk %}">#{{ t.id }}</a>
-            {% endif %}
-          </td>
-          <td>
-            {{ t.title|render_radio_links }}
-          </td>
-          <td>{{ t.ticket_type.name }}</td>
-          <td>
-            <span class="badge bg-light text-dark">{{ t.status.name }}</span>
-          </td>
-          <td><time class="timeago" datetime="{{ t.updated_at|date:'c' }}"></time></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div class="alert alert-info mt-4 w-100 text-center">
-      Geen tickets gekoppeld aan deze radio.
     </div>
-    {% endif %}
-  </div>
+  </section>
+
+  {% if perms.radio.can_create_decommission_requests and not radio.decommissioned %}
+    <div class="d-flex justify-content-end mb-4">
+      <a href="{% url 'radio:decommissioning_request_for_radio' pk=radio.pk %}" class="btn btn-link link-danger text-decoration-none btn-sm px-0">
+        <i class="bi bi-slash-circle me-1"></i>
+        {% trans "Radio buiten dienst stellen" %}
+      </a>
+    </div>
+  {% endif %}
 </div>
+{% endblock %}
 
-
-
-
-
-</div>
-
+{% block extra_script %}
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
 <script>
-document.querySelectorAll('.btn-print').forEach(btn => {
-  btn.addEventListener('click', function() {
-    event.preventDefault(); // stop default submit
+document.addEventListener("DOMContentLoaded", function() {
+  timeago.render(document.querySelectorAll('.timeago'), 'nl');
 
-    // hide printer icon and show spinner on clicked button
-    const icon = this.querySelector('i');
-    const spinner = this.querySelector('.spinner-border');
+  document.querySelectorAll('.js-copy').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const value = this.dataset.copyValue;
+      if (!value || !navigator.clipboard) return;
+      navigator.clipboard.writeText(value);
+      const icon = this.querySelector('i');
+      if (!icon) return;
+      icon.classList.remove('bi-clipboard');
+      icon.classList.add('bi-check2');
+      setTimeout(function() {
+        icon.classList.remove('bi-check2');
+        icon.classList.add('bi-clipboard');
+      }, 1200);
+    });
+  });
 
-    if (icon) icon.classList.add('d-none');      // hide printer icon
-    if (spinner) spinner.classList.remove('d-none'); // show spinner
+  document.querySelectorAll('.btn-print').forEach(function(btn) {
+    btn.addEventListener('click', function(event) {
+      event.preventDefault();
 
-    // disable all buttons
-    document.querySelectorAll('.btn-print').forEach(b => b.disabled = true);
+      const icon = this.querySelector('i');
+      const spinner = this.querySelector('.spinner-border');
+      const label = this.querySelector('span:not(.spinner-border)');
 
-    // submit form with the clicked button's action
-    const hidden = document.createElement('input');
-    hidden.type = 'hidden';
-    hidden.name = this.name;
-    hidden.value = this.value;
-    this.form.appendChild(hidden);
+      if (icon) icon.classList.add('d-none');
+      if (spinner) spinner.classList.remove('d-none');
+      if (label) label.textContent = "{% trans 'Bezig' %}";
 
-    // Submit form
-    this.form.submit();
+      document.querySelectorAll('.btn-print').forEach(function(button) {
+        button.disabled = true;
+      });
 
+      const hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.name = this.name;
+      hidden.value = this.value;
+      this.form.appendChild(hidden);
+      this.form.submit();
+    });
   });
 });
 </script>
-
-
 {% endblock %}

@@ -2,70 +2,118 @@
 {% load radio_selector_tags static i18n %}
 
 {% block content %}
+<div class="row justify-content-center">
+  <div class="col-xl-8 col-lg-9">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+      <div>
+        <h1 class="h3 mb-1">{% trans "Radio buiten dienst stellen" %}</h1>
+        <div class="text-muted">{% trans "Maak een aanvraagticket aan zodat de reden en opvolging traceerbaar blijven." %}</div>
+      </div>
+      {% if radio %}
+        <a href="{% url 'radio:detail' radio.pk %}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left me-1"></i>
+          {% trans "Terug naar radio" %}
+        </a>
+      {% endif %}
+    </div>
 
-<h1 class="mb-3">{% trans "Decommissioning request" %}</h1>
+    <form method="post" class="card">
+      {% csrf_token %}
+      <div class="card-body">
+        {% if radio %}
+          <input type="hidden" name="radio" value="{{ radio.pk }}">
 
-<div class="mb-4">
-  <p>
-    {% blocktranslate %}
-    Request to decommission a radio.
-    {% endblocktranslate %}
-  </p>
-</div>
-
-<form method="post">
-  {% csrf_token %}
-
-  <div class="row mt-3">
-
-    <div class="col radio-widget">
-      <label for="request-description">{% trans "Radio" %}</label>
-      <div class="border rounded p-4 d-flex flex-column position-relative"> 
-        <div class="overflow-auto text-center">
-          <div class="radio-card" id="radio-card">
-            {% radio_selector_button %}
+          <div class="border rounded p-3 mb-3 bg-light">
+            <div class="d-flex flex-column flex-md-row justify-content-between gap-2">
+              <div>
+                <div class="text-muted small text-uppercase fw-semibold">Radio</div>
+                <div class="fw-semibold">
+                  {% if radio.alias %}
+                    {{ radio.alias }}
+                  {% else %}
+                    {{ radio.model|default:"Radio" }}
+                  {% endif %}
+                </div>
+                <div class="text-muted small">TEI {{ radio.tei_str }}{% if radio.ISSI %} / ISSI {{ radio.ISSI }}{% endif %}</div>
+              </div>
+              <div>
+                {% if radio.is_active %}
+                  <span class="badge bg-success">{% trans "Actief" %}</span>
+                {% elif radio.is_DMO_only %}
+                  <span class="badge bg-info text-dark">{% trans "DMO only" %}</span>
+                {% elif radio.decommissioned %}
+                  <span class="badge bg-warning text-dark">{% trans "Decommissioned" %}</span>
+                {% else %}
+                  <span class="badge bg-danger">{% trans "Niet actief" %}</span>
+                {% endif %}
+              </div>
+            </div>
           </div>
+
+          {% if radio.is_active %}
+            <div class="alert alert-warning" role="alert">
+              {% trans "Deze radio is nog actief. Deactiveer de radio eerst voor je een buiten-dienst-aanvraag maakt." %}
+            </div>
+          {% elif radio.decommissioned %}
+            <div class="alert alert-info" role="alert">
+              {% trans "Deze radio staat al buiten dienst." %}
+            </div>
+          {% endif %}
+        {% else %}
+          <div class="radio-widget mb-3">
+            <label class="form-label">{% trans "Radio" %}</label>
+            <div class="border rounded p-3 d-flex flex-column position-relative">
+              <div class="overflow-auto text-center">
+                <div class="radio-card" id="radio-card">
+                  {% radio_selector_button %}
+                </div>
+              </div>
+            </div>
+            <input type="hidden" name="radio" class="hidden-radio-input">
+          </div>
+        {% endif %}
+
+        <div class="mb-3">
+          {{ form.description.label_tag }}
+          {{ form.description }}
+          {% if form.description.errors %}
+            <div class="invalid-feedback d-block">{{ form.description.errors|join:", " }}</div>
+          {% endif %}
         </div>
       </div>
-      <input type="hidden" name="radio" class="hidden-radio-input">
-    </div>
 
+      <div class="card-footer d-flex flex-column flex-sm-row justify-content-end gap-2">
+        {% if radio %}
+          <a href="{% url 'radio:detail' radio.pk %}" class="btn btn-outline-secondary">{% trans "Annuleren" %}</a>
+        {% endif %}
+        <button type="submit" class="btn btn-danger" {% if radio.is_active or radio.decommissioned %}disabled{% endif %}>
+          <i class="bi bi-slash-circle me-1"></i>
+          {% trans "Aanvraag aanmaken" %}
+        </button>
+      </div>
+    </form>
   </div>
+</div>
 
-  <div class="row mt-3">
-    <div class="col">
-      <label for="description">{% trans "Reden" %}</label>
-      <textarea class="form-control" id="description" name="description" rows="3" placeholder="{% trans 'Omschrijf hier de reden van de aanvraag' %}"></textarea>
-    </div>
-  </div>
+{% if not radio %}
+  {% radio_selector_modal %}
 
-  <div class="row mt-3">
-    <div class="col text-center">
-      <button type="submit" class="btn btn-primary">Aanvragen</button>
-    </div>
-  </div>
+  <script>
+    function radio_selector_callback(btn, data) {
+      const card = btn.parentElement;
+      const hiddenInput = card.closest(".radio-widget").querySelector(".hidden-radio-input");
 
-
-</form>
-
-{% radio_selector_modal %}
-
-<script>
-  function radio_selector_callback(btn, data){
-    const card = btn.parentElement; 
-    const hidden_input = card.closest(".radio-widget").querySelector(".hidden-radio-input");
-
-    hidden_input.value = data.tei;
-    card.dataset.tei = data.tei;
-  }
-</script>
-
+      hiddenInput.value = data.tei;
+      card.dataset.tei = data.tei;
+    }
+  </script>
+{% endif %}
 {% endblock %}
 
 {% block extra_script %}
-
   <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
-  <script src="{% static 'js/radio_card.js' %}"></script>
-
+  {% if not radio %}
+    <script src="{% static 'js/radio_card.js' %}"></script>
+  {% endif %}
 {% endblock %}

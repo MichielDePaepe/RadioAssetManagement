@@ -29,11 +29,11 @@ class Radio(models.Model):
 
     @property
     def is_active(self):
-        return self.subscription.active and not self.subscription.DMO_only if hasattr(self, 'subscription') else False
+        return self.subscription.active and not self.subscription.DMO_only and not self.decommissioned if hasattr(self, 'subscription') else False
 
     @property
     def is_DMO_only(self):
-        return self.subscription.DMO_only if hasattr(self, 'subscription') else False
+        return self.subscription.DMO_only and not self.decommissioned if hasattr(self, 'subscription') else False
 
     def save(self, *args, **kwargs):
         matching_range = TEIRange.objects.filter(min_tei__lte=self.TEI, max_tei__gte=self.TEI).first()
@@ -174,15 +174,32 @@ class RadioDecommissioningTicket(Ticket):
         # Ensure the correct TicketType exists
         decommissioning_type, _ = TicketType.objects.get_or_create(
             code="DECOMMISSIONING",
-            defaults={"name_en": "Decommissioning"},
+            defaults={"name": "Decommissioning"},
         )
         self.ticket_type = decommissioning_type
 
         # Only set the title on creation, not on every update
         if not self.pk:
-            self.title = f"Decommissioning of a {self.radio.model} witgh TEI {self.radio.tei_str}"
+            self.title = f"Decommissioning of a {self.radio.model} with TEI {self.radio.tei_str}"
 
         super().save(*args, **kwargs)
+
+    def approve_decommissioning(self, user=None, note=""):
+        from helpdesk.models import TicketLog, TicketStatus
+
+        self.radio.decommissioned = True
+        self.radio.save(update_fields=["decommissioned"])
+
+        closed, created = TicketStatus.objects.get_or_create(
+            code="CLOSED",
+            defaults={"name": "Closed"},
+        )
+        TicketLog.objects.create(
+            ticket=self,
+            user=user,
+            status_after=closed,
+            note=note or _("Decommissioning approved. Radio marked as decommissioned."),
+        )
 
     class Meta:
         permissions = [
