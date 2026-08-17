@@ -1,7 +1,7 @@
 class Scanner {
-  constructor({ inputId, onScan }) {
+  constructor({ inputId, onScan, scanUrl = "/radio/scan/" }) {
     this.input = document.getElementById(inputId);
-    this.scanUrl = "/en/radio/scan/";   // hardcoded
+    this.scanUrl = scanUrl;
     this.onScan = onScan;
 
     if (!this.input) {

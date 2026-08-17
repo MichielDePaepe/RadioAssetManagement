@@ -18,6 +18,7 @@
 // --- Scanner initialization ---
 const scanner = new Scanner({
   inputId: "radio-selector-scanner-input",
+  scanUrl: "{% url 'radio:scan' %}",
   onScan: handleScanResponse
 });
 
@@ -46,8 +47,8 @@ document.addEventListener("DOMContentLoaded", function() {
   if (modalElement.dataset.showOnLoad === "true") bsInstance.show();
 
   // Reset modal when shown/hidden
-  modalElement.addEventListener('shown.bs.modal', () => { resertToInputs(); stop_scanning(); });
-  modalElement.addEventListener('hidden.bs.modal', () => { resertToInputs(); stop_scanning(); });
+  modalElement.addEventListener('shown.bs.modal', () => { resetToInputs(); start_scanning(); });
+  modalElement.addEventListener('hidden.bs.modal', () => { resertToInputs(); stop_scanning(); stopCameraScanning(); });
 
   // Handle buttons that open the selector
   document.querySelectorAll(".open-radio-selector-modal").forEach(btn => {
@@ -74,96 +75,246 @@ document.addEventListener("DOMContentLoaded", function() {
     console.error("No callback function found");
     currentCallback = null;
   }
+  resetToInputs();
+  start_scanning();
 {% endif %}
 });
 
 // --- Reset function ---
-function resertToInputs() {
+function resetToInputs() {
   inputsDiv.style.display = "block";
   resultDiv.style.display = "none";
   resultDiv.innerHTML = "";
-  document.getElementById("radio-issi").value = "";
-  document.getElementById("radio-tei").value = "";
-  document.getElementById("radio-alias").value = "";
-  document.getElementById("error-issi").textContent = "";
-  document.getElementById("error-tei").textContent = "";
-  document.getElementById("error-alias").textContent = "";
-  document.getElementById("error-qr").textContent = "";
+  document.getElementById("radio-selector-query").value = "";
+  document.getElementById("radio-selector-error").textContent = "";
+  document.getElementById("radio-selector-scan-status").textContent = "";
+  stopCameraScanning();
 }
 
-// --- Handle clicking the search buttons (ISSI / TEI / ALIAS) ---
-document.querySelectorAll(".search-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const type = btn.dataset.type;
-    const input = document.getElementById(`radio-${type}`);
-    const errorDiv = document.getElementById(`error-${type}`);
+function resertToInputs() {
+  resetToInputs();
+}
 
-    errorDiv.textContent = "";
-    resultDiv.innerHTML = "";
+// --- Handle manual search ---
+const queryInput = document.getElementById("radio-selector-query");
+const searchButton = document.getElementById("radio-selector-search-btn");
+const errorDiv = document.getElementById("radio-selector-error");
 
-    const value = input.value.trim();
-    if (!value) {
-      errorDiv.textContent = "{% trans 'Vul een waarde in.' %}";
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("type", type);
-    formData.append("value", value);
-
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    try {
-      const res = await fetch("{% url 'radio:lookup' %}", {
-        method: "POST",
-        headers: { "X-CSRFToken": csrfToken },
-        body: formData
-      });
-      const data = await res.json();
-
-      if (data.status === "success") {
-        loadSelectorResult(data);
-      } else {
-        errorDiv.textContent = data.message;
-      }
-    } catch (err) {
-      errorDiv.textContent = "{% trans 'Er is een fout opgetreden bij het zoeken.' %}";
-      console.error(err);
-    }
-  });
+queryInput.addEventListener("focus", () => {
+  stop_scanning();
+  stopCameraScanning();
 });
+
+queryInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    lookupRadio();
+  }
+});
+
+searchButton.addEventListener("click", lookupRadio);
+
+async function lookupRadio() {
+  errorDiv.textContent = "";
+  resultDiv.innerHTML = "";
+
+  const value = queryInput.value.trim();
+  if (!value) {
+    errorDiv.textContent = "{% trans 'Vul een TEI, ISSI, alias of QR-url in.' %}";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("type", "auto");
+  formData.append("value", value);
+
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  try {
+    const res = await fetch("{% url 'radio:lookup' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": csrfToken },
+      body: formData
+    });
+    const data = await res.json();
+
+    if (data.status === "success" || data.status === "ok") {
+      loadSelectorResult(data);
+    } else {
+      errorDiv.textContent = data.message;
+    }
+  } catch (err) {
+    errorDiv.textContent = "{% trans 'Er is een fout opgetreden bij het zoeken.' %}";
+    console.error(err);
+  }
+}
 
 // --- Scanner logic (on/off, QR handling) ---
 function start_scanning() {
   const btn = document.getElementById("scan-btn");
+  const status = document.getElementById("radio-selector-scan-status");
   btn.classList.remove("btn-success");
   btn.classList.add("btn-danger");
-  btn.innerHTML = '<i class="bi bi-record-circle"></i> Scanning';
+  btn.innerHTML = '<i class="bi bi-record-circle"></i> Scanner aan';
+  status.textContent = "{% trans 'Scan een QR-code of TEI-barcode.' %}";
   scanner.start();
 }
 
 function stop_scanning() {
   const btn = document.getElementById("scan-btn");
+  const status = document.getElementById("radio-selector-scan-status");
   btn.classList.remove("btn-danger");
   btn.classList.add("btn-success");
   btn.innerHTML = '<i class="bi bi-qr-code"></i> Start scanner';
+  status.textContent = "";
   scanner.stop();
 }
 
 document.getElementById("scan-btn").addEventListener("click", e => {
-  if (!scanner.is_scanning) start_scanning();
+  if (!scanner.is_scanning) {
+    stopCameraScanning();
+    start_scanning();
+  }
   else stop_scanning();
 });
 
-function handleScanResponse(data) {
+// --- Smartphone camera QR scanner ---
+const cameraControls = document.getElementById("radio-selector-camera-controls");
+const cameraButton = document.getElementById("camera-scan-btn");
+const cameraPanel = document.getElementById("radio-selector-camera-panel");
+const cameraVideo = document.getElementById("radio-selector-camera-video");
+const cameraStopButton = document.getElementById("camera-stop-btn");
+let cameraStream = null;
+let cameraScanTimer = null;
+let cameraDetector = null;
+let cameraScanInProgress = false;
+
+function isSmartphone() {
+  const touchPhone = window.matchMedia("(pointer: coarse) and (max-width: 768px)").matches;
+  const userAgentPhone = /Android|iPhone|iPod|Windows Phone/i.test(navigator.userAgent);
+  return touchPhone || userAgentPhone;
+}
+
+function canShowCameraScanner() {
+  const localHost = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+  const forced = new URLSearchParams(window.location.search).get("camera") === "1";
+  return isSmartphone() || localHost || forced;
+}
+
+if (canShowCameraScanner()) {
+  cameraControls.style.display = "block";
+}
+
+cameraButton.addEventListener("click", startCameraScanning);
+cameraStopButton.addEventListener("click", () => {
+  stopCameraScanning();
+  start_scanning();
+});
+
+async function startCameraScanning() {
+  errorDiv.textContent = "";
   stop_scanning();
-  if (data.status === "ok") loadSelectorResult(data);
-  else document.getElementById("error-qr").textContent = data.message;
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    errorDiv.textContent = "{% trans 'Camera scannen wordt niet ondersteund door deze browser.' %}";
+    start_scanning();
+    return;
+  }
+
+  if (!window.BarcodeDetector) {
+    errorDiv.textContent = "{% trans 'QR-detectie met de camera wordt niet ondersteund door deze browser.' %}";
+    start_scanning();
+    return;
+  }
+
+  try {
+    cameraDetector = new BarcodeDetector({ formats: ["qr_code"] });
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
+    });
+    cameraVideo.srcObject = cameraStream;
+    cameraPanel.style.display = "block";
+    cameraButton.style.display = "none";
+    await cameraVideo.play();
+    scheduleCameraScan();
+  } catch (err) {
+    errorDiv.textContent = "{% trans 'Camera kon niet gestart worden.' %}";
+    console.error(err);
+    stopCameraScanning();
+    start_scanning();
+  }
+}
+
+function stopCameraScanning() {
+  if (cameraScanTimer) {
+    clearTimeout(cameraScanTimer);
+    cameraScanTimer = null;
+  }
+  cameraScanInProgress = false;
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+  }
+  cameraVideo.srcObject = null;
+  cameraPanel.style.display = "none";
+  if (canShowCameraScanner()) {
+    cameraButton.style.display = "block";
+  }
+}
+
+function scheduleCameraScan() {
+  if (!cameraStream) return;
+  cameraScanTimer = setTimeout(scanCameraFrame, 300);
+}
+
+async function scanCameraFrame() {
+  if (!cameraStream || cameraScanInProgress) return;
+  cameraScanInProgress = true;
+
+  try {
+    const codes = await cameraDetector.detect(cameraVideo);
+    if (codes.length) {
+      const scannedLine = codes[0].rawValue;
+      const data = await submitScannedLine(scannedLine);
+      if (data.status === "ok" || data.status === "success") {
+        stopCameraScanning();
+        handleScanResponse(data);
+        return;
+      }
+      errorDiv.textContent = data.message;
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    cameraScanInProgress = false;
+    scheduleCameraScan();
+  }
+}
+
+async function submitScannedLine(scannedLine) {
+  const res = await fetch("{% url 'radio:scan' %}", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scanned_line: scannedLine }),
+  });
+  return res.json();
+}
+
+function handleScanResponse(data) {
+  if (data.status === "ok" || data.status === "success") {
+    stop_scanning();
+    loadSelectorResult(data);
+  } else {
+    errorDiv.textContent = data.message;
+    start_scanning();
+  }
 }
 
 // --- Load result ---
 function loadSelectorResult(data) {
   if (autoConfirm && currentCallback) {
+    stopCameraScanning();
     currentCallback(currentButton, data);
     modalElement && bootstrap.Modal.getInstance(modalElement)?.hide();
     return;
@@ -184,8 +335,10 @@ function loadSelectorResult(data) {
 // --- Confirm/Cancel buttons ---
 resultDiv.addEventListener("click", e => {
   if (e.target.id === "cancel-radio") {
-    resertToInputs();
+    resetToInputs();
+    start_scanning();
   } else if (e.target.id === "confirm-radio") {
+    stopCameraScanning();
     if (currentCallback) currentCallback(currentButton, e.target.dataset);
     if (!isStatic && modalElement) bootstrap.Modal.getInstance(modalElement)?.hide();
   }

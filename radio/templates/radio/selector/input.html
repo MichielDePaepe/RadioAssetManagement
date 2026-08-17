@@ -3,32 +3,41 @@
 
 <div class="mb-3">
   <div class="input-group">
-    <input type="text" id="radio-issi" class="form-control" placeholder="{% trans 'ISSI' %}">
-    <button type="button" class="btn btn-primary search-btn" id="search-issi-btn" data-type="issi">{% trans "Zoeken" %}</button>
+    <input type="text"
+           id="radio-selector-query"
+           class="form-control"
+           placeholder="{% trans 'TEI, ISSI, alias of QR-url' %}"
+           autocomplete="off"
+           autocorrect="off"
+           autocapitalize="off">
+    <button type="button" class="btn btn-primary" id="radio-selector-search-btn">
+      <i class="bi bi-search"></i>
+      {% trans "Zoeken" %}
+    </button>
   </div>
-  <div class="form-text text-danger" id="error-issi"></div>
-</div>
-
-<div class="mb-3">
-  <div class="input-group">
-    <input type="text" id="radio-tei" class="form-control" placeholder="{% trans 'TEI' %}">
-    <button type="button" class="btn btn-primary search-btn" id="search-tei-btn" data-type="tei">{% trans "Zoeken" %}</button>
-  </div>
-  <div class="form-text text-danger" id="error-tei"></div>
-</div>
-
-<div class="mb-3">
-  <div class="input-group">
-    <input type="text" id="radio-alias" class="form-control" placeholder="{% trans 'Alias' %}">
-    <button type="button" class="btn btn-primary search-btn" id="search-alias-btn" data-type="alias">{% trans "Zoeken" %}</button>
-  </div>
-  <div class="form-text text-danger" id="error-alias"></div>
+  <div class="form-text text-danger" id="radio-selector-error"></div>
 </div>
 
 <div class="mb-3">
   <input type="text" id="radio-selector-scanner-input">
-  <button type="button" class="btn btn-success w-100" id="scan-btn" data-type="qr">
+  <button type="button" class="btn btn-success w-100" id="scan-btn">
     <i class="bi bi-qr-code"></i> {% trans "Start scanner" %}
   </button>
-  <div class="form-text text-danger" id="error-qr"></div>
+  <div class="form-text text-muted mt-1" id="radio-selector-scan-status"></div>
+</div>
+
+<div class="mb-3" id="radio-selector-camera-controls" style="display:none;">
+  <button type="button" class="btn btn-outline-primary w-100" id="camera-scan-btn">
+    <i class="bi bi-camera"></i> {% trans "Scan QR met camera" %}
+  </button>
+  <div id="radio-selector-camera-panel" class="mt-2" style="display:none;">
+    <video id="radio-selector-camera-video"
+           class="w-100 border rounded"
+           style="max-height: 320px; object-fit: cover;"
+           muted
+           playsinline></video>
+    <button type="button" class="btn btn-outline-secondary w-100 mt-2" id="camera-stop-btn">
+      {% trans "Stop camera" %}
+    </button>
+  </div>
 </div>

@@ -34,6 +34,177 @@ from printer.models import *
 from .services.printing import RadioPrintingService
 from .services.image_service import ImageGenerator
 
+SCANNER_KEYBOARD_TRANSLATION = str.maketrans({
+    'a': 'q', 'A': 'Q', 'z': 'w', 'Z': 'W', 'q': 'a', 'Q': 'A',
+    'm': ';', 'M': ':', 'w': 'z', 'W': 'Z', '&': '1', 'é': '2',
+    '"': '3', '\'': '4', '’': '4', '(': '5', '§': '6', 'è': '7',
+    '!': '8', 'ç': '9', 'à': '0', '=': '/', ':': '.', '+': '?',
+    '-': '=', ';': ',',
+})
+
+SCANNER_QWERTY_TO_AZERTY_TRANSLATION = str.maketrans({
+    'q': 'a', 'Q': 'A', '.': ':', '>': '/',
+    '<': '.', 'M': '?', 'd': 'd', '/': '=', '!': '1', '@': '2',
+    '*': '8', ')': '0', 'm': ',',
+})
+
+SCANNER_QWERTY_SHIFTED_DIGITS_TRANSLATION = str.maketrans({
+    'q': 'a', 'Q': 'A', '.': ':', '>': '/',
+    '<': '.', 'M': '?', 'd': 'd', '/': '=', '!': '1', '&': '2',
+    '$': '8', '*': '1', ')': '0', 'm': ',',
+})
+
+SCANNER_STANDARD_SHIFTED_DIGITS_TRANSLATION = str.maketrans({
+    ')': '0', '!': '1', '@': '2', '#': '3', '$': '4',
+    '%': '5', '^': '6', '&': '7', '*': '8', '(': '9',
+})
+
+SCANNER_KEYBOARD_TRANSLATIONS = (
+    SCANNER_KEYBOARD_TRANSLATION,
+    SCANNER_QWERTY_TO_AZERTY_TRANSLATION,
+    SCANNER_QWERTY_SHIFTED_DIGITS_TRANSLATION,
+    SCANNER_STANDARD_SHIFTED_DIGITS_TRANSLATION,
+)
+
+QR_CODE_PATTERN = re.compile(
+    r"https?://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)"
+)
+
+
+class RadioLookupError(Exception):
+    def __init__(self, message, status=404):
+        super().__init__(message)
+        self.message = message
+        self.status = status
+
+
+def scanner_input_variants(value):
+    value = (value or "").strip()
+    variants = []
+
+    def add_variant(candidate):
+        half_length = len(candidate) // 2
+        if half_length and len(candidate) % 2 == 0 and candidate[:half_length] == candidate[half_length:]:
+            half = candidate[:half_length]
+            if half not in variants:
+                variants.append(half)
+        if candidate and candidate not in variants:
+            variants.append(candidate)
+
+    add_variant(value)
+    for candidate in list(variants):
+        for translation in SCANNER_KEYBOARD_TRANSLATIONS:
+            add_variant(candidate.translate(translation))
+    return variants
+
+
+def radio_lookup_payload(radio, status="success"):
+    return {
+        "status": status,
+        "TEI": radio.TEI,
+        "tei": radio.tei_str,
+        "tei_str": radio.tei_str,
+        "ISSI": radio.ISSI,
+        "issi": radio.ISSI,
+        "alias": radio.alias,
+        "fireplan_id": radio.fireplan_id,
+        "radio": str(radio),
+        "result_html": render_to_string("radio/selector/result.html", {"radio": radio}),
+    }
+
+
+def radio_from_qr_code(value):
+    for candidate in scanner_input_variants(value):
+        match = QR_CODE_PATTERN.search(candidate)
+        if match:
+            fireplan_id = int(match.group("fireplan_id"))
+            try:
+                return Radio.objects.get(fireplan_id=fireplan_id)
+            except Radio.DoesNotExist:
+                raise RadioLookupError(
+                    _("Geen radio gevonden voor Fireplan ID {fireplan_id}").format(fireplan_id=fireplan_id)
+                )
+    return None
+
+
+def radio_from_tei(value):
+    value = (value or "").strip()
+    if not value.isdigit():
+        raise RadioLookupError(_("TEI mag enkel uit cijfers bestaan"), status=400)
+
+    tei_value = int(value)
+    try:
+        return Radio.objects.get(pk=tei_value)
+    except Radio.DoesNotExist:
+        raise RadioLookupError(
+            _("Radio met dit TEI {tei} nummer niet gevonden").format(tei=str(tei_value).zfill(15))
+        )
+
+
+def radio_from_issi(value):
+    value = (value or "").strip()
+    try:
+        issi_value = int(value)
+    except ValueError:
+        raise RadioLookupError(_("ISSI-nummer mag enkel uit cijfers bestaan"), status=400)
+
+    if len(str(issi_value)) != 7:
+        raise RadioLookupError(_("Lengte van een ISSI-nummer moet 7 digits zijn"), status=400)
+
+    try:
+        issi = ISSI.objects.get(number=issi_value)
+        return issi.subscription.radio
+    except ISSI.DoesNotExist:
+        raise RadioLookupError(_("ISSI-nummer niet gevonden"))
+    except ISSI.subscription.RelatedObjectDoesNotExist:
+        raise RadioLookupError(_("Geen radio gevonden met dit ISSI-nummer"))
+
+
+def radio_from_alias(value):
+    issi = ISSI.objects.filter(alias__iexact=(value or "").strip()).first()
+    if not issi:
+        raise RadioLookupError(_("Geen ISSI gevonden met alias “{alias}”").format(alias=value))
+    if hasattr(issi, "subscription") and hasattr(issi.subscription, "radio"):
+        return issi.subscription.radio
+    raise RadioLookupError(_("Geen radio gekoppeld aan deze alias"))
+
+
+def find_radio_by_any_input(value, lookup_type="auto"):
+    value = (value or "").strip()
+    if not value:
+        raise RadioLookupError(_("Vul een waarde in."), status=400)
+
+    if lookup_type in ("auto", "qr", "serial"):
+        radio = radio_from_qr_code(value)
+        if radio:
+            return radio
+        if lookup_type in ("qr", "serial"):
+            for candidate in scanner_input_variants(value):
+                if candidate.isdigit():
+                    return radio_from_tei(candidate)
+            raise RadioLookupError(_("QR-code of TEI niet gevonden"))
+
+    if lookup_type == "tei":
+        return radio_from_tei(value)
+    if lookup_type == "issi":
+        return radio_from_issi(value)
+    if lookup_type == "alias":
+        return radio_from_alias(value)
+
+    if lookup_type != "auto":
+        raise RadioLookupError(_("invalid lookup type"), status=400)
+
+    for candidate in scanner_input_variants(value):
+        if candidate.isdigit():
+            try:
+                return radio_from_tei(candidate)
+            except RadioLookupError as tei_error:
+                if len(str(int(candidate))) != 7:
+                    raise tei_error
+            return radio_from_issi(candidate)
+
+    return radio_from_alias(value)
+
 
 class RadioCardView(View):
     def get(self, request, tei):
@@ -196,45 +367,15 @@ class ScanQRCodeView(View):
         return JsonResponse({"status": "error", "message":"GET not allowed"}, status=500)
     
     def post(self, request, *args, **kwargs):
-        if True:
-            data = json.loads(request.body)
-            scanned_line = data.get("scanned_line")
-
-            logger.debug(f"QR code input: {scanned_line}")
-
-            pattern = re.compile(r"https://infoscan\.firebru\.brussels\?data[=-](?P<arg1>\d+),(?P<arg2>\d+),(?P<fireplan_id>\d+),(?P<arg4>\d+)")
-
-            match = pattern.match(scanned_line)
-
-            if not match:
-                # scanner is set to qwerty, try converting if input was on an azerty system
-                mapping = str.maketrans({'a': 'q', 'A': 'Q', 'z': 'w', 'Z': 'W', 'q': 'a', 'Q': 'A', 'm': ';', 'M': ':', 'w': 'z', 'W': 'Z', '&': '1', 'é': '2', '"': '3', '\'': '4', '’': '4', '(': '5', '§': '6', 'è': '7', '!': '8', 'ç': '9', 'à': '0', '=': '/', ':': '.', '+': '?', '-': '=', ';': ','})
-                translated_scanned_line = scanned_line.translate(mapping)
-                logger.debug(f"Try AZERTY to QWERTY translation. Result: {scanned_line}")
-                match = pattern.match(translated_scanned_line)
-
-            if match:
-                fireplan_id = int(match.group("fireplan_id"))
-                logger.debug(f"fireplan id: {fireplan_id}")
-
-                radio = Radio.objects.get(fireplan_id=fireplan_id)
-                logger.debug(f"radio: {radio}")
-
-                res = {
-                    "status": "ok", 
-                    "TEI": radio.TEI, 
-                    "ISSI": radio.ISSI, 
-                    "alias": radio.alias,
-                    "fireplan_id": fireplan_id,
-                    "radio": str(radio)
-                }
-
-                return JsonResponse(res)
-
-            return JsonResponse({"status": "error", "message": "TIE not found"}, status=404)
-
         try:
-            pass
+            data = json.loads(request.body)
+            scanned_line = data.get("scanned_line", "")
+            logger.debug(f"Radio scan input: {scanned_line}")
+
+            radio = find_radio_by_any_input(scanned_line, lookup_type="qr")
+            return JsonResponse(radio_lookup_payload(radio, status="ok"))
+        except RadioLookupError as e:
+            return JsonResponse({"status": "error", "message": e.message}, status=e.status)
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
@@ -343,76 +484,17 @@ class LookupView(View):
 
     def post(self, request, *args, **kwargs):
         try:
-            lookup_type = request.POST.get('type')
-            value = request.POST.get('value').strip()
+            lookup_type = request.POST.get('type', 'auto')
+            value = request.POST.get('value', '').strip()
 
             if not lookup_type or not value:
                 return HttpResponseBadRequest(_("type and value required"))
 
-            radio = None
+            radio = find_radio_by_any_input(value, lookup_type=lookup_type)
+            return JsonResponse(radio_lookup_payload(radio))
 
-            if lookup_type == 'issi':
-                try:
-                    issi_value = int(value)
-                    if len(str(issi_value)) != 7:
-                        return JsonResponse({"status": "error", "message":_("Lengte van een ISSI-nummer moet 7 digits zijn")}, status=500)
-                    issi = ISSI.objects.get(number=int(issi_value))
-                    radio = issi.subscription.radio
-                except ValueError:
-                    return JsonResponse({"status": "error", "message": _("ISSI-nummer mag enkel uit cijfers bestaan")}, status=500)
-                except ISSI.DoesNotExist:
-                    return JsonResponse({"status": "error", "message": _("ISSI-nummer niet gevonden")}, status=404)
-                except ISSI.subscription.RelatedObjectDoesNotExist:
-                    return JsonResponse({"status": "error", "message": _("Geen radio gevonden met dit ISSI-nummer")}, status=404)
-
-            elif lookup_type == 'tei':
-                tei_value = value
-                try:
-                    radio = Radio.objects.get(pk=tei_value)
-                except Radio.DoesNotExist:
-                    return JsonResponse({"status": "error", "message": _("Radio met dit TEI {tei} nummer niet gevonden").format(tei=tei_value.zfill(15))}, status=404)
-
-            elif lookup_type == 'alias':
-                try:
-                    issi = ISSI.objects.filter(alias__iexact=value).first()
-                    if not issi:
-                        return JsonResponse(
-                            {"status": "error", "message": _("Geen ISSI gevonden met alias “{alias}”").format(alias=value)},
-                            status=404
-                        )
-                    if hasattr(issi, "subscription") and hasattr(issi.subscription, "radio"):
-                        radio = issi.subscription.radio
-                    else:
-                        return JsonResponse(
-                            {"status": "error", "message": _("Geen radio gekoppeld aan deze alias")},
-                            status=404
-                        )
-                except Exception as e:
-                    logger.error(f"Alias lookup error: {e}")
-                    return JsonResponse({"status": "error", "message": _("Fout bij het zoeken op alias")}, status=500)
-
-
-            elif lookup_type in ('qr', 'serial'):
-                logger.debug(value)
-
-            else:
-                return HttpResponseBadRequest(_('invalid lookup type'))
-
-            if radio:
-                data = {
-                    "status": "success", 
-                    "TEI": radio.TEI, 
-                    "tei_str": radio.tei_str, 
-                    "ISSI": radio.ISSI, 
-                    "alias": radio.alias,
-                    "fireplan_id": radio.fireplan_id,
-                    "radio": str(radio),
-                    "result_html": render_to_string("radio/selector/result.html", {"radio": radio})
-                }
-                return JsonResponse(data)
-            else:
-                return JsonResponse({"status": "error", "message": _("Radio not found")}, status=404)
-
+        except RadioLookupError as e:
+            return JsonResponse({"status": "error", "message": e.message}, status=e.status)
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
