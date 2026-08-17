@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import override
 
-from radio.models import ISSI, Radio, RadioModel, TEIRange
+from radio.models import ISSI, Radio, RadioModel, Subscription, TEIRange
 
 from .models import FireplanInventory, FireplanInventoryRadio, Vector, Vehicle, VehicleStatus
 from .sync import _match_or_create_vehicle_from_vector_item, sync_fireplan_fleet
@@ -166,6 +166,7 @@ class FireplanInventoryHistoryViewTests(TestCase):
         self.assertContains(response, "Citerne 01")
         self.assertContains(response, "text-danger")
         self.assertContains(response, "bi-exclamation-triangle-fill")
+        self.assertContains(response, "text-muted")
         self.assertContains(response, self.inventory.closed_at.strftime("%d/%m/%Y"))
         self.assertNotContains(response, self.inventory.closed_at.strftime("%H:%M"))
 
@@ -221,6 +222,75 @@ class FireplanInventoryHistoryViewTests(TestCase):
         self.assertContains(response, "A Post")
         self.assertContains(response, "Z Post")
         self.assertLess(content.index("A Post"), content.index("Z Post"))
+
+    def test_overview_strikes_radio_when_seen_more_recently_on_another_vector(self):
+        radio_model = RadioModel.objects.create(name="Portable")
+        TEIRange.objects.create(
+            model=radio_model,
+            min_tei=750000000000000,
+            max_tei=750000000000999,
+        )
+        radio = Radio.objects.create(TEI=750000000000111)
+        issi = ISSI.objects.create(number=6922111, alias="A BRI 2-1")
+        Subscription.objects.create(radio=radio, issi=issi)
+
+        older_vehicle = Vehicle.objects.create(number="A35", status=1)
+        older_vector = Vector.objects.create(
+            resourceCode="ABANDE03A",
+            vehicle=older_vehicle,
+            name="AMB AND 3",
+            orderServiceAbbreviation="ANDERLECHT",
+        )
+        older_inventory = FireplanInventory.objects.create(
+            uuid=uuid4(),
+            vehicle_alpha_code=older_vehicle.number,
+            vehicle=older_vehicle,
+            vector=older_vector,
+            closed_at=timezone.now() - timedelta(days=5),
+        )
+        older_inventory_radio = FireplanInventoryRadio.objects.create(
+            inventory=older_inventory,
+            container_uuid=uuid4(),
+            item_uuid=uuid4(),
+            tei=radio.tei_str,
+            radio=radio,
+        )
+
+        newer_vehicle = Vehicle.objects.create(number="A75", status=1)
+        newer_vector = Vector.objects.create(
+            resourceCode="ABSCHA01A",
+            vehicle=newer_vehicle,
+            name="AMB BRIEN 1",
+            orderServiceAbbreviation="BRIEN",
+        )
+        newer_inventory = FireplanInventory.objects.create(
+            uuid=uuid4(),
+            vehicle_alpha_code=newer_vehicle.number,
+            vehicle=newer_vehicle,
+            vector=newer_vector,
+            closed_at=timezone.now(),
+        )
+        newer_inventory_radio = FireplanInventoryRadio.objects.create(
+            inventory=newer_inventory,
+            container_uuid=uuid4(),
+            item_uuid=uuid4(),
+            tei=radio.tei_str,
+            radio=radio,
+        )
+
+        with override("nl"):
+            response = self.client.get(reverse("fireplan:latest_inventory_per_vector"))
+
+        self.assertContains(response, "A BRI 2-1", count=2)
+        self.assertContains(response, "text-decoration-line-through")
+        self.assertIn(
+            older_inventory_radio.id,
+            response.context["superseded_inventory_radio_ids"],
+        )
+        self.assertNotIn(
+            newer_inventory_radio.id,
+            response.context["superseded_inventory_radio_ids"],
+        )
 
     def test_vector_inventory_history_shows_vehicle_and_scanner(self):
         with override("nl"):

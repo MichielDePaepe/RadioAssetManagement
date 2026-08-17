@@ -12,6 +12,15 @@ from django.views.generic import TemplateView
 from .models import FireplanInventory, Vector
 
 
+def inventory_radio_identity(inventory_radio):
+    if inventory_radio.radio_id:
+        return ("radio", inventory_radio.radio_id)
+    tei = (inventory_radio.tei or "").strip().lstrip("0")
+    if tei:
+        return ("tei", tei)
+    return None
+
+
 class LatestInventoryPerVectorView(TemplateView):
     template_name = "fireplan/latest_inventory_per_vector.html"
 
@@ -45,8 +54,7 @@ class LatestInventoryPerVectorView(TemplateView):
                 }
 
 
-        ctx["stale_before"] = stale_before
-        ctx["latest_rows"] = sorted(
+        latest_rows = sorted(
             latest_per_vector.values(),
             key=lambda r: (
                 r["vector"].orderServiceAbbreviation or "",
@@ -54,6 +62,29 @@ class LatestInventoryPerVectorView(TemplateView):
                 r["vector"].resourceCode or "",
             )
         )
+
+        latest_seen_by_radio = {}
+        for row in latest_rows:
+            inv = row["inventory"]
+            for inventory_radio in inv.radios.all():
+                identity = inventory_radio_identity(inventory_radio)
+                if not identity:
+                    continue
+                seen_at = inv.closed_at
+                if identity not in latest_seen_by_radio or seen_at > latest_seen_by_radio[identity]:
+                    latest_seen_by_radio[identity] = seen_at
+
+        superseded_inventory_radio_ids = set()
+        for row in latest_rows:
+            inv = row["inventory"]
+            for inventory_radio in inv.radios.all():
+                identity = inventory_radio_identity(inventory_radio)
+                if identity and inv.closed_at < latest_seen_by_radio[identity]:
+                    superseded_inventory_radio_ids.add(inventory_radio.id)
+
+        ctx["stale_before"] = stale_before
+        ctx["latest_rows"] = latest_rows
+        ctx["superseded_inventory_radio_ids"] = superseded_inventory_radio_ids
         return ctx
 
 

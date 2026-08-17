@@ -52,15 +52,16 @@
 
                 <td>
                   {% if is_stale %}
-                    <span class="text-danger fw-semibold">
-                      <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ inv.closed_at|date:"d/m/Y" }}
+                    <span class="text-muted">
+                      {{ inv.closed_at|date:"d/m/Y" }}
+                      <i class="bi bi-exclamation-triangle-fill ms-1 text-danger"></i>
                     </span>
                   {% else %}
                     <span class="text-muted">{{ inv.closed_at|date:"d/m/Y" }}</span>
                   {% endif %}
                 </td>
 
-                <td>
+                <td class="{% if ir.id in superseded_inventory_radio_ids %}text-decoration-line-through text-muted{% endif %}">
                   {% if r %}
                     <span class="fw-semibold">
                       {% if r.subscription.issi.alias %}{{ r.subscription.issi.alias }}{% else %}{% trans "(no alias)" %}{% endif %}
@@ -106,8 +107,9 @@
 
             <td>
               {% if is_stale %}
-                <span class="text-danger fw-semibold">
-                  <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ inv.closed_at|date:"d/m/Y" }}
+                <span class="text-muted">
+                  {{ inv.closed_at|date:"d/m/Y" }}
+                  <i class="bi bi-exclamation-triangle-fill ms-1 text-danger"></i>
                 </span>
               {% else %}
                 <span class="text-muted">{{ inv.closed_at|date:"d/m/Y" }}</span>
