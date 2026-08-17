@@ -32,9 +32,16 @@
             </li>
             <li>
               <a class="dropdown-item" href="{% url 'fireplan:latest_inventory_per_vector' %}">
-                <i class="fa fa-truck-medical me-2"></i>{% trans "Ziekenwagens" %}
+                <i class="bi bi-clipboard-data me-2"></i>{% trans "Inventarisoverzicht" %}
               </a>
             </li>
+            {% if user.is_authenticated %}
+            <li>
+              <a class="dropdown-item" href="{% url 'inventory:fireplan_inventory_start' %}">
+                <i class="bi bi-qr-code-scan me-2"></i>{% trans "Inventaris doen" %}
+              </a>
+            </li>
+            {% endif %}
           </ul>
         </li>
 

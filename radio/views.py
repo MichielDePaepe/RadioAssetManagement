@@ -108,6 +108,10 @@ def radio_lookup_payload(radio, status="success"):
         "issi": radio.ISSI,
         "alias": radio.alias,
         "fireplan_id": radio.fireplan_id,
+        "model": str(radio.model) if radio.model else "",
+        "is_active": radio.is_active,
+        "is_DMO_only": radio.is_DMO_only,
+        "decommissioned": radio.decommissioned,
         "radio": str(radio),
         "result_html": render_to_string("radio/selector/result.html", {"radio": radio}),
     }

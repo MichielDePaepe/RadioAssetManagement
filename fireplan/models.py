@@ -169,7 +169,8 @@ class Vector(models.Model):
 
 
 class FireplanInventory(models.Model):
-    uuid = models.UUIDField(primary_key=True)
+    id = models.BigAutoField(primary_key=True)
+    uuid = models.UUIDField(unique=True, null=True, blank=True)
 
     vehicle_alpha_code = models.CharField(max_length=16, db_index=True)
 
@@ -217,8 +218,8 @@ class FireplanInventoryRadio(models.Model):
         related_name="radios",
     )
 
-    container_uuid = models.UUIDField(db_index=True)
-    item_uuid = models.UUIDField(db_index=True)
+    container_uuid = models.UUIDField(null=True, blank=True, db_index=True)
+    item_uuid = models.UUIDField(null=True, blank=True, db_index=True)
 
     tracked_item_id = models.IntegerField(db_index=True, null=True, blank=True)
     tei = models.CharField(max_length=64, db_index=True)

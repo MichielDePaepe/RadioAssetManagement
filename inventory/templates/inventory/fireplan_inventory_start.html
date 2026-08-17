@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <div>
+    <h3 class="mb-1">{% trans "Inventaris voertuig" %}</h3>
+    <div class="text-muted">{% trans "Kies eerst het voertuig waarvoor je een inventaris wil doen." %}</div>
+  </div>
+</div>
+
+<form id="vehicleForm" method="get" class="card card-body" style="max-width: 820px;">
+  <label for="vehicleSearch" class="form-label">{% trans "Voertuig" %}</label>
+  <input id="vehicleSearch"
+         class="form-control"
+         placeholder="{% trans 'Begin te typen op indicatief, nummerplaat of vector' %}"
+         autocomplete="off">
+  <div id="vehicleResults" class="list-group mt-2" style="display:none;"></div>
+
+  <input type="hidden" id="vehicleId">
+
+  <div id="vehicleDetails" class="mt-4 border rounded p-3 bg-light" style="display:none;">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="text-muted small">{% trans "Indicatief" %}</div>
+        <div id="vehicleIndicatif" class="fw-semibold">-</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">{% trans "Huidige vector" %}</div>
+        <div id="vehicleVector" class="fw-semibold">-</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">{% trans "Vectorstatus" %}</div>
+        <div id="vehicleVectorStatus" class="fw-semibold">-</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">{% trans "Nummerplaat" %}</div>
+        <div id="vehiclePlate" class="fw-semibold">-</div>
+      </div>
+      <div class="col-md-4">
+        <div class="text-muted small">{% trans "Gebruik" %}</div>
+        <div id="vehicleUtilisation" class="fw-semibold">-</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 d-flex gap-2">
+    <button id="continueButton" class="btn btn-primary" type="submit" disabled>
+      <i class="bi bi-arrow-right-circle me-1"></i>{% trans "Ga verder" %}
+    </button>
+  </div>
+</form>
+
+<script>
+(function () {
+  const input = document.getElementById("vehicleSearch");
+  const results = document.getElementById("vehicleResults");
+  const form = document.getElementById("vehicleForm");
+  const vehicleId = document.getElementById("vehicleId");
+  const continueButton = document.getElementById("continueButton");
+  const details = document.getElementById("vehicleDetails");
+  let timer = null;
+
+  function setText(id, value) {
+    document.getElementById(id).textContent = value || "-";
+  }
+
+  function clearResults() {
+    results.innerHTML = "";
+    results.style.display = "none";
+  }
+
+  function escapeText(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    }[char]));
+  }
+
+  function selectVehicle(vehicle) {
+    vehicleId.value = vehicle.id;
+    input.value = vehicle.label;
+    setText("vehicleIndicatif", vehicle.indicatif);
+    setText("vehicleVector", vehicle.vector || vehicle.vector_code);
+    setText("vehicleVectorStatus", vehicle.vector_status);
+    setText("vehiclePlate", vehicle.plate);
+    setText("vehicleUtilisation", vehicle.utilisation);
+    details.style.display = "block";
+    continueButton.disabled = false;
+    clearResults();
+  }
+
+  input.addEventListener("input", () => {
+    const q = input.value.trim();
+    vehicleId.value = "";
+    continueButton.disabled = true;
+    details.style.display = "none";
+    if (timer) clearTimeout(timer);
+    if (q.length < 2) return clearResults();
+
+    timer = setTimeout(async () => {
+      const resp = await fetch("{% url 'inventory:vehicle_search' %}?q=" + encodeURIComponent(q));
+      const data = await resp.json();
+      results.innerHTML = "";
+      if (!data.results.length) return clearResults();
+
+      for (const vehicle of data.results) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "list-group-item list-group-item-action";
+        button.innerHTML = `
+          <div class="fw-semibold">${escapeText(vehicle.label)}</div>
+          <div class="small text-muted">${escapeText(vehicle.vector || vehicle.vector_code || "-")} &middot; ${escapeText(vehicle.plate || "-")}</div>
+        `;
+        button.addEventListener("click", () => selectVehicle(vehicle));
+        results.appendChild(button);
+      }
+      results.style.display = "block";
+    }, 150);
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!vehicleId.value) return;
+    window.location.href = "{% url 'inventory:fireplan_inventory_start' %}" + vehicleId.value + "/scan/";
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!results.contains(event.target) && event.target !== input) clearResults();
+  });
+})();
+</script>
+{% endblock %}

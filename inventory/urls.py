@@ -4,6 +4,10 @@ from .views import *
 app_name = 'inventory'
 
 urlpatterns = [
+    path("fireplan/", FireplanInventoryStartView.as_view(), name="fireplan_inventory_start"),
+    path("fireplan/vehicles/search/", vehicle_search, name="vehicle_search"),
+    path("fireplan/<int:vehicle_id>/scan/", fireplan_inventory_scan, name="fireplan_inventory_scan"),
+
     path("endpoints/", EndpointLookupView.as_view(), name="entpoint_lookup"),
     
     path("endpoints/<int:pk>/", EndpointDetailView.as_view(), name="endpoint_detail"),

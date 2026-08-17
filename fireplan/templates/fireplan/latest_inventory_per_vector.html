@@ -4,21 +4,21 @@
 {% block content %}
 
 <h2>{% trans "Latest inventory per vector" %}</h2>
-<p class="text-muted">{% trans "Since" %}: {{ since|date:"Y-m-d H:i" }}</p>
+<p class="text-muted">{% trans "Laatste inventaris per vector, zonder tijdsbeperking." %}</p>
 
 <table class="table table-sm align-middle">
   <thead>
     <tr>
       <th>{% trans "Vector" %}</th>
+      <th>{% trans "Order service" %}</th>
       <th style="width:140px;">{% trans "Vehicle" %}</th>
       <th style="width:160px;">{% trans "Date" %}</th>
       <th>{% trans "Radio" %}</th>
-      <th style="width:240px;">{% trans "Done by" %}</th>
     </tr>
   </thead>
   <tbody>
     {% for row in latest_rows %}
-      {% with v=row.vector inv=row.inventory veh=row.vehicle %}
+      {% with v=row.vector inv=row.inventory veh=row.vehicle is_stale=row.is_stale %}
         {% if inv.radios.all %}
           {% for ir in inv.radios.all %}
             {% with r=ir.radio %}
@@ -34,6 +34,14 @@
                   {% endif %}
                 </td>
 
+                <td>
+                  {% if v.orderServiceAbbreviation %}
+                    {{ v.orderServiceAbbreviation }}
+                  {% else %}
+                    <span class="text-muted">-</span>
+                  {% endif %}
+                </td>
+
                 <td class="fw-semibold">
                   {% if veh %}
                     {{ veh.call_sign|default:veh.number }}
@@ -42,7 +50,15 @@
                   {% endif %}
                 </td>
 
-                <td class="text-muted">{{ inv.closed_at|date:"Y-m-d H:i" }}</td>
+                <td>
+                  {% if is_stale %}
+                    <span class="text-danger fw-semibold">
+                      <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ inv.closed_at|date:"d/m/Y" }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted">{{ inv.closed_at|date:"d/m/Y" }}</span>
+                  {% endif %}
+                </td>
 
                 <td>
                   {% if r %}
@@ -56,7 +72,6 @@
                   {% endif %}
                 </td>
 
-                <td>{% if inv.done_by_full_name %}{{ inv.done_by_full_name }}{% else %}{% trans "(unknown)" %}{% endif %}</td>
               </tr>
             {% endwith %}
           {% endfor %}
@@ -73,6 +88,14 @@
               {% endif %}
             </td>
 
+            <td>
+              {% if v.orderServiceAbbreviation %}
+                {{ v.orderServiceAbbreviation }}
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+
             <td class="fw-semibold">
               {% if veh %}
                 {{ veh.call_sign|default:veh.number }}
@@ -81,9 +104,16 @@
               {% endif %}
             </td>
 
-            <td class="text-muted">{{ inv.closed_at|date:"Y-m-d H:i" }}</td>
+            <td>
+              {% if is_stale %}
+                <span class="text-danger fw-semibold">
+                  <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ inv.closed_at|date:"d/m/Y" }}
+                </span>
+              {% else %}
+                <span class="text-muted">{{ inv.closed_at|date:"d/m/Y" }}</span>
+              {% endif %}
+            </td>
             <td class="text-muted">{% trans "No radios" %}</td>
-            <td>{% if inv.done_by_full_name %}{{ inv.done_by_full_name }}{% else %}{% trans "(unknown)" %}{% endif %}</td>
           </tr>
         {% endif %}
       {% endwith %}

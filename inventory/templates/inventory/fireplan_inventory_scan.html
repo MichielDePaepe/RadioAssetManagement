@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block content %}
+<style>
+  .inventory-status-dot {
+    width: .75rem;
+    height: .75rem;
+    border-radius: 50%;
+    display: inline-block;
+    flex: 0 0 .75rem;
+  }
+
+  #cameraPanel {
+    max-width: 420px;
+  }
+
+  #cameraVideo {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    object-position: center center;
+    background: #111;
+  }
+</style>
+
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+  <div>
+    <h3 class="mb-1">{% trans "Radio's scannen" %}</h3>
+    <div class="text-muted">
+      {{ vehicle.number }}
+      {% if vector %} &middot; {{ vector.name|default:vector.resourceCode }}{% endif %}
+    </div>
+  </div>
+  <a class="btn btn-outline-secondary" href="{% url 'inventory:fireplan_inventory_start' %}">
+    <i class="bi bi-arrow-left me-1"></i>{% trans "Ander voertuig" %}
+  </a>
+</div>
+
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">{% trans "Indicatief" %}</div>
+      <div class="fw-semibold">{{ vehicle.call_sign|default:vehicle.number }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">{% trans "Voertuigstatus" %}</div>
+      <div class="fw-semibold d-inline-flex align-items-center gap-2">
+        {% if vehicle.status == 1 %}
+          <span class="inventory-status-dot bg-success"></span>
+        {% elif vehicle.status == 2 %}
+          <span class="inventory-status-dot bg-danger"></span>
+        {% elif vehicle.status == 3 %}
+          <span class="inventory-status-dot bg-warning"></span>
+        {% else %}
+          <span class="inventory-status-dot bg-secondary"></span>
+        {% endif %}
+        <span>{{ vehicle.get_status_display|default:"-" }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">{% trans "Vector" %}</div>
+      <div class="fw-semibold">{% if vector %}{{ vector.name|default:vector.resourceCode }}{% else %}-{% endif %}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card card-body mb-3">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div>
+      <div class="fw-semibold">{% trans "Scan radio's" %}</div>
+      <div class="text-muted small">{% trans "Elke geldige scan wordt aan de lijst toegevoegd." %}</div>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <button id="scannerToggle" class="btn btn-danger btn-sm" type="button" title="{% trans 'Stop handscanner' %}">
+        <i class="bi bi-upc-scan me-1"></i>{% trans "Handscanner" %}
+      </button>
+      <button id="cameraToggle" class="btn btn-outline-primary btn-sm" type="button" title="{% trans 'GSM camera' %}" style="display:none;">
+        <i class="bi bi-camera me-1"></i>{% trans "GSM camera" %}
+      </button>
+    </div>
+  </div>
+  <input id="scannerInput" type="text" autofocus>
+  <div id="cameraPanel" class="mt-3" style="display:none;">
+    <video id="cameraVideo"
+           class="w-100 border rounded"
+           muted
+           playsinline></video>
+    <button id="cameraStop" class="btn btn-outline-secondary w-100 mt-2" type="button">
+      <i class="bi bi-stop-circle me-1"></i>{% trans "Stop camera" %}
+    </button>
+  </div>
+  <div id="scanMessage" class="alert mt-3 mb-0" style="display:none;"></div>
+</div>
+
+<form method="post" id="closeInventoryForm">
+  {% csrf_token %}
+  <input type="hidden" id="radiosPayload" name="radios" value="[]">
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead>
+        <tr>
+          <th>{% trans "Alias" %}</th>
+          <th>{% trans "ISSI" %}</th>
+          <th>{% trans "TEI" %}</th>
+          <th>{% trans "Model" %}</th>
+          <th>{% trans "Fireplan ID" %}</th>
+          <th>{% trans "Status" %}</th>
+          <th class="text-end">{% trans "Acties" %}</th>
+        </tr>
+      </thead>
+      <tbody id="radioRows">
+        <tr id="emptyRow">
+          <td colspan="7" class="text-muted text-center py-4">{% trans "Nog geen radio's gescand." %}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2 mt-3">
+    <button id="closeButton" class="btn btn-success" type="submit" disabled>
+      <i class="bi bi-check2-circle me-1"></i>{% trans "Afsluiten" %}
+    </button>
+  </div>
+</form>
+
+<script src="{% static 'js/scanner.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+(function () {
+  const rows = document.getElementById("radioRows");
+  const emptyRow = document.getElementById("emptyRow");
+  const payload = document.getElementById("radiosPayload");
+  const closeButton = document.getElementById("closeButton");
+  const message = document.getElementById("scanMessage");
+  const scannerToggle = document.getElementById("scannerToggle");
+  const cameraToggle = document.getElementById("cameraToggle");
+  const cameraPanel = document.getElementById("cameraPanel");
+  const cameraVideo = document.getElementById("cameraVideo");
+  const cameraStop = document.getElementById("cameraStop");
+  const radios = new Map();
+  let cameraStream = null;
+  let cameraScanTimer = null;
+  let cameraDetector = null;
+  let cameraCanvas = null;
+  let cameraCanvasContext = null;
+  let cameraScanInProgress = false;
+  let lastCameraValue = "";
+  let lastCameraValueAt = 0;
+
+  function escapeText(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;",
+    }[char]));
+  }
+
+  function statusLabel(radio) {
+    if (radio.status && radio.status !== "ok" && radio.status !== "success") return radio.status;
+    if (radio.decommissioned) return "Gedecommissioneerd";
+    if (radio.is_DMO_only) return "DMO-only";
+    if (radio.is_active) return "Actief";
+    return "Inactief";
+  }
+
+  function statusClass(status) {
+    if (status === "Actief") return "text-bg-success";
+    if (status === "DMO-only") return "text-bg-warning";
+    if (status === "Inactief") return "text-bg-secondary";
+    if (status === "Gedecommissioneerd") return "text-bg-danger";
+    return "text-bg-info";
+  }
+
+  function setMessage(kind, text) {
+    message.className = "alert mt-3 mb-0 alert-" + kind;
+    message.textContent = text;
+    message.style.display = "block";
+  }
+
+  function syncPayload() {
+    payload.value = JSON.stringify(Array.from(radios.values()));
+    closeButton.disabled = radios.size === 0;
+    emptyRow.style.display = radios.size ? "none" : "";
+  }
+
+  function removeRadio(tei) {
+    radios.delete(String(tei));
+    const row = document.querySelector(`[data-radio-row="${tei}"]`);
+    if (row) row.remove();
+    syncPayload();
+  }
+
+  function addRadio(data) {
+    if (!data || data.status === "error") {
+      setMessage("danger", data?.message || "Scan niet herkend.");
+      return;
+    }
+
+    const tei = String(data.tei || data.tei_str || data.TEI || "").padStart(15, "0");
+    if (!tei || radios.has(tei)) {
+      setMessage("warning", "Deze radio staat al in de lijst.");
+      return;
+    }
+
+    const radio = {
+      tei,
+      alias: data.alias || "",
+      issi: data.issi || data.ISSI || "",
+      model: data.model || "",
+      fireplan_id: data.fireplan_id || "",
+      status: statusLabel(data),
+    };
+    radios.set(tei, radio);
+
+    const tr = document.createElement("tr");
+    tr.dataset.radioRow = tei;
+    tr.innerHTML = `
+      <td>${escapeText(radio.alias || "-")}</td>
+      <td>${escapeText(radio.issi || "-")}</td>
+      <td><code>${escapeText(radio.tei)}</code></td>
+      <td>${escapeText(radio.model || "-")}</td>
+      <td>${escapeText(radio.fireplan_id || "-")}</td>
+      <td><span class="badge ${statusClass(radio.status)}">${escapeText(radio.status)}</span></td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-outline-danger" type="button" title="{% trans 'Verwijderen' %}">
+          <i class="bi bi-trash"></i>
+        </button>
+      </td>
+    `;
+    tr.querySelector("button").addEventListener("click", () => removeRadio(tei));
+    rows.appendChild(tr);
+    syncPayload();
+    setMessage("success", `Radio ${tei} toegevoegd.`);
+  }
+
+  const scanner = new Scanner({
+    inputId: "scannerInput",
+    scanUrl: "{% url 'radio:scan' %}",
+    onScan: addRadio,
+  });
+
+  function startHandScanner() {
+    stopCameraScanning();
+    scanner.start();
+    scannerToggle.classList.remove("btn-success");
+    scannerToggle.classList.add("btn-danger");
+    scannerToggle.title = "{% trans 'Stop handscanner' %}";
+  }
+
+  function stopHandScanner() {
+    scanner.stop();
+    scannerToggle.classList.remove("btn-danger");
+    scannerToggle.classList.add("btn-success");
+    scannerToggle.title = "{% trans 'Start handscanner' %}";
+  }
+
+  function isSmartphone() {
+    const touchPhone = window.matchMedia("(pointer: coarse) and (max-width: 768px)").matches;
+    const userAgentPhone = /Android|iPhone|iPod|Windows Phone/i.test(navigator.userAgent);
+    return touchPhone || userAgentPhone;
+  }
+
+  function canShowCameraScanner() {
+    return isSmartphone() || new URLSearchParams(window.location.search).get("camera") === "1";
+  }
+
+  if (canShowCameraScanner()) {
+    cameraToggle.style.display = "inline-flex";
+  }
+
+  async function submitScannedLine(scannedLine) {
+    const response = await fetch("{% url 'radio:scan' %}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ scanned_line: scannedLine }),
+    });
+    return response.json();
+  }
+
+  async function startCameraScanning() {
+    stopHandScanner();
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMessage("danger", "{% trans 'Camera scannen wordt niet ondersteund door deze browser.' %}");
+      return;
+    }
+
+    const hasBarcodeDetector = Boolean(window.BarcodeDetector);
+    const hasJsQrFallback = typeof window.jsQR === "function";
+    if (!hasBarcodeDetector && !hasJsQrFallback) {
+      setMessage("danger", "{% trans 'QR-detectie met de camera wordt niet ondersteund door deze browser.' %}");
+      return;
+    }
+
+    try {
+      cameraDetector = hasBarcodeDetector ? new BarcodeDetector({ formats: ["qr_code"] }) : null;
+      cameraCanvas = document.createElement("canvas");
+      cameraCanvasContext = cameraCanvas.getContext("2d", { willReadFrequently: true });
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+      cameraVideo.srcObject = cameraStream;
+      cameraPanel.style.display = "block";
+      cameraToggle.classList.remove("btn-outline-primary");
+      cameraToggle.classList.add("btn-danger");
+      await cameraVideo.play();
+      scheduleCameraScan();
+    } catch (err) {
+      console.error(err);
+      setMessage("danger", "{% trans 'Camera kon niet gestart worden.' %}");
+      stopCameraScanning();
+    }
+  }
+
+  function stopCameraScanning() {
+    if (cameraScanTimer) {
+      clearTimeout(cameraScanTimer);
+      cameraScanTimer = null;
+    }
+    cameraScanInProgress = false;
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      cameraStream = null;
+    }
+    cameraVideo.srcObject = null;
+    cameraCanvas = null;
+    cameraCanvasContext = null;
+    cameraPanel.style.display = "none";
+    cameraToggle.classList.remove("btn-danger");
+    cameraToggle.classList.add("btn-outline-primary");
+  }
+
+  function scheduleCameraScan(delay = 300) {
+    if (!cameraStream) return;
+    cameraScanTimer = setTimeout(scanCameraFrame, delay);
+  }
+
+  async function scanCameraFrame() {
+    if (!cameraStream || cameraScanInProgress) return;
+    cameraScanInProgress = true;
+
+    try {
+      const codes = await detectQrCodes(cameraVideo);
+      if (codes.length) {
+        const scannedLine = codes[0].rawValue;
+        const now = Date.now();
+        if (scannedLine !== lastCameraValue || now - lastCameraValueAt > 2000) {
+          lastCameraValue = scannedLine;
+          lastCameraValueAt = now;
+          addRadio(await submitScannedLine(scannedLine));
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      cameraScanInProgress = false;
+      scheduleCameraScan(500);
+    }
+  }
+
+  async function detectQrCodes(video) {
+    if (cameraDetector) {
+      return cameraDetector.detect(video);
+    }
+
+    if (!cameraCanvasContext || !video.videoWidth || !video.videoHeight || typeof window.jsQR !== "function") {
+      return [];
+    }
+
+    cameraCanvas.width = video.videoWidth;
+    cameraCanvas.height = video.videoHeight;
+    cameraCanvasContext.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
+    const imageData = cameraCanvasContext.getImageData(0, 0, cameraCanvas.width, cameraCanvas.height);
+    const code = window.jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: "dontInvert",
+    });
+    return code ? [{ rawValue: code.data }] : [];
+  }
+
+  scannerToggle.addEventListener("click", () => {
+    if (scanner.is_scanning) {
+      stopHandScanner();
+    } else {
+      startHandScanner();
+    }
+  });
+  cameraToggle.addEventListener("click", startCameraScanning);
+  cameraStop.addEventListener("click", stopCameraScanning);
+  document.getElementById("closeInventoryForm").addEventListener("submit", () => syncPayload());
+
+  startHandScanner();
+})();
+</script>
+{% endblock %}

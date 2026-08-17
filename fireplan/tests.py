@@ -1,3 +1,4 @@
+from datetime import timedelta
 from uuid import uuid4
 from unittest.mock import Mock, patch
 
@@ -137,6 +138,7 @@ class FireplanInventoryHistoryViewTests(TestCase):
             resourceCode="CIT01",
             vehicle=self.vehicle,
             name="Citerne 01",
+            orderServiceAbbreviation="Z Post",
         )
         self.inventory = FireplanInventory.objects.create(
             uuid=uuid4(),
@@ -153,6 +155,72 @@ class FireplanInventoryHistoryViewTests(TestCase):
             history_url = reverse("fireplan:vector_inventory_history", args=[self.vector.pk])
 
         self.assertContains(response, history_url)
+
+    def test_overview_marks_latest_inventory_older_than_two_weeks(self):
+        self.inventory.closed_at = timezone.now() - timedelta(days=15)
+        self.inventory.save(update_fields=["closed_at"])
+
+        with override("nl"):
+            response = self.client.get(reverse("fireplan:latest_inventory_per_vector"))
+
+        self.assertContains(response, "Citerne 01")
+        self.assertContains(response, "text-danger")
+        self.assertContains(response, "bi-exclamation-triangle-fill")
+        self.assertContains(response, self.inventory.closed_at.strftime("%d/%m/%Y"))
+        self.assertNotContains(response, self.inventory.closed_at.strftime("%H:%M"))
+
+    def test_overview_uses_newest_inventory_per_vector_without_time_limit(self):
+        old_inventory = FireplanInventory.objects.create(
+            uuid=uuid4(),
+            vehicle_alpha_code=self.vehicle.number,
+            vehicle=self.vehicle,
+            vector=self.vector,
+            closed_at=timezone.now() - timedelta(days=14),
+            done_by_full_name="Old Scanner",
+        )
+        FireplanInventoryRadio.objects.create(
+            inventory=old_inventory,
+            container_uuid=uuid4(),
+            item_uuid=uuid4(),
+            tei="000075000000001",
+        )
+
+        with override("nl"):
+            response = self.client.get(reverse("fireplan:latest_inventory_per_vector"))
+
+        self.assertContains(response, "Citerne 01")
+        self.assertNotContains(response, "Old Scanner")
+
+    def test_overview_shows_and_sorts_by_order_service_abbreviation(self):
+        other_vehicle = Vehicle.objects.create(
+            number="AMB 01 - Test",
+            num_letter="AMB",
+            num_value=1,
+            status=1,
+        )
+        other_vector = Vector.objects.create(
+            resourceCode="AMB01",
+            vehicle=other_vehicle,
+            name="Ambulance 01",
+            orderServiceAbbreviation="A Post",
+        )
+        FireplanInventory.objects.create(
+            uuid=uuid4(),
+            vehicle_alpha_code=other_vehicle.number,
+            vehicle=other_vehicle,
+            vector=other_vector,
+            closed_at=timezone.now(),
+            done_by_full_name="Other Scanner",
+        )
+
+        with override("nl"):
+            response = self.client.get(reverse("fireplan:latest_inventory_per_vector"))
+
+        content = response.content.decode()
+        self.assertContains(response, "Order service")
+        self.assertContains(response, "A Post")
+        self.assertContains(response, "Z Post")
+        self.assertLess(content.index("A Post"), content.index("Z Post"))
 
     def test_vector_inventory_history_shows_vehicle_and_scanner(self):
         with override("nl"):
