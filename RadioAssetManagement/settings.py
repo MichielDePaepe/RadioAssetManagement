@@ -46,7 +46,7 @@ DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_PROD_HOSTS = env.list("ALLOWED_PROD_HOST", default=[])
 
-ALLOWED_HOSTS = ["localhost", "172.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 CSRF_TRUSTED_ORIGINS = []
 
 for host in ALLOWED_PROD_HOSTS:
@@ -232,11 +232,23 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 
-# SSL
+# SSL / HTTPS
+#
+# Camera access, Web Serial and other browser hardware APIs require a secure
+# context. In production Nginx terminates HTTPS and forwards requests to
+# gunicorn, so Django must trust X-Forwarded-Proto.
+HTTPS_ENABLED = env.bool("HTTPS_ENABLED", default=ENVIRONMENT == "prod")
 
-# SECURE_SSL_REDIRECT = True
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = HTTPS_ENABLED
+SESSION_COOKIE_SECURE = HTTPS_ENABLED
+CSRF_COOKIE_SECURE = HTTPS_ENABLED
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
+
+SECURE_HSTS_SECONDS = env.int("SECURE_HSTS_SECONDS", default=0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False)
+SECURE_HSTS_PRELOAD = env.bool("SECURE_HSTS_PRELOAD", default=False)
 
 
 LOGGING = {
@@ -280,6 +292,10 @@ MQTT_USERNAME = os.getenv("MQTT_USERNAME", "roip")
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "")
 ROIP_MQTT_TOPIC = os.getenv("ROIP_MQTT_TOPIC", "roip/+/events")
 ROIP_CHANNEL_GROUP = os.getenv("ROIP_CHANNEL_GROUP", "live_tx")
+ROIP_RECORDINGS_BASE_URL = os.getenv(
+    "ROIP_RECORDINGS_BASE_URL",
+    "/media/recordings/",
+)
 
 
 

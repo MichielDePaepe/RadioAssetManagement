@@ -96,10 +96,11 @@
 {% endblock %}
 
 {% block extra_script %}
+{{ recordings_base_url|json_script:"recordings-base-url" }}
 <script>
 
 (() => {
-  const RECORDINGS_BASE_URL = "http://192.168.20.196/media/recordings/";
+  const RECORDINGS_BASE_URL = JSON.parse(document.getElementById("recordings-base-url").textContent);
 
   const wsUrl = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws/live/tx/";
   const ws = new WebSocket(wsUrl);

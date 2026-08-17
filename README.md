@@ -69,9 +69,11 @@ DEBUG=False
 SECRET_KEY=***
 DATABASE_URL=postgres://<pg username>:<pg password>@localhost:5432/<db name>
 ALLOWED_PROD_HOST=<host 1>, <host 2>
+HTTPS_ENABLED=True
 FIREPLAN_USERNAME=***
 FIREPLAN_PASSWORD=***
 ROIP_API_KEYS=<lange random api key 1>, <lange random api key 2>
+ROIP_RECORDINGS_BASE_URL=/media/recordings/
 ```
 
 ## RoIP REST API
@@ -101,7 +103,7 @@ from django.core.management.utils import get_random_secret_key
 get_random_secret_key()
 ```
 
-## Nginx Setup voor Django
+## Nginx HTTPS Setup voor Django
 
 De Nginx configuratie voor de Django-app staat in:
 
@@ -109,25 +111,79 @@ De Nginx configuratie voor de Django-app staat in:
 
 ### Configuratie
 
+Deze configuratie zet HTTP door naar HTTPS en laat Nginx TLS afhandelen.
+Django blijft via gunicorn op `127.0.0.1:8000` draaien.
+
 ```nginx
 server {
     listen 80;
-    server_name _;
+    server_name <host>;
+
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name <host>;
+
+    ssl_certificate /etc/ssl/certs/ram-lan.crt;
+    ssl_certificate_key /etc/ssl/private/ram-lan.key;
 
     location /static/ {
         alias /home/taqto/RadioAssetManagement/RadioAssetManagement/staticfiles/;
-        autoindex on;  # alleen om te testen
+    }
+
+    location /media/ {
+        alias /home/taqto/RadioAssetManagement/RadioAssetManagement/media/;
     }
 
     location / {
         proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 }
 ```
+
+Als de RoIP-opnames op een apart toestel staan, vermijd dan `http://...` links op
+de HTTPS-site. Zet `ROIP_RECORDINGS_BASE_URL` naar een HTTPS URL, of proxy de
+opnames via Nginx onder `/media/recordings/`.
+
+### Intern LAN zonder IT-certificaat
+
+Voor camera en Web Serial moet de browser de site als secure context zien.
+Een HTTPS-pagina met een certificaatwaarschuwing is vaak niet genoeg. Maak
+daarom een kleine eigen LAN-CA en installeer het CA-certificaat als vertrouwde
+root op de pc's die de scanner of seriele kabel gebruiken.
+
+Maak het certificaat lokaal, met de echte hostnaam en het LAN-IP van de server:
+
+```bash
+chmod +x scripts/make_lan_https_cert.sh
+scripts/make_lan_https_cert.sh <host> <server-ip>
+```
+
+Kopieer daarna het servercertificaat en de private key naar Nginx:
+
+```bash
+sudo cp certs/ram-lan.crt /etc/ssl/certs/ram-lan.crt
+sudo cp certs/ram-lan.key /etc/ssl/private/ram-lan.key
+sudo chmod 600 /etc/ssl/private/ram-lan.key
+```
+
+Installeer `certs/ram-lan-ca.crt` op elke client-pc als vertrouwde root-CA.
+Daarna moet de site zonder certificaatwaarschuwing openen via `https://<host>/`.
+
+Als installeren van een vertrouwde CA op de client-pc's echt niet kan, blijft er
+alleen een browser workaround over. In Chrome/Edge kan je voor tests
+`chrome://flags/#unsafely-treat-insecure-origin-as-secure` gebruiken met de
+origin van de site, bijvoorbeeld `http://<host>`. Dat is minder proper en moet
+per client-browser ingesteld worden.
 
 ### Activeren
 
@@ -135,8 +191,6 @@ server {
 sudo ln -s /etc/nginx/sites-available/django /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl restart nginx
-go
-Code kopiëren
 ```
 
 ## PostgreSQL Setup voor Django
