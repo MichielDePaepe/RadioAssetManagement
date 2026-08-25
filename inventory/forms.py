@@ -1,11 +1,35 @@
 from django import forms
+from django.db.models import CharField, Value
+from django.db.models.functions import Coalesce, Lower, NullIf
 from django.utils.translation import gettext_lazy as _
 
+from fireplan.models import Vector, Vehicle
 from radio.models import Radio
 from .models import Location, RadioPosition
 
 
+def _ordered_vectors():
+    return (
+        Vector.objects
+        .annotate(
+            sort_label=Coalesce(
+                NullIf("display_name", Value("")),
+                NullIf("name", Value("")),
+                "resourceCode",
+                output_field=CharField(),
+            )
+        )
+        .order_by(Lower("sort_label"), "resourceCode")
+    )
+
+
 class LocationForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["dashboard_vectors"].queryset = _ordered_vectors()
+        self.fields["dashboard_locations"].queryset = Location.objects.order_by(Lower("name"), "id")
+        self.fields["parent"].queryset = Location.objects.order_by(Lower("name"), "id")
+
     class Meta:
         model = Location
         fields = [
@@ -29,6 +53,12 @@ class LocationForm(forms.ModelForm):
 
 
 class RadioPositionForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["vector"].queryset = _ordered_vectors()
+        self.fields["vehicle"].queryset = Vehicle.objects.order_by(Lower("number"), "id")
+        self.fields["location"].queryset = Location.objects.order_by(Lower("name"), "id")
+
     class Meta:
         model = RadioPosition
         fields = ["name", "order", "active", "vector", "vehicle", "location"]
