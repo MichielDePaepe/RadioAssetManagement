@@ -364,6 +364,20 @@
               </button>
             </div>
 
+            {% if radio.decommissioned %}
+              <div class="print-row">
+                <div>
+                  <div class="fw-semibold mb-1">{% trans "Decommissioned-label" %}</div>
+                  <img src="{% url 'radio:label_image' radio.pk 'decommissioned_label' %}" alt="Decommissioned Label" class="label-preview label-preview-strip">
+                </div>
+                <button type="submit" name="action" value="decommissioned" class="btn btn-primary btn-print" {% if not printers %}disabled{% endif %}>
+                  <i class="bi bi-printer-fill me-1"></i>
+                  <span>{% trans "Print" %}</span>
+                  <span class="spinner-border spinner-border-sm d-none ms-1" role="status" aria-hidden="true"></span>
+                </button>
+              </div>
+            {% endif %}
+
             {% if radio.model.radio_type == 'MOBILE' %}
               <div class="print-row">
                 <div>

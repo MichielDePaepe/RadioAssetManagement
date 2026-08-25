@@ -605,6 +605,10 @@ class RadioDetailView(DetailView):
                 res = print_service.print_qr(copies)
             elif action == "tei":
                 res = print_service.print_tei(copies)
+            elif action == "decommissioned":
+                if not radio.decommissioned:
+                    raise Exception(_("Radio is not decommissioned."))
+                res = print_service.print_decommissioned_label(copies)
             elif action == "label":
                 res = print_service.print_mobile_label(copies)
             elif action == "alias":
@@ -670,6 +674,8 @@ class QRImageView(View):
             img = ig.qr_image(color_dark=(0, 0, 0), color_light=(255, 255, 0))
         elif type == "tei_label":
             img = ig.portable_radio_tei_label(color_dark=(0, 0, 0), color_light=(255, 255, 0))
+        elif type == "decommissioned_label":
+            img = ig.decommissioned_label(color_dark=(0, 0, 0), color_light=(255, 255, 0))
         elif type == "mobile_label":
             img = ig.mobile_radio_label(color_dark=(255,255,255), color_light=(0,102,204))
         elif type == "alias_label":

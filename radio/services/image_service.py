@@ -119,6 +119,65 @@ class ImageGenerator:
 
         return map_grayscale_to_colors(label_img, color_dark, color_light)
 
+    def decommissioned_label(self, color_dark=(0, 0, 0), color_light=(255, 255, 255)):
+        label_w_px = self.mm_to_px(60)
+        label_h_px = 150
+        text = "DECOMMISSIONED"
+
+        label_img = Image.new("L", (label_w_px, label_h_px), color=255)
+        draw = ImageDraw.Draw(label_img)
+
+        stripe_width = self.mm_to_px(5)
+        stripe_period = stripe_width * 2
+        skew = label_h_px
+        for x in range(-skew - stripe_period, label_w_px + skew + stripe_period, stripe_period):
+            draw.polygon(
+                [
+                    (x, label_h_px),
+                    (x + stripe_width, label_h_px),
+                    (x + stripe_width + skew, 0),
+                    (x + skew, 0),
+                ],
+                fill=0,
+            )
+
+        max_text_w = label_w_px - self.mm_to_px(6)
+        max_text_h = label_h_px - self.mm_to_px(4)
+        font_size = self.mm_to_px(5)
+        min_font_size = self.mm_to_px(3)
+        letter_spacing = self.mm_to_px(0.45)
+
+        def tracked_text_width(font):
+            width = sum(font.getlength(char) for char in text)
+            width += letter_spacing * max(0, len(text) - 1)
+            return int(width)
+
+        while font_size >= min_font_size:
+            font = ImageFont.truetype("fonts/Barlow-Black.ttf", font_size)
+            bbox = font.getbbox(text)
+            text_w = tracked_text_width(font)
+            text_h = bbox[3] - bbox[1]
+            if text_w <= max_text_w and text_h <= max_text_h:
+                break
+            font_size -= 1
+
+        text_x = (label_w_px - text_w) // 2
+        text_y = (label_h_px - text_h) // 2 - bbox[1]
+        cursor_x = text_x
+        stroke_width = max(1, self.mm_to_px(0.35))
+        for char in text:
+            draw.text(
+                (cursor_x, text_y),
+                char,
+                font=font,
+                fill=0,
+                stroke_width=stroke_width,
+                stroke_fill=255,
+            )
+            cursor_x += font.getlength(char) + letter_spacing
+
+        return map_grayscale_to_colors(label_img, color_dark, color_light)
+
 
     def mobile_radio_label(self, color_dark=(0, 0, 0), color_light=(255, 255, 255)):
 

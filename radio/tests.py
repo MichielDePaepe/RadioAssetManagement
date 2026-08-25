@@ -7,7 +7,9 @@ from django.urls import reverse
 from django.utils.translation import override
 
 from helpdesk.models import Ticket, TicketStatus, TicketType
+from printer.models import Printer
 
+from .services.image_service import ImageGenerator
 from .models import ISSI, Radio, RadioDecommissioningTicket, RadioModel, Subscription, TEIRange
 
 
@@ -187,6 +189,62 @@ class DecommissioningRequestTests(TestCase):
         self.assertEqual(response.status_code, 403)
         self.radio.refresh_from_db()
         self.assertFalse(self.radio.decommissioned)
+
+
+class DecommissionedLabelTests(TestCase):
+    def setUp(self):
+        self.radio_model = RadioModel.objects.create(name="Portable")
+        TEIRange.objects.create(
+            model=self.radio_model,
+            min_tei=75000000000,
+            max_tei=75999999999,
+        )
+        self.radio = Radio.objects.create(TEI=75000000001, decommissioned=True)
+        self.user = User.objects.create_user(username="label-user", password="secret")
+
+    def test_decommissioned_label_matches_tei_label_height_and_uses_warning_colors(self):
+        generator = ImageGenerator(self.radio)
+
+        tei_img = generator.portable_radio_tei_label(color_dark=(0, 0, 0), color_light=(255, 255, 0))
+        label_img = generator.decommissioned_label(color_dark=(0, 0, 0), color_light=(255, 255, 0))
+        label_colors = [color for count, color in label_img.getcolors(maxcolors=1000000)]
+
+        self.assertEqual(label_img.height, tei_img.height)
+        self.assertGreater(label_img.width, tei_img.width)
+        self.assertIn((0, 0, 0), label_colors)
+        self.assertIn((255, 255, 0), label_colors)
+
+    def test_detail_shows_decommissioned_label_for_decommissioned_radio(self):
+        self.client.force_login(self.user)
+
+        with override("nl"):
+            response = self.client.get(reverse("radio:detail", kwargs={"pk": self.radio.pk}))
+
+        self.assertContains(response, "decommissioned_label")
+        self.assertContains(response, "Decommissioned-label")
+
+    @patch("radio.views.RadioPrintingService")
+    def test_prints_decommissioned_label(self, print_service):
+        printer = Printer.objects.create(
+            name="Test printer",
+            device="QL-800",
+            ip="127.0.0.1",
+        )
+        print_service.return_value.print_decommissioned_label.return_value = "Printed"
+
+        with override("nl"):
+            detail_url = reverse("radio:detail", kwargs={"pk": self.radio.pk})
+            response = self.client.post(
+                detail_url,
+                {
+                    "printer_id": printer.pk,
+                    "copies": "2",
+                    "action": "decommissioned",
+                },
+            )
+
+        self.assertRedirects(response, detail_url)
+        print_service.return_value.print_decommissioned_label.assert_called_once_with("2")
 
 
 class RadioListViewTests(TestCase):

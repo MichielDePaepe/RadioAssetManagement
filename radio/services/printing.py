@@ -24,6 +24,13 @@ class RadioPrintingService:
 
         return f"TEI label has been send to printer {self.printer.name}."
 
+    def print_decommissioned_label(self, copies=1):
+        img = self.image_generator.decommissioned_label()
+
+        self.printer.print(type="12", images=[img.rotate(90, expand=True)] * int(copies))
+
+        return f"Decommissioned label has been send to printer {self.printer.name}."
+
     def print_mobile_label(self, copies=1):
         img = self.image_generator.mobile_radio_label()        
 
