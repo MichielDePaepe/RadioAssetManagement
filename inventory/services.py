@@ -11,7 +11,7 @@ def _active_assignments_for_update(position):
         RadioPositionAssignment.objects
         .select_for_update()
         .filter(position=position, ended_at__isnull=True)
-        .select_related("radio", "position", "replaces")
+        .select_related("radio", "position")
     )
 
 
