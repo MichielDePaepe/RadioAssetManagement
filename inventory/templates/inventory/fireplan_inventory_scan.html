@@ -164,7 +164,7 @@
 
   function statusLabel(radio) {
     if (radio.status && radio.status !== "ok" && radio.status !== "success") return radio.status;
-    if (radio.decommissioned) return "Gedecommissioneerd";
+    if (radio.decommissioned) return "H/S";
     if (radio.is_DMO_only) return "DMO-only";
     if (radio.is_active) return "Actief";
     return "Inactief";
@@ -174,7 +174,7 @@
     if (status === "Actief") return "text-bg-success";
     if (status === "DMO-only") return "text-bg-warning";
     if (status === "Inactief") return "text-bg-secondary";
-    if (status === "Gedecommissioneerd") return "text-bg-danger";
+    if (status === "H/S") return "badge-radio-decommissioned";
     return "text-bg-info";
   }
 

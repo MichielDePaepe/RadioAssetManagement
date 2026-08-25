@@ -105,6 +105,16 @@ class TicketLabelPrintTests(TestCase):
         self.assertContains(response, "Printer 1")
         self.assertContains(response, "Printer 2")
 
+    def test_ticket_detail_shows_created_at_in_ticket_info(self):
+        self.client.force_login(self.user)
+
+        with override("nl"):
+            response = self.client.get(reverse("helpdesk:ticket_detail", kwargs={"pk": self.ticket.pk}))
+
+        self.assertContains(response, "Aangemaakt")
+        self.assertContains(response, self.ticket.created_at.strftime("%d/%m/%Y"))
+        self.assertContains(response, self.user.username)
+
     @patch("helpdesk.views.TicketPrintingService")
     def test_print_ticket_label_posts_to_selected_printer_without_real_printing(self, printing_service):
         self.client.force_login(self.user)

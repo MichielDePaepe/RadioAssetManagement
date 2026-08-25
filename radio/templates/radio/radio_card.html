@@ -34,13 +34,7 @@
 
   <div class="card-body text-center">
     {% if radio.decommissioned %}
-      <div class="mb-3 p-2" style="background: repeating-linear-gradient(45deg, #ffc107, #ffc107 20px, #000 20px, #000 40px); border: none;">
-        <div class="bg-white p-1 border border-4 border-dark">
-          <span style="font-weight:bold; color:black; letter-spacing:1px;">
-            {% trans "DECOMMISSIONED" %}
-          </span>
-        </div>
-      </div>
+      <span class="badge badge-radio-decommissioned">{% trans "Decommissioned" %}</span>
     {% else %}
       {% if not radio.is_active %}
         <span class="badge bg-danger">{% trans "Niet actief" %}</span>

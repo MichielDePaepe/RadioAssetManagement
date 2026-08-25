@@ -130,7 +130,7 @@
           {% elif radio.is_DMO_only %}
             <span class="badge bg-info text-dark">{% trans "DMO only" %}</span>
           {% elif radio.decommissioned %}
-            <span class="badge bg-warning text-dark">{% trans "Decommissioned" %}</span>
+            <span class="badge badge-radio-decommissioned">{% trans "Decommissioned" %}</span>
           {% else %}
             <span class="badge bg-danger">{% trans "Niet actief" %}</span>
           {% endif %}
@@ -248,7 +248,7 @@
               {% elif radio.is_DMO_only %}
                 <span class="badge bg-info text-dark">{% trans "DMO only" %}</span>
               {% elif radio.decommissioned %}
-                <span class="badge bg-warning text-dark">{% trans "Decommissioned" %}</span>
+                <span class="badge badge-radio-decommissioned">{% trans "Decommissioned" %}</span>
               {% else %}
                 <span class="badge bg-danger">{% trans "Niet actief" %}</span>
               {% endif %}

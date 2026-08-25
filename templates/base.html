@@ -12,6 +12,27 @@
     <!-- Bootstrap JavaScript  -->
     {% bootstrap_javascript %}
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+      .badge-radio-decommissioned {
+        background:
+          repeating-linear-gradient(
+            135deg,
+            #000 0,
+            #000 .45rem,
+            #ffe600 .45rem,
+            #ffe600 .9rem
+          );
+        color: #000;
+        border: 1px solid #000;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-shadow:
+          -1px -1px 0 #ffe600,
+          1px -1px 0 #ffe600,
+          -1px 1px 0 #ffe600,
+          1px 1px 0 #ffe600;
+      }
+    </style>
 {% endblock %}
 
 {% block body %}

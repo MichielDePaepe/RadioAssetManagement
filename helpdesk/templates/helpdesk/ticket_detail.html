@@ -162,6 +162,23 @@
         <input type="hidden" name="update_ticket" value="1">
       {% endif %}
 
+        {% if ticket %}
+          <div class="mb-2">
+            <label class="form-label">{% trans "Aangemaakt" %}:</label>
+            <div class="small">
+              {{ ticket.created_at|date:"d/m/Y H:i" }}
+              {% if ticket.created_by %}
+                <span class="text-muted">{% trans "door" %} {{ ticket.created_by }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">{% trans "Laatst bijgewerkt" %}:</label>
+            <div class="small">{{ ticket.updated_at|date:"d/m/Y H:i" }}</div>
+          </div>
+        {% endif %}
+
         <!-- TYPE -->
         <div class="mb-2">
           <label class="form-label">{% trans "Type" %}:</label>

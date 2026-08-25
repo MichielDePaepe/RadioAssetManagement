@@ -57,7 +57,7 @@
                   {% elif radio.is_DMO_only %}
                     <span class="badge bg-info text-dark">{% trans "DMO only" %}</span>
                   {% elif radio.decommissioned %}
-                    <span class="badge bg-warning text-dark">{% trans "Decommissioned" %}</span>
+                    <span class="badge badge-radio-decommissioned">{% trans "Decommissioned" %}</span>
                   {% else %}
                     <span class="badge bg-danger">{% trans "Niet actief" %}</span>
                   {% endif %}
@@ -209,7 +209,7 @@
               <a href="?status=decommissioned{% if base_query_string %}&{{ base_query_string }}{% endif %}{% if selected_model %}&model={{ selected_model|urlencode }}{% endif %}"
                  class="btn btn-sm d-flex justify-content-between align-items-center {% if status == 'decommissioned' %}btn-warning{% else %}btn-outline-warning{% endif %}">
                 <span>{% trans "Decommissioned" %}</span>
-                <span class="badge {% if status == 'decommissioned' %}bg-light text-warning{% else %}bg-warning text-dark{% endif %}">{{ status_counts.decommissioned }}</span>
+                <span class="badge badge-radio-decommissioned">{{ status_counts.decommissioned }}</span>
               </a>
             </div>
           </div>
