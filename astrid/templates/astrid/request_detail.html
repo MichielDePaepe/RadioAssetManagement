@@ -3,11 +3,36 @@
 
 {% block content %}
 
-<h1 class="mb-3">
-  {% blocktrans with type=object.request_type id=object.id %}
-    {{ type }} request #{{ id }}
-  {% endblocktrans %}
-</h1>
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start gap-2 mb-3">
+  <h1 class="mb-0">
+    {% blocktrans with type=object.request_type id=object.id %}
+      {{ type }} request #{{ id }}
+    {% endblocktrans %}
+  </h1>
+
+  <div class="flex-shrink-0">
+    {% if printer_count == 0 %}
+      <button type="button" class="btn btn-outline-secondary" disabled>
+        <i class="bi bi-printer me-1"></i>
+        {% trans "Print ticketlabel" %}
+      </button>
+    {% elif printer_count == 1 %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="printer_id" value="{{ default_printer.pk }}">
+        <button type="submit" name="print_ticket_label" value="1" class="btn btn-outline-secondary">
+          <i class="bi bi-printer me-1"></i>
+          {% trans "Print ticketlabel" %}
+        </button>
+      </form>
+    {% else %}
+      <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#ticketLabelPrinterModal">
+        <i class="bi bi-printer me-1"></i>
+        {% trans "Print ticketlabel" %}
+      </button>
+    {% endif %}
+  </div>
+</div>
 <hr>
 
 <div class="container-fluid" style="max-width: 600px;">
@@ -254,6 +279,37 @@
     {% endif %}
 
   </form>
+
+  {% if printer_count > 1 %}
+    <div class="modal fade" id="ticketLabelPrinterModal" tabindex="-1" aria-labelledby="ticketLabelPrinterModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form method="post">
+            {% csrf_token %}
+            <div class="modal-header">
+              <h5 class="modal-title" id="ticketLabelPrinterModalLabel">{% trans "Ticketlabel printen" %}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Sluiten' %}"></button>
+            </div>
+            <div class="modal-body">
+              <label for="ticket-label-printer" class="form-label">{% trans "Printer" %}</label>
+              <select name="printer_id" id="ticket-label-printer" class="form-select" required>
+                {% for printer in printers %}
+                  <option value="{{ printer.pk }}">{{ printer.name }} ({{ printer.device }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Annuleren" %}</button>
+              <button type="submit" name="print_ticket_label" value="1" class="btn btn-primary">
+                <i class="bi bi-printer-fill me-1"></i>
+                {% trans "Print" %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
 
 </div>
 

@@ -17,6 +17,8 @@ from django.db import transaction
 import openpyxl
 
 from helpdesk.models import *
+from helpdesk.services.printing import TicketPrintingService
+from printer.models import Printer
 from radio.models import *
 from .models import *
 
@@ -345,8 +347,28 @@ class RequestDetailView(DetailView):
     model = Request
     template_name = "astrid/request_detail.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        printers = Printer.objects.all()
+        context["printers"] = printers
+        context["printer_count"] = printers.count()
+        context["default_printer"] = printers.first()
+        return context
+
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
+
+        if "print_ticket_label" in request.POST:
+            printer_id = request.POST.get("printer_id")
+            try:
+                printer = Printer.objects.get(pk=printer_id)
+                message = TicketPrintingService(obj, printer).print_ticket_number_label()
+                messages.success(request, message)
+            except Printer.DoesNotExist:
+                messages.error(request, "Selected printer does not exist.")
+            except Exception as e:
+                messages.error(request, f"Printing failed: {str(e)}")
+            return redirect(request.path)
 
         request_type = request.POST.get("type")
         action = request.POST.get("action")
@@ -409,5 +431,4 @@ class RequestDetailView(DetailView):
             return redirect(request.path)
 
         return redirect("astrid:request_overview")
-
 

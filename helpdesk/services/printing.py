@@ -10,9 +10,15 @@ class TicketPrintingService:
     def mm_to_px(self, mm):
         return int(mm * self.dpi / 25.4)
 
+    def label_text(self):
+        request_type = getattr(self.ticket, "request_type", "")
+        if request_type in {"VTEI", "VISSI", "VISSI & VTEI"}:
+            return f"{request_type} #{self.ticket.pk}"
+        return f"#{self.ticket.pk}"
+
     def ticket_number_label(self):
         label_h_px = self.mm_to_px(12)
-        text = f"#{self.ticket.pk}"
+        text = self.label_text()
         font_size = self.mm_to_px(6)
         min_font_size = self.mm_to_px(3)
         max_label_w_px = self.mm_to_px(60)
