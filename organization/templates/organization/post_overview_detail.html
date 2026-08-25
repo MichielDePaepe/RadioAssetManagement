@@ -90,13 +90,15 @@ h2, h3, h4 {
                 </h4>
                 <table class="table table-sm table-bordered radio-table">
                     <tbody>
-                        {% for link in child.radio_links.all %}
-                            {% if link.radio %}
+                        {% for position in child.radio_positions_for_overview %}
+                            {% with assignment=position.operational_assignment %}
+                            {% if assignment %}
                                 <tr>
-                                    <td>{{ link.name }}</td>
-                                    <td class="issi">{{ link.radio.ISSI }}</td>
+                                    <td>{{ position.name }}</td>
+                                    <td class="issi">{{ assignment.radio.ISSI }}</td>
                                 </tr>
                             {% endif %}
+                            {% endwith %}
                         {% endfor %}
                     </tbody>
                 </table>

@@ -75,11 +75,13 @@ def radio_selector_button(
     callback=None, 
     btn_type="btn-primary", 
     extra_class='', 
+    label="",
     **extra_data
 ):
     return {
         'btn_type': btn_type,
         'callback': callback,
         'extra_class': extra_class,
+        'label': label,
         'extra_data': extra_data,
     }

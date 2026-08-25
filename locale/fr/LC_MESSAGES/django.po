@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-04 10:03+0200\n"
+"POT-Creation-Date: 2026-08-18 18:08+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -83,18 +83,20 @@ msgstr ""
 "    "
 
 #: astrid/templates/astrid/activation_request.html:22
-#: fireplan/templates/fireplan/latest_inventory_per_vector.html:15
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:16
 #: fireplan/templates/fireplan/vector_inventory_history.html:24
-#: helpdesk/templates/helpdesk/ticket_detail.html:154
-#: radio/templates/radio/decommissioning_request.html:22
+#: helpdesk/templates/helpdesk/ticket_detail.html:187 inventory/forms.py:40
+#: inventory/templates/inventory/position_detail.html:175
+#: radio/templates/radio/decommissioning_request.html:64
 #: radio/templates/radio/issi_alias_form.html:41
 msgid "Radio"
 msgstr "Radio"
 
-#: astrid/templates/astrid/activation_request.html:37 radio/forms.py:57
-#: radio/templates/radio/issi_alias_form.html:18
-#: radio/templates/radio/issi_form.html:17
-#: radio/templates/radio/selector/input.html:6 radio/views.py:139
+#: astrid/templates/astrid/activation_request.html:37
+#: inventory/templates/inventory/fireplan_inventory_scan.html:108
+#: radio/forms.py:73 radio/templates/radio/issi_alias_form.html:18
+#: radio/templates/radio/issi_form.html:17 radio/views.py:387
+#: radio/views.py:443
 msgid "ISSI"
 msgstr "ISSI"
 
@@ -103,14 +105,12 @@ msgid "ISSI die geactiveerd moet worden"
 msgstr "ISSI à activer"
 
 #: astrid/templates/astrid/activation_request.html:44
-#: astrid/templates/astrid/vtei_request.html:52
-#: radio/templates/radio/decommissioning_request.html:37
+#: astrid/templates/astrid/vtei_request.html:74 radio/forms.py:36
 msgid "Reden"
 msgstr "Motif"
 
 #: astrid/templates/astrid/activation_request.html:45
-#: astrid/templates/astrid/vtei_request.html:53
-#: radio/templates/radio/decommissioning_request.html:38
+#: astrid/templates/astrid/vtei_request.html:75
 msgid "Omschrijf hier de reden van de aanvraag"
 msgstr "Décrivez ici le motif de la demande"
 
@@ -140,7 +140,8 @@ msgid "TEI oude radio"
 msgstr "TEI ancienne radio"
 
 #: astrid/templates/astrid/request_detail.html:66
-#: radio/templates/radio/selector/input.html:14 radio/views.py:144
+#: inventory/templates/inventory/fireplan_inventory_scan.html:109
+#: radio/views.py:384 radio/views.py:448
 msgid "TEI"
 msgstr "TEI"
 
@@ -155,14 +156,16 @@ msgstr "Ancien ISSI"
 
 #: astrid/templates/astrid/request_detail.html:112
 #: astrid/templates/astrid/request_overview.html:18
+#: astrid/templates/astrid/vtei_request.html:66
 msgid "Nieuwe ISSI"
 msgstr "Nouvel ISSI"
 
-#: astrid/templates/astrid/request_detail.html:128 radio/forms.py:43
-#: radio/forms.py:70 radio/templates/radio/issi_alias_form.html:22
-#: radio/templates/radio/issi_form.html:28
-#: radio/templates/radio/selector/input.html:22 radio/views.py:140
-#: roip/templates/roip/live_tx.html:71
+#: astrid/templates/astrid/request_detail.html:128
+#: inventory/templates/inventory/fireplan_inventory_scan.html:107
+#: radio/forms.py:59 radio/forms.py:86
+#: radio/templates/radio/issi_alias_form.html:22
+#: radio/templates/radio/issi_form.html:28 radio/views.py:388
+#: radio/views.py:444 roip/templates/roip/live_tx.html:71
 #: taqto/templates/taqto/phonebook_serial.html:262
 msgid "Alias"
 msgstr "Alias"
@@ -229,6 +232,9 @@ msgid "Nieuwe TEI"
 msgstr "Nouveau TEI"
 
 #: astrid/templates/astrid/request_overview.html:19
+#: inventory/templates/inventory/fireplan_inventory_scan.html:112
+#: radio/templates/radio/detail.html:244 radio/templates/radio/detail.html:422
+#: radio/templates/radio/radio_list.html:187 radio/views.py:386
 msgid "Status"
 msgstr "Statut"
 
@@ -240,52 +246,86 @@ msgstr "Créé le"
 msgid "Geen openstaande tickets."
 msgstr "Aucun ticket ouvert."
 
-#: astrid/templates/astrid/vtei_request.html:6
-msgid "VTEI aanvragen"
+#: astrid/templates/astrid/vtei_request.html:8
+#, fuzzy
+#| msgid "VTEI aanvragen"
+msgid "VTEI & VISSI aanvragen"
 msgstr "Demande VTEI"
 
 #: astrid/templates/astrid/vtei_request.html:10
+msgid "VTEI aanvragen"
+msgstr "Demande VTEI"
+
+#: astrid/templates/astrid/vtei_request.html:17
+#, fuzzy
+#| msgid ""
+#| "\n"
+#| "    VTEI is een aanvraag om het abonnement van een radio over te zetten "
+#| "op een nieuwe radio met behoud van het ISSI op de nieuwe radio.\n"
+#| "    "
 msgid ""
 "\n"
-"    VTEI is een aanvraag om het abonnement van een radio over te zetten op "
-"een nieuwe radio met behoud van het ISSI op de nieuwe radio.\n"
-"    "
+"      VTEI & VISSI is een aanvraag om het abonnement van een radio over te "
+"zetten op een nieuwe radio met een nieuw ISSI op de nieuwe radio.\n"
+"      "
 msgstr ""
 "\n"
 "    Le VTEI est une demande visant à transférer l’abonnement d’une radio "
 "vers une nouvelle radio tout en conservant l’ISSI sur la nouvelle radio.\n"
 "    "
 
-#: astrid/templates/astrid/vtei_request.html:22
+#: astrid/templates/astrid/vtei_request.html:21
+#, fuzzy
+#| msgid ""
+#| "\n"
+#| "    VTEI is een aanvraag om het abonnement van een radio over te zetten "
+#| "op een nieuwe radio met behoud van het ISSI op de nieuwe radio.\n"
+#| "    "
+msgid ""
+"\n"
+"      VTEI is een aanvraag om het abonnement van een radio over te zetten op "
+"een nieuwe radio met behoud van het ISSI op de nieuwe radio.\n"
+"      "
+msgstr ""
+"\n"
+"    Le VTEI est une demande visant à transférer l’abonnement d’une radio "
+"vers une nouvelle radio tout en conservant l’ISSI sur la nouvelle radio.\n"
+"    "
+
+#: astrid/templates/astrid/vtei_request.html:35
 msgid "Oude radio"
 msgstr "Ancienne radio"
 
-#: astrid/templates/astrid/vtei_request.html:39
+#: astrid/templates/astrid/vtei_request.html:52
 msgid "Nieuwe radio"
 msgstr "Nouvelle radio"
 
-#: astrid/templates/astrid/vtei_request.html:53
+#: astrid/templates/astrid/vtei_request.html:67
+msgid "Nieuwe ISSI voor de nieuwe radio"
+msgstr ""
+
+#: astrid/templates/astrid/vtei_request.html:75
 #, python-format
 msgid "Aanvraag gekoppeld aan ticket #%(ticket_id)s – %(ticket_title)s"
 msgstr "Demande liée au ticket #%(ticket_id)s – %(ticket_title)s"
 
-#: astrid/templates/astrid/vtei_request.html:59
+#: astrid/templates/astrid/vtei_request.html:81 templates/index.html:186
 msgid "Aanvragen"
 msgstr "Demander"
 
-#: astrid/views.py:157
+#: astrid/views.py:176
 msgid "Both an old and a new radio need to be selected."
 msgstr "Une ancienne et une nouvelle radio doivent être sélectionnées."
 
-#: astrid/views.py:163
+#: astrid/views.py:182
 msgid "The radio selected as old radio has no subscription."
 msgstr "La radio sélectionnée comme ancienne radio n’a pas d’abonnement."
 
-#: astrid/views.py:166
+#: astrid/views.py:185
 msgid "The radio selected as new radio already has a subscription."
 msgstr "La radio sélectionnée comme nouvelle radio a déjà un abonnement."
 
-#: astrid/views.py:178
+#: astrid/views.py:197
 #, python-brace-format
 msgid ""
 "There is already an open Astrid request for one of the radios: <a "
@@ -294,38 +334,18 @@ msgstr ""
 "Il existe déjà une demande Astrid ouverte pour l’une des radios : <a "
 "href='{url}'>#{id}</a>"
 
-#: astrid/views.py:204
-msgid "VTEI request succesvol aangemaakt"
-msgstr "Demande VTEI créée avec succès"
-
-#: astrid/views.py:226 radio/views.py:475
-msgid "A radio needs to be selected."
-msgstr "Une radio doit être sélectionnée."
-
-#: astrid/views.py:234
-#, python-brace-format
-msgid "The selected <a href='{url}'>radio</a> already has a subscription."
-msgstr "La <a href='{url}'>radio</a> sélectionnée a déjà un abonnement."
-
-#: astrid/views.py:241
-msgid "A ISSI needs to be provided."
+#: astrid/views.py:209
+#, fuzzy
+#| msgid "A ISSI needs to be provided."
+msgid "A new ISSI needs to be provided."
 msgstr "Un ISSI doit être fourni."
 
-#: astrid/views.py:249
+#: astrid/views.py:216 astrid/views.py:294
 #, python-brace-format
 msgid "The ISSI <a href='{url}'>{issi}</a> is already activated."
 msgstr "L’ISSI <a href='{url}'>{issi}</a> est déjà activé."
 
-#: astrid/views.py:256 radio/views.py:495
-#, python-brace-format
-msgid ""
-"The <a href='{radio_url}'>radio</a> has an open request ticket: <a "
-"href='{ticket_url}'>#{ticket_id}</a>"
-msgstr ""
-"La <a href='{radio_url}'>radio</a> a un ticket de demande ouvert : <a "
-"href='{ticket_url}'>#{ticket_id}</a>"
-
-#: astrid/views.py:262
+#: astrid/views.py:229 astrid/views.py:307
 #, python-brace-format
 msgid ""
 "The ISSI is already used in an open request ticket: <a "
@@ -334,23 +354,52 @@ msgstr ""
 "L’ISSI est déjà utilisé dans un ticket de demande ouvert : <a "
 "href='{ticket_url}'>#{ticket_id}</a>"
 
-#: astrid/views.py:273
+#: astrid/views.py:245
+#, fuzzy, python-format
+#| msgid "VTEI request succesvol aangemaakt"
+msgid "%(type)s request succesvol aangemaakt"
+msgstr "Demande VTEI créée avec succès"
+
+#: astrid/views.py:271 inventory/views.py:182 inventory/views.py:188
+#: inventory/views.py:201 radio/views.py:721
+msgid "A radio needs to be selected."
+msgstr "Une radio doit être sélectionnée."
+
+#: astrid/views.py:279
+#, python-brace-format
+msgid "The selected <a href='{url}'>radio</a> already has a subscription."
+msgstr "La <a href='{url}'>radio</a> sélectionnée a déjà un abonnement."
+
+#: astrid/views.py:286
+msgid "A ISSI needs to be provided."
+msgstr "Un ISSI doit être fourni."
+
+#: astrid/views.py:301 radio/views.py:743
+#, python-brace-format
+msgid ""
+"The <a href='{radio_url}'>radio</a> has an open request ticket: <a "
+"href='{ticket_url}'>#{ticket_id}</a>"
+msgstr ""
+"La <a href='{radio_url}'>radio</a> a un ticket de demande ouvert : <a "
+"href='{ticket_url}'>#{ticket_id}</a>"
+
+#: astrid/views.py:318
 msgid "Activation request successful"
 msgstr "Demande d’activation créée avec succès"
 
-#: astrid/views.py:320
+#: astrid/views.py:365
 msgid "Geen astrid ticket nummer opgegeven"
 msgstr "Aucun numéro de ticket Astrid fourni"
 
-#: astrid/views.py:329
+#: astrid/views.py:374
 msgid "Geef een reden op waarom de aanvraag geweigerd werd"
 msgstr "Indiquez le motif du refus de la demande"
 
-#: astrid/views.py:340
+#: astrid/views.py:385
 msgid "Request refused by astrid"
 msgstr "Demande refusée par Astrid"
 
-#: astrid/views.py:347
+#: astrid/views.py:392
 msgid "Opmerking mag niet leeg zijn"
 msgstr "La remarque ne peut pas être vide"
 
@@ -359,45 +408,43 @@ msgid "Latest inventory per vector"
 msgstr "Dernier inventaire par vecteur"
 
 #: fireplan/templates/fireplan/latest_inventory_per_vector.html:7
-msgid "Since"
-msgstr "Depuis"
+#, fuzzy
+#| msgid "Latest inventory per vector"
+msgid "Laatste inventaris per vector, zonder tijdsbeperking."
+msgstr "Dernier inventaire par vecteur"
 
 #: fireplan/templates/fireplan/latest_inventory_per_vector.html:12
-#: roip/templates/roip/live_tx.html:73
+#: inventory/templates/inventory/fireplan_inventory_scan.html:65
+#: radio/templates/radio/detail.html:279 roip/templates/roip/live_tx.html:73
 msgid "Vector"
 msgstr "Vecteur"
 
 #: fireplan/templates/fireplan/latest_inventory_per_vector.html:13
+msgid "Order service"
+msgstr ""
+
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:14
 msgid "Vehicle"
 msgstr "Véhicule"
 
-#: fireplan/templates/fireplan/latest_inventory_per_vector.html:14
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:15
 msgid "Date"
 msgstr "Date"
 
-#: fireplan/templates/fireplan/latest_inventory_per_vector.html:16
-msgid "Done by"
-msgstr "Effectué par"
-
 #: fireplan/templates/fireplan/latest_inventory_per_vector.html:33
-#: fireplan/templates/fireplan/latest_inventory_per_vector.html:72
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:88
 msgid "(no vector)"
 msgstr "(aucun vecteur)"
 
-#: fireplan/templates/fireplan/latest_inventory_per_vector.html:50
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:67
 msgid "(no alias)"
 msgstr "(aucun alias)"
 
-#: fireplan/templates/fireplan/latest_inventory_per_vector.html:55
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:72
 msgid "not linked"
 msgstr "non lié"
 
-#: fireplan/templates/fireplan/latest_inventory_per_vector.html:59
-#: fireplan/templates/fireplan/latest_inventory_per_vector.html:86
-msgid "(unknown)"
-msgstr "(inconnu)"
-
-#: fireplan/templates/fireplan/latest_inventory_per_vector.html:85
+#: fireplan/templates/fireplan/latest_inventory_per_vector.html:118
 msgid "No radios"
 msgstr "Aucune radio"
 
@@ -419,7 +466,9 @@ msgid "Uur"
 msgstr "Heure"
 
 #: fireplan/templates/fireplan/vector_inventory_history.html:23
-#: roip/templates/roip/live_tx.html:72
+#: inventory/templates/inventory/fireplan_inventory_start.html:13
+#: inventory/templates/inventory/position_detail.html:13
+#: radio/templates/radio/detail.html:274 roip/templates/roip/live_tx.html:72
 msgid "Voertuig"
 msgstr "Véhicule"
 
@@ -448,10 +497,12 @@ msgid "Geen inventarissen gevonden voor deze vector."
 msgstr "Aucun inventaire trouvé pour ce vecteur."
 
 #: helpdesk/templates/helpdesk/ticket_detail.html:13
+#: radio/templates/radio/detail.html:167 radio/templates/radio/detail.html:409
 msgid "Nieuw ticket"
 msgstr "Nouveau ticket"
 
 #: helpdesk/templates/helpdesk/ticket_detail.html:34
+#: radio/templates/radio/detail.html:420
 msgid "Titel"
 msgstr "Titre"
 
@@ -476,33 +527,63 @@ msgstr "Pas encore de journaux."
 msgid "Log toevoegen"
 msgstr "Ajouter un journal"
 
-#: helpdesk/templates/helpdesk/ticket_detail.html:120
+#: helpdesk/templates/helpdesk/ticket_detail.html:121
+#, fuzzy
+#| msgid "Decommissioned"
+msgid "Decommissioning"
+msgstr "Déclassée"
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:127
+msgid "Deze radio staat buiten dienst."
+msgstr ""
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:131
+msgid ""
+"Bevestig deze aanvraag om de radio effectief buiten dienst te zetten en het "
+"ticket te sluiten."
+msgstr ""
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:139
+msgid "Radio effectief buiten dienst zetten?"
+msgstr ""
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:141
+msgid "Buiten dienst bevestigen"
+msgstr ""
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:146
+#, fuzzy
+#| msgid "Je hebt geen toestemming om deze pagina te bekijken."
+msgid "Je hebt geen rechten om deze buiten-dienst-aanvraag te bevestigen."
+msgstr "Vous n’avez pas l’autorisation de consulter cette page."
+
+#: helpdesk/templates/helpdesk/ticket_detail.html:153
 msgid "Ticket info"
 msgstr "Infos ticket"
 
-#: helpdesk/templates/helpdesk/ticket_detail.html:134
-#: taqto/templates/taqto/phonebook_serial.html:263
+#: helpdesk/templates/helpdesk/ticket_detail.html:167
+#: radio/templates/radio/detail.html:224 radio/templates/radio/detail.html:421
+#: radio/views.py:385 taqto/templates/taqto/phonebook_serial.html:263
 msgid "Type"
 msgstr "Type"
 
-#: helpdesk/templates/helpdesk/ticket_detail.html:144
+#: helpdesk/templates/helpdesk/ticket_detail.html:177
 msgid "Priority"
 msgstr "Priorité"
 
-#: helpdesk/templates/helpdesk/ticket_detail.html:177
+#: helpdesk/templates/helpdesk/ticket_detail.html:210
 msgid "External ref"
 msgstr "Référence externe"
 
-#: helpdesk/templates/helpdesk/ticket_detail.html:187
+#: helpdesk/templates/helpdesk/ticket_detail.html:220
 msgid "SIAMU"
 msgstr "SIAMU"
 
-#: helpdesk/templates/helpdesk/ticket_detail.html:197
+#: helpdesk/templates/helpdesk/ticket_detail.html:230
 msgid "Assigned to"
 msgstr "Assigné à"
 
-#: helpdesk/templates/helpdesk/ticket_detail.html:209
-#: inventory/templates/inventory/endpoint_switch.html:27
+#: helpdesk/templates/helpdesk/ticket_detail.html:242
 #: radio/templates/radio/issi_alias_form.html:59
 #: radio/templates/radio/issi_form.html:45
 msgid "Opslaan"
@@ -520,73 +601,500 @@ msgstr "Afficher les clôturés"
 msgid "Geen tickets gevonden."
 msgstr "Aucun ticket trouvé."
 
-#: inventory/models.py:52
-msgid "Dispatching"
-msgstr "Dispatching"
-
-#: inventory/models.py:53
-msgid "Reserve cabinet"
-msgstr "Armoire de réserve"
-
-#: inventory/models.py:54
-msgid "Stock"
-msgstr "Stock"
-
-#: inventory/models.py:55 radio/models.py:127
-msgid "Other"
-msgstr "Autre"
-
-#: inventory/models.py:113
-msgid "Primary"
-msgstr "Principal"
-
-#: inventory/models.py:114
-msgid "Temporary replacement"
-msgstr "Remplacement temporaire"
-
-#: inventory/models.py:115
-msgid "Storage"
-msgstr "Stockage"
-
-#: inventory/models.py:116
-msgid "Repair"
-msgstr "Réparation"
-
-#: inventory/templates/inventory/container_detail.html:12
-msgid "Endpoint"
-msgstr "Point de connexion"
-
-#: inventory/templates/inventory/container_detail.html:13
-msgid "Huidige radio"
-msgstr "Radio actuelle"
-
-#: inventory/templates/inventory/container_detail.html:35
-#: inventory/templates/inventory/endpoint_switch.html:5
-msgid "Wissel radio"
-msgstr "Changer de radio"
-
-#: inventory/templates/inventory/endpoint_switch.html:12
-#: radio/templates/radio/find.html:11
-msgid "Radio zoeken"
-msgstr "Rechercher une radio"
-
-#: inventory/templates/inventory/endpoint_switch.html:13
-msgid "TEI / ISSI / alias"
-msgstr "TEI / ISSI / alias"
-
-#: inventory/templates/inventory/endpoint_switch.html:17
-msgid "Gekozen radio"
-msgstr "Radio choisie"
-
-#: inventory/templates/inventory/endpoint_switch.html:22
+#: inventory/forms.py:45 inventory/templates/inventory/position_detail.html:111
+#: inventory/templates/inventory/position_detail.html:143
+#: inventory/templates/inventory/position_detail.html:179
+#: inventory/templates/inventory/position_release_substitute.html:27
 msgid "Note"
 msgstr "Note"
 
-#: inventory/templates/inventory/endpoint_switch.html:28
-#: radio/templates/radio/issi_alias_form.html:62
-#: radio/templates/radio/issi_form.html:48
-msgid "Annuleren"
+#: inventory/models.py:10
+msgid "Post"
+msgstr "Poste"
+
+#: inventory/models.py:11
+msgid "Dispatching"
+msgstr "Dispatching"
+
+#: inventory/models.py:12
+msgid "Stock"
+msgstr "Stock"
+
+#: inventory/models.py:13
+msgid "Intelligent cabinet"
+msgstr "Armoire intelligente"
+
+#: inventory/models.py:14 radio/models.py:169
+msgid "Other"
+msgstr "Autre"
+
+#: inventory/models.py:158
+#: inventory/templates/inventory/position_detail.html:35
+#: inventory/templates/inventory/position_list.html:47
+msgid "Primary"
+msgstr "Principal"
+
+#: inventory/models.py:159
+#: inventory/templates/inventory/position_detail.html:61
+#: inventory/templates/inventory/position_list.html:48
+msgid "Substitute"
+msgstr "Remplaçant"
+
+#: inventory/models.py:180
+msgid "Primary assignment replaced by this substitute."
+msgstr "Affectation principale remplacée par ce remplaçant."
+
+#: inventory/models.py:236 inventory/models.py:242
+msgid "A substitute assignment must replace an active primary assignment."
+msgstr ""
+"Une affectation de remplaçant doit remplacer une affectation principale "
+"active."
+
+#: inventory/models.py:238
+msgid "A substitute assignment can only replace a primary assignment."
+msgstr ""
+"Une affectation de remplaçant ne peut remplacer qu'une affectation "
+"principale."
+
+#: inventory/models.py:240
+msgid ""
+"A substitute assignment must replace a primary assignment on the same "
+"position."
+msgstr ""
+"Une affectation de remplaçant doit remplacer une affectation principale sur "
+"la même position."
+
+#: inventory/models.py:244
+msgid "A substitute radio must be different from the primary radio."
+msgstr "La radio remplaçante doit être différente de la radio principale."
+
+#: inventory/models.py:246
+msgid "Only substitute assignments can replace another assignment."
+msgstr ""
+"Seules les affectations de remplaçant peuvent remplacer une autre "
+"affectation."
+
+#: inventory/models.py:249
+msgid "active"
+msgstr "actif"
+
+#: inventory/models.py:249
+msgid "ended"
+msgstr "terminé"
+
+#: inventory/services.py:42 inventory/services.py:89
+msgid "This radio already has an active position assignment."
+msgstr "Cette radio a déjà une affectation de position active."
+
+#: inventory/services.py:80
+msgid ""
+"A substitute can only be assigned when the position has an active primary "
+"radio."
+msgstr ""
+"Un remplaçant ne peut être affecté que si la position a une radio principale "
+"active."
+
+#: inventory/services.py:83
+msgid "This position already has an active substitute radio."
+msgstr "Cette position a déjà une radio remplaçante active."
+
+#: inventory/services.py:86
+msgid "The substitute radio must be different from the primary radio."
+msgstr "La radio remplaçante doit être différente de la radio principale."
+
+#: inventory/services.py:113
+#: inventory/templates/inventory/position_release_substitute.html:40
+msgid "This position has no active substitute radio."
+msgstr "Cette position n'a pas de radio remplaçante active."
+
+#: inventory/services.py:134
+msgid "This position has no active primary radio."
+msgstr "Cette position n'a pas de radio principale active."
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:28
+msgid "Radio's scannen"
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:35
+#, fuzzy
+#| msgid "Voertuig"
+msgid "Ander voertuig"
+msgstr "Véhicule"
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:42
+#: inventory/templates/inventory/fireplan_inventory_start.html:25
+#, fuzzy
+#| msgid "Actief"
+msgid "Indicatief"
+msgstr "Actif"
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:48
+#, fuzzy
+#| msgid "Voertuig"
+msgid "Voertuigstatus"
+msgstr "Véhicule"
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:74
+#, fuzzy
+#| msgid "Geen radio's"
+msgid "Scan radio's"
+msgstr "Aucune radio"
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:75
+msgid "Elke geldige scan wordt aan de lijst toegevoegd."
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:78
+#: inventory/templates/inventory/fireplan_inventory_scan.html:254
+#: radio/templates/radio/selector/modal_body.html:167
+#, fuzzy
+#| msgid "Start scanner"
+msgid "Stop handscanner"
+msgstr "Démarrer le scanner"
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:79
+#: radio/templates/radio/selector/input.html:81
+#: radio/templates/radio/selector/modal_body.html:177
+#, fuzzy
+#| msgid "Start scanner"
+msgid "Handscanner"
+msgstr "Démarrer le scanner"
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:81
+#: inventory/templates/inventory/fireplan_inventory_scan.html:82
+msgid "GSM camera"
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:93
+#: radio/templates/radio/selector/input.html:97
+msgid "Stop camera"
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:110
+msgid "Model"
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:111
+msgid "Fireplan ID"
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:113
+#, fuzzy
+#| msgid "Actie"
+msgid "Acties"
+msgstr "Action"
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:118
+msgid "Nog geen radio's gescand."
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:126
+#, fuzzy
+#| msgid "Sluiten"
+msgid "Afsluiten"
+msgstr "Fermer"
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:232
+msgid "Verwijderen"
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:261
+#, fuzzy
+#| msgid "Start scanner"
+msgid "Start handscanner"
+msgstr "Démarrer le scanner"
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:291
+#: radio/templates/radio/selector/modal_body.html:228
+msgid "Camera scannen wordt niet ondersteund door deze browser."
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:298
+#: radio/templates/radio/selector/modal_body.html:235
+msgid "QR-detectie met de camera wordt niet ondersteund door deze browser."
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_scan.html:318
+#: radio/templates/radio/selector/modal_body.html:254
+#, fuzzy
+#| msgid "Web Serial kan hier niet starten"
+msgid "Camera kon niet gestart worden."
+msgstr "Web Serial ne peut pas démarrer ici"
+
+#: inventory/templates/inventory/fireplan_inventory_start.html:7
+msgid "Inventaris voertuig"
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_start.html:8
+msgid "Kies eerst het voertuig waarvoor je een inventaris wil doen."
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_start.html:16
+msgid "Begin te typen op indicatief, nummerplaat of vector"
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_start.html:29
+#, fuzzy
+#| msgid "Huidige radio"
+msgid "Huidige vector"
+msgstr "Radio actuelle"
+
+#: inventory/templates/inventory/fireplan_inventory_start.html:33
+#, fuzzy
+#| msgid "Vector"
+msgid "Vectorstatus"
+msgstr "Vecteur"
+
+#: inventory/templates/inventory/fireplan_inventory_start.html:37
+msgid "Nummerplaat"
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_start.html:41
+msgid "Gebruik"
+msgstr ""
+
+#: inventory/templates/inventory/fireplan_inventory_start.html:49
+msgid "Ga verder"
+msgstr ""
+
+#: inventory/templates/inventory/location_detail.html:14
+#: inventory/templates/inventory/location_list.html:4
+#: inventory/templates/inventory/location_list.html:8
+#: inventory/templates/inventory/position_list.html:20
+msgid "Locations"
+msgstr "Emplacements"
+
+#: inventory/templates/inventory/location_detail.html:17
+#: inventory/templates/inventory/position_detail.html:27
+msgid "Edit"
+msgstr "Modifier"
+
+#: inventory/templates/inventory/location_detail.html:22
+#: inventory/templates/inventory/position_detail.html:24
+msgid "Positions"
+msgstr "Positions"
+
+#: inventory/templates/inventory/location_detail.html:38
+msgid "No positions for this location."
+msgstr "Aucune position pour cet emplacement."
+
+#: inventory/templates/inventory/location_form.html:4
+#: inventory/templates/inventory/location_form.html:8
+msgid "Location"
+msgstr "Emplacement"
+
+#: inventory/templates/inventory/location_form.html:10
+#: inventory/templates/inventory/location_form.html:58
+#: inventory/templates/inventory/position_assignment_form.html:41
+#: inventory/templates/inventory/position_detail.html:115
+#: inventory/templates/inventory/position_detail.html:147
+#: inventory/templates/inventory/position_form.html:10
+#: inventory/templates/inventory/position_form.html:68
+#: inventory/templates/inventory/position_release_substitute.html:35
+msgid "Cancel"
 msgstr "Annuler"
+
+#: inventory/templates/inventory/location_form.html:55
+#: inventory/templates/inventory/position_assignment_form.html:38
+#: inventory/templates/inventory/position_form.html:65
+msgid "Save"
+msgstr "Enregistrer"
+
+#: inventory/templates/inventory/location_list.html:10
+msgid "New location"
+msgstr "Nouvel emplacement"
+
+#: inventory/templates/inventory/location_list.html:16
+msgid "Search location"
+msgstr "Rechercher un emplacement"
+
+#: inventory/templates/inventory/location_list.html:18
+#: inventory/templates/inventory/position_list.html:35
+msgid "Search"
+msgstr "Rechercher"
+
+#: inventory/templates/inventory/location_list.html:33
+msgid "No locations found."
+msgstr "Aucun emplacement trouvé."
+
+#: inventory/templates/inventory/position_detail.html:44
+#: inventory/templates/inventory/position_detail.html:70
+msgid "Since"
+msgstr "Depuis"
+
+#: inventory/templates/inventory/position_detail.html:46
+msgid "No active primary radio."
+msgstr "Aucune radio principale active."
+
+#: inventory/templates/inventory/position_detail.html:49
+msgid "Change primary"
+msgstr "Changer la radio principale"
+
+#: inventory/templates/inventory/position_detail.html:53
+#: inventory/templates/inventory/position_detail.html:100
+#: inventory/templates/inventory/position_detail.html:117
+msgid "Remove primary"
+msgstr "Supprimer la radio principale"
+
+#: inventory/templates/inventory/position_detail.html:72
+#: inventory/templates/inventory/position_detail.html:132
+#: inventory/templates/inventory/position_detail.html:149
+#: inventory/templates/inventory/position_release_substitute.html:4
+#: inventory/templates/inventory/position_release_substitute.html:7
+#: inventory/templates/inventory/position_release_substitute.html:32
+msgid "Release substitute"
+msgstr "Libérer le remplaçant"
+
+#: inventory/templates/inventory/position_detail.html:75
+msgid "No active substitute radio."
+msgstr "Aucune radio remplaçante active."
+
+#: inventory/templates/inventory/position_detail.html:77
+msgid "Assign substitute"
+msgstr "Affecter un remplaçant"
+
+#: inventory/templates/inventory/position_detail.html:101
+#: inventory/templates/inventory/position_detail.html:133
+#: radio/templates/radio/selector/modal.html:23
+msgid "Sluiten"
+msgstr "Fermer"
+
+#: inventory/templates/inventory/position_detail.html:169
+msgid "Assignment history"
+msgstr "Historique des affectations"
+
+#: inventory/templates/inventory/position_detail.html:174
+msgid "Role"
+msgstr "Rôle"
+
+#: inventory/templates/inventory/position_detail.html:176
+msgid "Assigned"
+msgstr "Affecté"
+
+#: inventory/templates/inventory/position_detail.html:177
+msgid "Ended"
+msgstr "Terminé"
+
+#: inventory/templates/inventory/position_detail.html:178
+msgid "Replaces"
+msgstr "Remplace"
+
+#: inventory/templates/inventory/position_detail.html:196
+msgid "Active"
+msgstr "Actif"
+
+#: inventory/templates/inventory/position_detail.html:212
+msgid "No assignments yet."
+msgstr "Aucune affectation pour le moment."
+
+#: inventory/templates/inventory/position_form.html:4
+#: inventory/templates/inventory/position_form.html:8
+msgid "Radio position"
+msgstr "Position radio"
+
+#: inventory/templates/inventory/position_form.html:35
+msgid "Parent"
+msgstr "Contexte"
+
+#: inventory/templates/inventory/position_form.html:36
+msgid "Choose exactly one parent: vector, vehicle or location."
+msgstr "Choisissez exactement un contexte : vecteur, véhicule ou emplacement."
+
+#: inventory/templates/inventory/position_list.html:4
+#: inventory/templates/inventory/position_list.html:8 templates/navbar.html:41
+msgid "Radio positions"
+msgstr "Positions radio"
+
+#: inventory/templates/inventory/position_list.html:12
+msgid "Show active"
+msgstr "Afficher les actives"
+
+#: inventory/templates/inventory/position_list.html:16
+msgid "Show inactive"
+msgstr "Afficher les inactives"
+
+#: inventory/templates/inventory/position_list.html:23
+msgid "New position"
+msgstr "Nouvelle position"
+
+#: inventory/templates/inventory/position_list.html:33
+msgid "Search position, vehicle, vector or location"
+msgstr "Rechercher une position, un véhicule, un vecteur ou un emplacement"
+
+#: inventory/templates/inventory/position_list.html:44
+msgid "Location/vector"
+msgstr "Lieu/vecteur"
+
+#: inventory/templates/inventory/position_list.html:45
+#: radio/templates/radio/detail.html:258
+msgid "Position"
+msgstr "Position"
+
+#: inventory/templates/inventory/position_list.html:46
+msgid "Gelinkt voertuig"
+msgstr "Véhicule lié"
+
+#: inventory/templates/inventory/position_list.html:49
+msgid "Operational"
+msgstr "Opérationnel"
+
+#: inventory/templates/inventory/position_list.html:62
+msgid "Inactive"
+msgstr "Inactif"
+
+#: inventory/templates/inventory/position_list.html:103
+msgid "No radio positions found."
+msgstr "Aucune position radio trouvée."
+
+#: inventory/templates/inventory/position_list.html:111
+msgid "Pagination"
+msgstr "Pagination"
+
+#: inventory/templates/inventory/position_list.html:116
+#: inventory/templates/inventory/position_list.html:120
+msgid "Previous"
+msgstr "Précédent"
+
+#: inventory/templates/inventory/position_list.html:130
+#: inventory/templates/inventory/position_list.html:134
+msgid "Next"
+msgstr "Suivant"
+
+#: inventory/templates/inventory/position_release_substitute.html:12
+msgid "Release"
+msgstr "Libérer"
+
+#: inventory/templates/inventory/position_release_substitute.html:42
+msgid "Back"
+msgstr "Retour"
+
+#: inventory/views.py:185 inventory/views.py:238
+msgid "Primary radio changed."
+msgstr "Radio principale modifiée."
+
+#: inventory/views.py:191 inventory/views.py:256
+msgid "Substitute radio assigned."
+msgstr "Radio remplaçante affectée."
+
+#: inventory/views.py:194 inventory/views.py:283
+msgid "Substitute radio released."
+msgstr "Radio remplaçante libérée."
+
+#: inventory/views.py:197
+msgid "Primary radio removed."
+msgstr "Radio principale supprimée."
+
+#: inventory/views.py:199
+msgid "Invalid position action."
+msgstr "Action de position non valide."
+
+#: inventory/views.py:228
+msgid "Change primary radio"
+msgstr "Changer la radio principale"
+
+#: inventory/views.py:246
+msgid "Assign substitute radio"
+msgstr "Affecter une radio remplaçante"
 
 #: organization/templates/organization/post_overview_list.html:4
 msgid "Post overview"
@@ -608,80 +1116,244 @@ msgstr "Le TEI doit contenir 15 chiffres."
 msgid "TEI is not within known TEI ranges."
 msgstr "Le TEI ne se trouve pas dans les plages TEI connues."
 
-#: radio/forms.py:79 radio/views.py:362
+#: radio/forms.py:41
+msgid "Omschrijf waarom deze radio buiten dienst gesteld moet worden."
+msgstr ""
+
+#: radio/forms.py:45
+#, fuzzy
+#| msgid "Geef een reden op waarom de aanvraag geweigerd werd"
+msgid "Een reden voor de aanvraag is verplicht."
+msgstr "Indiquez le motif du refus de la demande"
+
+#: radio/forms.py:95 radio/views.py:155
 msgid "ISSI-nummer mag enkel uit cijfers bestaan"
 msgstr "Le numéro ISSI ne peut contenir que des chiffres"
 
-#: radio/forms.py:82 radio/views.py:358
+#: radio/forms.py:98 radio/views.py:158
 msgid "Lengte van een ISSI-nummer moet 7 digits zijn"
 msgstr "Un numéro ISSI doit contenir 7 chiffres"
 
-#: radio/forms.py:86
+#: radio/forms.py:102
 msgid "ISSI-nummer bestaat al"
 msgstr "Le numéro ISSI existe déjà"
 
-#: radio/models.py:124
+#: radio/models.py:166
 msgid "Police"
 msgstr "Police"
 
-#: radio/models.py:125 templates/navbar.html:112
+#: radio/models.py:167 templates/navbar.html:127
 msgid "Fire"
 msgstr "Pompiers"
 
-#: radio/models.py:126 templates/navbar.html:119
+#: radio/models.py:168 templates/navbar.html:134
 msgid "Medical"
 msgstr "Médical"
 
-#: radio/models.py:191
+#: radio/models.py:243
+msgid "Decommissioning approved. Radio marked as decommissioned."
+msgstr ""
+
+#: radio/models.py:250
 msgid "Can create a decommission request"
 msgstr "Peut créer une demande de déclassement"
 
-#: radio/models.py:195
+#: radio/models.py:254
 msgid "Can approve a decommission request"
 msgstr "Peut approuver une demande de déclassement"
 
-#: radio/templates/radio/decommissioning_request.html:6
-#: templates/navbar.html:54
-msgid "Decommissioning request"
-msgstr "Demande de déclassement"
+#: radio/templates/radio/decommissioning_request.html:9
+#: radio/templates/radio/detail.html:466
+msgid "Radio buiten dienst stellen"
+msgstr ""
 
 #: radio/templates/radio/decommissioning_request.html:10
 msgid ""
-"\n"
-"    Request to decommission a radio.\n"
-"    "
+"Maak een aanvraagticket aan zodat de reden en opvolging traceerbaar blijven."
 msgstr ""
-"\n"
-"    Demande de déclassement d’une radio.\n"
-"    "
 
-#: radio/templates/radio/detail.html:57
+#: radio/templates/radio/decommissioning_request.html:15
+#, fuzzy
+#| msgid "Type radio"
+msgid "Terug naar radio"
+msgstr "Type de radio"
+
+#: radio/templates/radio/decommissioning_request.html:41
+#: radio/templates/radio/detail.html:129 radio/templates/radio/detail.html:247
+#: radio/templates/radio/radio_list.html:56
+#: radio/templates/radio/radio_list.html:196
 msgid "Actief"
 msgstr "Actif"
 
-#: radio/templates/radio/detail.html:59
-#: radio/templates/radio/radio_card.html:41
+#: radio/templates/radio/decommissioning_request.html:43
+#: radio/templates/radio/detail.html:131 radio/templates/radio/detail.html:249
+#: radio/templates/radio/radio_card.html:50
+#: radio/templates/radio/radio_list.html:58
+#: radio/templates/radio/radio_list.html:201
 msgid "DMO only"
 msgstr "DMO uniquement"
 
-#: radio/templates/radio/detail.html:61
+#: radio/templates/radio/decommissioning_request.html:45
+#: radio/templates/radio/detail.html:133 radio/templates/radio/detail.html:251
+#: radio/templates/radio/radio_list.html:60
+#: radio/templates/radio/radio_list.html:211
 msgid "Decommissioned"
 msgstr "Déclassée"
 
-#: radio/templates/radio/detail.html:63
-#: radio/templates/radio/radio_card.html:37
+#: radio/templates/radio/decommissioning_request.html:47
+#: radio/templates/radio/detail.html:135 radio/templates/radio/detail.html:253
+#: radio/templates/radio/radio_card.html:46
+#: radio/templates/radio/radio_list.html:62
+#: radio/templates/radio/radio_list.html:206
 msgid "Niet actief"
 msgstr "Inactif"
 
-#: radio/templates/radio/detail.html:151
+#: radio/templates/radio/decommissioning_request.html:55
+msgid ""
+"Deze radio is nog actief. Deactiveer de radio eerst voor je een buiten-"
+"dienst-aanvraag maakt."
+msgstr ""
+
+#: radio/templates/radio/decommissioning_request.html:59
+msgid "Deze radio staat al buiten dienst."
+msgstr ""
+
+#: radio/templates/radio/decommissioning_request.html:87
+#: radio/templates/radio/issi_alias_form.html:62
+#: radio/templates/radio/issi_form.html:48
+msgid "Annuleren"
+msgstr "Annuler"
+
+#: radio/templates/radio/decommissioning_request.html:91
+#, fuzzy
+#| msgid "Aanvragen"
+msgid "Aanvraag aanmaken"
+msgstr "Demander"
+
+#: radio/templates/radio/detail.html:163
+#, fuzzy
+#| msgid "Radio zoeken"
+msgid "Andere radio zoeken"
+msgstr "Rechercher une radio"
+
+#: radio/templates/radio/detail.html:178
+#, fuzzy
+#| msgid "Nieuwe TEI"
+msgid "Kopieer TEI"
+msgstr "Nouveau TEI"
+
+#: radio/templates/radio/detail.html:198
+#, fuzzy
+#| msgid "Nieuwe ISSI"
+msgid "Kopieer ISSI"
+msgstr "Nouvel ISSI"
+
+#: radio/templates/radio/detail.html:207 radio/views.py:389
+#, fuzzy
+#| msgid "Ticket info"
+msgid "Tickets"
+msgstr "Infos ticket"
+
+#: radio/templates/radio/detail.html:209
+#, fuzzy
+#| msgid "Geen radio gekoppeld aan deze alias"
+msgid "gekoppeld aan deze radio"
+msgstr "Aucune radio liée à cet alias"
+
+#: radio/templates/radio/detail.html:220
+#, fuzzy
+#| msgid "Radio is working"
+msgid "Radio informatie"
+msgstr "La radio fonctionne"
+
+#: radio/templates/radio/detail.html:288
+#: radio/templates/radio/radio_list.html:42
+msgid "Laatste Fireplan-scan"
+msgstr "Dernier scan Fireplan"
+
+#: radio/templates/radio/detail.html:308
+msgid "Labels printen"
+msgstr ""
+
+#: radio/templates/radio/detail.html:316
+msgid "Printer"
+msgstr ""
+
+#: radio/templates/radio/detail.html:321
+#, fuzzy
+#| msgid "Web Serial beschikbaar"
+msgid "Geen printers beschikbaar"
+msgstr "Web Serial disponible"
+
+#: radio/templates/radio/detail.html:326
+msgid "Kopies"
+msgstr ""
+
+#: radio/templates/radio/detail.html:333
+msgid "Voeg eerst een printer toe om labels te kunnen printen."
+msgstr ""
+
+#: radio/templates/radio/detail.html:340
+msgid "QR-label"
+msgstr ""
+
+#: radio/templates/radio/detail.html:345 radio/templates/radio/detail.html:362
+#: radio/templates/radio/detail.html:375 radio/templates/radio/detail.html:389
+msgid "Print"
+msgstr ""
+
+#: radio/templates/radio/detail.html:351
 msgid "Deze radio heeft geen Fireplan ID, QR-printen niet mogelijk."
 msgstr "Cette radio n’a pas d’ID Fireplan, l’impression QR est impossible."
+
+#: radio/templates/radio/detail.html:370
+#, fuzzy
+#| msgid "Nieuwe radio"
+msgid "Mobiele radio"
+msgstr "Nouvelle radio"
+
+#: radio/templates/radio/detail.html:384
+#, fuzzy
+#| msgid "Alias"
+msgid "Alias-label"
+msgstr "Alias"
+
+#: radio/templates/radio/detail.html:404
+#, fuzzy
+#| msgid "Nieuw ticket"
+msgid "Gelinkte tickets"
+msgstr "Nouveau ticket"
+
+#: radio/templates/radio/detail.html:423
+msgid "Laatst bijgewerkt"
+msgstr ""
+
+#: radio/templates/radio/detail.html:452
+#, fuzzy
+#| msgid "Geen radio gekoppeld aan deze alias"
+msgid "Geen tickets gekoppeld aan deze radio."
+msgstr "Aucune radio liée à cet alias"
+
+#: radio/templates/radio/detail.html:455
+#, fuzzy
+#| msgid "Ticket nummer"
+msgid "Ticket aanmaken"
+msgstr "Numéro de ticket"
+
+#: radio/templates/radio/detail.html:506
+msgid "Bezig"
+msgstr ""
+
+#: radio/templates/radio/find.html:8 radio/templates/radio/find.html:12
+#: templates/index.html:95
+msgid "Radio zoeken"
+msgstr "Rechercher une radio"
 
 #: radio/templates/radio/issi_alias_form.html:33
 msgid "Klant"
 msgstr "Client"
 
-#: radio/templates/radio/issi_alias_form.html:37 radio/views.py:142
+#: radio/templates/radio/issi_alias_form.html:37 radio/views.py:446
 msgid "Discipline"
 msgstr "Discipline"
 
@@ -696,9 +1368,8 @@ msgid "Zoek ISSI, alias, klant of discipline"
 msgstr "Rechercher un ISSI, alias, client ou discipline"
 
 #: radio/templates/radio/issi_alias_list.html:25
-#: radio/templates/radio/selector/input.html:7
-#: radio/templates/radio/selector/input.html:15
-#: radio/templates/radio/selector/input.html:23
+#: radio/templates/radio/radio_list.html:136
+#: radio/templates/radio/selector/input.html:74
 msgid "Zoeken"
 msgstr "Rechercher"
 
@@ -707,6 +1378,7 @@ msgid "Wis zoekopdracht"
 msgstr "Effacer la recherche"
 
 #: radio/templates/radio/issi_alias_list.html:63
+#: radio/templates/radio/radio_list.html:43
 msgid "Actie"
 msgstr "Action"
 
@@ -724,20 +1396,31 @@ msgid "Geen ISSI's gevonden."
 msgstr "Aucun ISSI trouvé."
 
 #: radio/templates/radio/issi_alias_list.html:119
+#: radio/templates/radio/radio_list.html:222
 msgid "Paginatie"
 msgstr "Pagination"
 
 #: radio/templates/radio/issi_alias_list.html:124
+#: radio/templates/radio/radio_list.html:227
 msgid "Vorige"
 msgstr "Précédent"
 
 #: radio/templates/radio/issi_alias_list.html:134
+#: radio/templates/radio/radio_list.html:237
 msgid "Volgende"
 msgstr "Suivant"
 
-#: radio/templates/radio/radio_card.html:66
+#: radio/templates/radio/radio_card.html:40
 msgid "DECOMMISSIONED"
 msgstr "DÉCLASSÉE"
+
+#: radio/templates/radio/radio_card.html:68
+msgid "Niet toegewezen"
+msgstr "Non assignée"
+
+#: radio/templates/radio/radio_card.html:74
+msgid "Gescand"
+msgstr "Scannée"
 
 #: radio/templates/radio/radio_create.html:5
 msgid "Nieuwe radio toevoegen"
@@ -759,109 +1442,192 @@ msgstr ""
 msgid "Voeg radio toe in Fireplan"
 msgstr "Ajouter la radio dans Fireplan"
 
-#: radio/templates/radio/selector/input.html:31
-msgid "Start scanner"
-msgstr "Démarrer le scanner"
+#: radio/templates/radio/radio_list.html:8 templates/index.html:139
+#, fuzzy
+#| msgid "Radio"
+msgid "Radio's"
+msgstr "Radio"
 
-#: radio/templates/radio/selector/modal.html:23
-msgid "Sluiten"
-msgstr "Fermer"
+#: radio/templates/radio/radio_list.html:9
+msgid ""
+"Overzicht van alle radio's in het systeem, hun status, ISSI en gekoppelde "
+"tickets."
+msgstr ""
 
-#: radio/templates/radio/selector/modal_body.html:106
-msgid "Vul een waarde in."
-msgstr "Veuillez saisir une valeur."
+#: radio/templates/radio/radio_list.html:102
+#, fuzzy
+#| msgid "Radio zoeken"
+msgid "Radio openen"
+msgstr "Rechercher une radio"
 
-#: radio/templates/radio/selector/modal_body.html:130
-msgid "Er is een fout opgetreden bij het zoeken."
-msgstr "Une erreur s’est produite lors de la recherche."
+#: radio/templates/radio/radio_list.html:109
+#, fuzzy
+#| msgid "Geen ISSI's gevonden."
+msgid "Geen radio's gevonden."
+msgstr "Aucun ISSI trouvé."
 
-#: radio/views.py:72
-#, python-brace-format
-msgid "Radio aangemaakt in Fireplan met ID {fireplan_id}."
-msgstr "Radio créée dans Fireplan avec l’ID {fireplan_id}."
+#: radio/templates/radio/radio_list.html:122
+msgid "Filters"
+msgstr ""
 
-#: radio/views.py:79
-#, python-brace-format
-msgid "Radio kon niet aangemaakt worden in Fireplan: {error}"
-msgstr "La radio n’a pas pu être créée dans Fireplan : {error}"
+#: radio/templates/radio/radio_list.html:143
+#, fuzzy
+#| msgid "TEI / ISSI / alias"
+msgid "TEI, ISSI, alias..."
+msgstr "TEI / ISSI / alias"
 
-#: radio/views.py:141
-msgid "Customer"
-msgstr "Client"
+#: radio/templates/radio/radio_list.html:144
+#, fuzzy
+#| msgid "Zoek ISSI, alias, klant of discipline"
+msgid "Zoek TEI, ISSI, alias, type, klant of discipline"
+msgstr "Rechercher un ISSI, alias, client ou discipline"
 
-#: radio/views.py:143
+#: radio/templates/radio/radio_list.html:153
+#, fuzzy
+#| msgid "Wis zoekopdracht"
+msgid "Zoekopdracht wissen"
+msgstr "Effacer la recherche"
+
+#: radio/templates/radio/radio_list.html:168 radio/views.py:447
 msgid "Type radio"
 msgstr "Type de radio"
 
-#: radio/views.py:158
-#, python-brace-format
-msgid "ISSI {issi} toegevoegd."
-msgstr "ISSI {issi} ajouté."
+#: radio/templates/radio/radio_list.html:170
+msgid "Alle types"
+msgstr ""
 
-#: radio/views.py:173
-#, python-brace-format
-msgid "Alias voor ISSI {issi} bijgewerkt."
-msgstr "Alias de l’ISSI {issi} mis à jour."
+#: radio/templates/radio/radio_list.html:181
+msgid "Typefilter wissen"
+msgstr ""
 
-#: radio/views.py:350
-msgid "type and value required"
-msgstr "type et valeur requis"
+#: radio/templates/radio/radio_list.html:191
+msgid "Alle"
+msgstr ""
 
-#: radio/views.py:364
-msgid "ISSI-nummer niet gevonden"
-msgstr "Numéro ISSI introuvable"
+#: radio/templates/radio/selector/input.html:70
+#, fuzzy
+#| msgid "TEI / ISSI / alias"
+msgid "TEI, ISSI of alias"
+msgstr "TEI / ISSI / alias"
 
-#: radio/views.py:366
-msgid "Geen radio gevonden met dit ISSI-nummer"
-msgstr "Aucune radio trouvée avec ce numéro ISSI"
+#: radio/templates/radio/selector/input.html:85
+msgid "Camera"
+msgstr ""
 
-#: radio/views.py:373
+#: radio/templates/radio/selector/modal_body.html:132
+#, fuzzy
+#| msgid "TEI / ISSI / alias"
+msgid "Vul een TEI, ISSI of alias in."
+msgstr "TEI / ISSI / alias"
+
+#: radio/templates/radio/selector/modal_body.html:156
+msgid "Er is een fout opgetreden bij het zoeken."
+msgstr "Une erreur s’est produite lors de la recherche."
+
+#: radio/views.py:131
+#, fuzzy, python-brace-format
+#| msgid "Radio aangemaakt in Fireplan met ID {fireplan_id}."
+msgid "Geen radio gevonden voor Fireplan ID {fireplan_id}"
+msgstr "Radio créée dans Fireplan avec l’ID {fireplan_id}."
+
+#: radio/views.py:139
+#, fuzzy
+#| msgid "ISSI-nummer mag enkel uit cijfers bestaan"
+msgid "TEI mag enkel uit cijfers bestaan"
+msgstr "Le numéro ISSI ne peut contenir que des chiffres"
+
+#: radio/views.py:146
 #, python-brace-format
 msgid "Radio met dit TEI {tei} nummer niet gevonden"
 msgstr "Radio avec le numéro TEI {tei} introuvable"
 
-#: radio/views.py:380
+#: radio/views.py:164
+msgid "ISSI-nummer niet gevonden"
+msgstr "Numéro ISSI introuvable"
+
+#: radio/views.py:166
+msgid "Geen radio gevonden met dit ISSI-nummer"
+msgstr "Aucune radio trouvée avec ce numéro ISSI"
+
+#: radio/views.py:172
 #, python-brace-format
 msgid "Geen ISSI gevonden met alias “{alias}”"
 msgstr "Aucun ISSI trouvé avec l’alias « {alias} »"
 
-#: radio/views.py:387
+#: radio/views.py:175
 msgid "Geen radio gekoppeld aan deze alias"
 msgstr "Aucune radio liée à cet alias"
 
-#: radio/views.py:392
-msgid "Fout bij het zoeken op alias"
-msgstr "Erreur lors de la recherche par alias"
+#: radio/views.py:181
+msgid "Vul een waarde in."
+msgstr "Veuillez saisir une valeur."
 
-#: radio/views.py:399
+#: radio/views.py:191
+#, fuzzy
+#| msgid "Radio met dit TEI {tei} nummer niet gevonden"
+msgid "QR-code of TEI niet gevonden"
+msgstr "Radio avec le numéro TEI {tei} introuvable"
+
+#: radio/views.py:201
 msgid "invalid lookup type"
 msgstr "Type de recherche invalide"
 
-#: radio/views.py:414
-msgid "Radio not found"
-msgstr "Radio introuvable"
+#: radio/views.py:249
+#, python-brace-format
+msgid "Radio aangemaakt in Fireplan met ID {fireplan_id}."
+msgstr "Radio créée dans Fireplan avec l’ID {fireplan_id}."
 
-#: radio/views.py:485
+#: radio/views.py:256
+#, python-brace-format
+msgid "Radio kon niet aangemaakt worden in Fireplan: {error}"
+msgstr "La radio n’a pas pu être créée dans Fireplan : {error}"
+
+#: radio/views.py:445
+msgid "Customer"
+msgstr "Client"
+
+#: radio/views.py:462
+#, python-brace-format
+msgid "ISSI {issi} toegevoegd."
+msgstr "ISSI {issi} ajouté."
+
+#: radio/views.py:477
+#, python-brace-format
+msgid "Alias voor ISSI {issi} bijgewerkt."
+msgstr "Alias de l’ISSI {issi} mis à jour."
+
+#: radio/views.py:636
+msgid "type and value required"
+msgstr "type et valeur requis"
+
+#: radio/views.py:729
+#, fuzzy, python-brace-format
+#| msgid "The selected <a href='{url}'>radio</a> already has a subscription."
+msgid "The selected <a href='{url}'>radio</a> is already decommissioned."
+msgstr "La <a href='{url}'>radio</a> sélectionnée a déjà un abonnement."
+
+#: radio/views.py:733
 #, python-brace-format
 msgid "The selected <a href='{url}'>radio</a> is still active."
 msgstr "La <a href='{url}'>radio</a> sélectionnée est toujours active."
 
-#: radio/views.py:502
-#, python-brace-format
+#: radio/views.py:755
+#, fuzzy, python-brace-format
+#| msgid ""
+#| "There is an open decommissioning request (#{ticket_id}) for this <a "
+#| "href='{url}'>radio</a>"
 msgid ""
-"There is an open decommissioning request (#{ticket_id}) for this <a "
-"href='{url}'>radio</a>"
+"There is an open decommissioning request for this <a "
+"href='{radio_url}'>radio</a>: <a href='{ticket_url}'>#{ticket_id}</a>"
 msgstr ""
 "Il existe une demande de déclassement ouverte (#{ticket_id}) pour cette <a "
 "href='{url}'>radio</a>"
 
-#: radio/views.py:507
-msgid "A reason for the decommissioning request is required."
-msgstr "Un motif est requis pour la demande de déclassement."
-
-#: radio/views.py:516
-msgid "Decommissioning request successful"
-msgstr "Demande de déclassement créée avec succès"
+#: radio/views.py:767
+#, fuzzy
+#| msgid "Decommissioning request"
+msgid "Decommissioning request created."
+msgstr "Demande de déclassement"
 
 #: roip/templates/roip/live_tx.html:14
 msgid "Live uitzending"
@@ -935,7 +1701,8 @@ msgstr "et redémarrez Chrome."
 msgid ""
 "Gebruik dit alleen op de programmeer-pc's. HTTPS blijft de nette oplossing."
 msgstr ""
-"Utilisez ceci uniquement sur les PC de programmation. HTTPS reste la bonne solution."
+"Utilisez ceci uniquement sur les PC de programmation. HTTPS reste la bonne "
+"solution."
 
 #: taqto/templates/taqto/phonebook_serial.html:230
 msgid "Radio phonebook updater"
@@ -1006,14 +1773,16 @@ msgid ""
 "Deze interne site draait via HTTP. Browsers laten Web Serial alleen toe via "
 "HTTPS of localhost."
 msgstr ""
-"Ce site interne fonctionne en HTTP. Les navigateurs n’autorisent Web Serial que via HTTPS ou localhost."
+"Ce site interne fonctionne en HTTP. Les navigateurs n’autorisent Web Serial "
+"que via HTTPS ou localhost."
 
 #: taqto/views.py:56
 msgid ""
 "Deze browser ondersteunt Web Serial niet. Gebruik Chrome of Edge op desktop; "
 "Safari, Firefox en iOS ondersteunen dit niet."
 msgstr ""
-"Ce navigateur ne prend pas en charge Web Serial. Utilisez Chrome ou Edge sur ordinateur ; Safari, Firefox et iOS ne le prennent pas en charge."
+"Ce navigateur ne prend pas en charge Web Serial. Utilisez Chrome ou Edge sur "
+"ordinateur ; Safari, Firefox et iOS ne le prennent pas en charge."
 
 #: taqto/views.py:58
 msgid "Web Serial beschikbaar"
@@ -1105,7 +1874,8 @@ msgstr "Port série ouvert à 9600 8N1 RTS/CTS"
 msgid ""
 "Geen seriële poort gekozen. Klik opnieuw op verbinden en selecteer de radio."
 msgstr ""
-"Aucun port série choisi. Cliquez à nouveau sur connecter et sélectionnez la radio."
+"Aucun port série choisi. Cliquez à nouveau sur connecter et sélectionnez la "
+"radio."
 
 #: taqto/views.py:79
 #, python-brace-format
@@ -1139,7 +1909,8 @@ msgid ""
 "Phonebook heeft {slots} plaatsen, maar {contacts} contacten moeten "
 "geschreven worden"
 msgstr ""
-"Le répertoire contient {slots} emplacements, mais {contacts} contacts doivent être écrits"
+"Le répertoire contient {slots} emplacements, mais {contacts} contacts "
+"doivent être écrits"
 
 #: taqto/views.py:86
 #, python-brace-format
@@ -1188,13 +1959,105 @@ msgstr "Accès refusé"
 msgid "Je hebt geen toestemming om deze pagina te bekijken."
 msgstr "Vous n’avez pas l’autorisation de consulter cette page."
 
-#: templates/index.html:9
-msgid "Welkom bij Radio Asset Management"
+#: templates/index.html:84
+#, fuzzy
+#| msgid "Brandweer"
+msgid "Brandweer Brussel"
+msgstr "Pompiers"
+
+#: templates/index.html:85
+#, fuzzy
+#| msgid "Welkom bij Radio Asset Management"
+msgid "Radio Asset Management"
 msgstr "Bienvenue dans Radio Asset Management"
 
-#: templates/index.html:10
-msgid "Start hier met beheren van de radio’s van Brandweer Brussel"
-msgstr "Commencez ici à gérer les radios des Pompiers de Bruxelles"
+#: templates/index.html:91
+#, python-format
+msgid ""
+"Welkom terug, %(username)s. Vind snel een radio, open een ticket of ga "
+"direct naar de inventaris die je nodig hebt."
+msgstr ""
+
+#: templates/index.html:98
+#, fuzzy
+#| msgid "Ticket info"
+msgid "Tickets bekijken"
+msgstr "Infos ticket"
+
+#: templates/index.html:103
+msgid ""
+"Meld je aan om radio's, inventaris, aanvragen en helpdesktickets te beheren."
+msgstr ""
+
+#: templates/index.html:106
+#, fuzzy
+#| msgid "Aanmaken"
+msgid "Aanmelden"
+msgstr "Créer"
+
+#: templates/index.html:112
+msgid "Snelle start"
+msgstr ""
+
+#: templates/index.html:116
+msgid "Controleer een radio via nummer, TEI of ISSI."
+msgstr ""
+
+#: templates/index.html:120
+msgid "Bekijk waar materiaal gekoppeld is."
+msgstr ""
+
+#: templates/index.html:124
+msgid "Volg aanvragen en incidenten vanuit een centrale plek."
+msgstr ""
+
+#: templates/index.html:140
+msgid "Zoeken, details bekijken en labels raadplegen."
+msgstr ""
+
+#: templates/index.html:151
+#, fuzzy
+#| msgid "Posts"
+msgid "Posten"
+msgstr "Postes"
+
+#: templates/index.html:152
+msgid "Bekijk posten en gekoppelde radio-inventaris."
+msgstr ""
+
+#: templates/index.html:163
+msgid "Ziekenwagens"
+msgstr "Ambulances"
+
+#: templates/index.html:164
+#, fuzzy
+#| msgid "Latest inventory per vector"
+msgid "Laatste inventaris per vector openen."
+msgstr "Dernier inventaire par vecteur"
+
+#: templates/index.html:176
+msgid "Tickets opvolgen en problemen bundelen."
+msgstr ""
+
+#: templates/index.html:188
+msgid "ASTRID-aanvragen opvolgen"
+msgstr ""
+
+#: templates/index.html:192 templates/navbar.html:161
+msgid "Live"
+msgstr "Direct"
+
+#: templates/index.html:194
+msgid "RoIP live-transmissies"
+msgstr ""
+
+#: templates/index.html:198
+msgid "Beheer"
+msgstr ""
+
+#: templates/index.html:200
+msgid "Django admin openen"
+msgstr ""
 
 #: templates/login.html:22
 msgid "Username"
@@ -1204,7 +2067,7 @@ msgstr "Nom d’utilisateur"
 msgid "Password"
 msgstr "Mot de passe"
 
-#: templates/login.html:31 templates/navbar.html:166
+#: templates/login.html:31 templates/navbar.html:181
 msgid "Login"
 msgstr "Connexion"
 
@@ -1217,88 +2080,160 @@ msgid "Posts"
 msgstr "Postes"
 
 #: templates/navbar.html:35
-msgid "Ziekenwagens"
-msgstr "Ambulances"
+msgid "Inventarisoverzicht"
+msgstr ""
 
-#: templates/navbar.html:47
+#: templates/navbar.html:48
+msgid "Inventaris doen"
+msgstr ""
+
+#: templates/navbar.html:61
 msgid "Find"
 msgstr "Rechercher"
 
-#: templates/navbar.html:50
+#: templates/navbar.html:62
+#, fuzzy
+#| msgid "Post overview"
+msgid "Radio overview"
+msgstr "Aperçu des postes"
+
+#: templates/navbar.html:65
 msgid "Add radio"
 msgstr "Ajouter une radio"
 
-#: templates/navbar.html:70
+#: templates/navbar.html:69
+msgid "Decommissioning request"
+msgstr "Demande de déclassement"
+
+#: templates/navbar.html:85
 msgid "Upload subscriptions"
 msgstr "Téléverser les abonnements"
 
-#: templates/navbar.html:73
+#: templates/navbar.html:88
 msgid "VTEI request"
 msgstr "Demande VTEI"
 
-#: templates/navbar.html:74
+#: templates/navbar.html:89
 msgid "VTEI & VISSI request"
 msgstr "Demande VTEI & VISSI"
 
-#: templates/navbar.html:75
+#: templates/navbar.html:90
 msgid "Activation request"
 msgstr "Demande d’activation"
 
-#: templates/navbar.html:77
+#: templates/navbar.html:92
 msgid "Overzicht van aanvragen"
 msgstr "Aperçu des demandes"
 
-#: templates/navbar.html:96
+#: templates/navbar.html:111
 msgid "Update radio phonebook"
 msgstr "Mettre à jour le répertoire radio"
 
-#: templates/navbar.html:105
+#: templates/navbar.html:120
 msgid "Download contacts"
 msgstr "Télécharger les contacts"
 
-#: templates/navbar.html:136
+#: templates/navbar.html:151
 msgid "Ticket overview"
 msgstr "Aperçu des tickets"
 
-#: templates/navbar.html:146
-msgid "Live"
-msgstr "Direct"
-
-#: templates/navbar.html:158
+#: templates/navbar.html:173
 msgid "Admin"
 msgstr "Admin"
 
-#: templates/navbar.html:161
+#: templates/navbar.html:176
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: traca/models.py:15
-msgid "Empty"
-msgstr "Vide"
+#~ msgid "Nog nooit gescand"
+#~ msgstr "Jamais scannée"
 
-#: traca/models.py:16
-msgid "Spare radio"
-msgstr "Radio de réserve"
+#~ msgid "Geen Fireplan-scan gevonden"
+#~ msgstr "Aucun scan Fireplan trouvé"
 
-#: traca/models.py:17
-msgid "Defecte radio"
-msgstr "Radio défectueuse"
+#~ msgid "Scan"
+#~ msgstr "Scan"
 
-#: traca/models.py:18
-msgid "In use"
-msgstr "En service"
+#~ msgid "Toegewezen aan"
+#~ msgstr "Assignée à"
 
-#: traca/models.py:32
-msgid "Taken"
-msgstr "Pris"
+#~ msgid "Release the active substitute before removing the primary radio."
+#~ msgstr "Libérez le remplaçant actif avant de supprimer la radio principale."
 
-#: traca/models.py:33
-msgid "Returned"
-msgstr "Rendu"
+#~ msgid "Reserve cabinet"
+#~ msgstr "Armoire de réserve"
 
-#: traca/models.py:34
-msgid "Swap"
-msgstr "Échange"
+#~ msgid "Temporary replacement"
+#~ msgstr "Remplacement temporaire"
+
+#~ msgid "Storage"
+#~ msgstr "Stockage"
+
+#~ msgid "Repair"
+#~ msgstr "Réparation"
+
+#~ msgid "Endpoint"
+#~ msgstr "Point de connexion"
+
+#~ msgid "Huidige radio"
+#~ msgstr "Radio actuelle"
+
+#~ msgid "Wissel radio"
+#~ msgstr "Changer de radio"
+
+#~ msgid "TEI / ISSI / alias"
+#~ msgstr "TEI / ISSI / alias"
+
+#~ msgid "Gekozen radio"
+#~ msgstr "Radio choisie"
+
+#~ msgid "Empty"
+#~ msgstr "Vide"
+
+#~ msgid "Spare radio"
+#~ msgstr "Radio de réserve"
+
+#~ msgid "Defecte radio"
+#~ msgstr "Radio défectueuse"
+
+#~ msgid "In use"
+#~ msgstr "En service"
+
+#~ msgid "Taken"
+#~ msgstr "Pris"
+
+#~ msgid "Returned"
+#~ msgstr "Rendu"
+
+#~ msgid "Swap"
+#~ msgstr "Échange"
+
+#~ msgid "Done by"
+#~ msgstr "Effectué par"
+
+#~ msgid "(unknown)"
+#~ msgstr "(inconnu)"
+
+#~ msgid ""
+#~ "\n"
+#~ "    Request to decommission a radio.\n"
+#~ "    "
+#~ msgstr ""
+#~ "\n"
+#~ "    Demande de déclassement d’une radio.\n"
+#~ "    "
+
+#~ msgid "Fout bij het zoeken op alias"
+#~ msgstr "Erreur lors de la recherche par alias"
+
+#~ msgid "A reason for the decommissioning request is required."
+#~ msgstr "Un motif est requis pour la demande de déclassement."
+
+#~ msgid "Decommissioning request successful"
+#~ msgstr "Demande de déclassement créée avec succès"
+
+#~ msgid "Start hier met beheren van de radio’s van Brandweer Brussel"
+#~ msgstr "Commencez ici à gérer les radios des Pompiers de Bruxelles"
 
 #~ msgid "If 15 digits, last digit must be zero."
 #~ msgstr "Si le TEI comporte 15 chiffres, le dernier doit être zéro."

@@ -37,6 +37,18 @@
             </li>
             {% if user.is_authenticated %}
             <li>
+              <a class="dropdown-item" href="{% url 'inventory:location_list' %}?type=POST">
+                <i class="bi bi-grid-1x2 me-2"></i>{% trans "Post dashboards" %}
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" href="{% url 'inventory:position_list' %}">
+                <i class="bi bi-geo-alt me-2"></i>{% trans "Radio positions" %}
+              </a>
+            </li>
+            {% endif %}
+            {% if user.is_authenticated %}
+            <li>
               <a class="dropdown-item" href="{% url 'inventory:fireplan_inventory_start' %}">
                 <i class="bi bi-qr-code-scan me-2"></i>{% trans "Inventaris doen" %}
               </a>

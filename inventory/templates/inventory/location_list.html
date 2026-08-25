@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Locations" %}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">{% trans "Locations" %}</h1>
+  <a class="btn btn-primary" href="{% url 'inventory:location_create' %}">
+    <i class="bi bi-plus-circle me-1"></i>{% trans "New location" %}
+  </a>
+</div>
+
+<form class="mb-3" method="get">
+  <div class="input-group">
+    {% if type_filter %}<input type="hidden" name="type" value="{{ type_filter }}">{% endif %}
+    <input class="form-control" name="q" value="{{ request.GET.q }}" placeholder="{% trans 'Search location' %}">
+    <button class="btn btn-outline-primary" type="submit">
+      <i class="bi bi-search me-1"></i>{% trans "Search" %}
+    </button>
+  </div>
+</form>
+
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <a class="btn btn-sm {% if not type_filter %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'inventory:location_list' %}">
+    {% trans "All" %}
+  </a>
+  {% for value,label in location_types %}
+    <a class="btn btn-sm {% if type_filter == value %}btn-primary{% else %}btn-outline-primary{% endif %}" href="{% url 'inventory:location_list' %}?type={{ value }}">
+      {{ label }}
+    </a>
+  {% endfor %}
+</div>
+
+<div class="list-group">
+  {% for location in locations %}
+    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="{% url 'inventory:location_detail' location.pk %}">
+      <span>
+        <span class="fw-semibold">{{ location }}</span>
+        <span class="text-muted ms-2">{{ location.get_location_type_display }}</span>
+      </span>
+      <span class="badge bg-secondary">{{ location.radio_positions.count }}</span>
+    </a>
+  {% empty %}
+    <div class="list-group-item text-muted">{% trans "No locations found." %}</div>
+  {% endfor %}
+</div>
+{% endblock %}

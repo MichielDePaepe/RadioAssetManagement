@@ -23,16 +23,25 @@
       {% endif %}
 
       {% if radio.ISSI %}
-        <span class="badge {% if radio.is_active %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ radio.ISSI }}</span>
+        <a href="{% url 'radio:issi_alias_edit' radio.ISSI %}"
+           class="badge text-decoration-none {% if radio.is_active %}bg-success{% else %}bg-warning text-dark{% endif %}">
+          {{ radio.ISSI }}
+        </a>
       {% endif %}
     </div>
 
   </div>
 
-  {% if not radio.decommissioned %}
-
-    <div class="card-body text-center">
-
+  <div class="card-body text-center">
+    {% if radio.decommissioned %}
+      <div class="mb-3 p-2" style="background: repeating-linear-gradient(45deg, #ffc107, #ffc107 20px, #000 20px, #000 40px); border: none;">
+        <div class="bg-white p-1 border border-4 border-dark">
+          <span style="font-weight:bold; color:black; letter-spacing:1px;">
+            {% trans "DECOMMISSIONED" %}
+          </span>
+        </div>
+      </div>
+    {% else %}
       {% if not radio.is_active %}
         <span class="badge bg-danger">{% trans "Niet actief" %}</span>
       {% endif %}
@@ -40,44 +49,43 @@
       {% if radio.is_DMO_only %}
         <span class="badge bg-info">{% trans "DMO only" %}</span>
       {% endif %}
-      
-      {% if radio.inventory_entries.all %}
-        <div class="text-muted small mb-2 text-center">
-          Laatst gezien:
-          {% if radio.inventory_entries.last.container != radio.container_link.first.container %}
-            <span class="badge bg-danger">
-              <i class="bi bi-exclamation-triangle-fill me-1"></i>
-              {{ radio.inventory_entries.last.container }}
+    {% endif %}
+
+    {% with assignment=radio.active_position_assignment latest_scan=radio.latest_fireplan_inventory_radio %}
+      <hr>
+
+      <div class="text-start small d-grid gap-1">
+        <div class="d-flex align-items-start gap-2">
+          {% if assignment %}
+            <a href="{% url 'inventory:position_detail' assignment.position.pk %}" class="text-reset text-decoration-none text-truncate flex-grow-1">
+              {{ assignment.position }}
+            </a>
+            <span class="badge {% if assignment.role == 'SUBSTITUTE' %}bg-warning text-dark{% else %}bg-success{% endif %} flex-shrink-0 ms-auto"
+                  title="{{ assignment.get_role_display }}">
+              {% if assignment.role == 'SUBSTITUTE' %}S{% else %}P{% endif %}
             </span>
-            <br>
+          {% else %}
+            <span class="text-muted text-truncate flex-grow-1">{% trans "Niet toegewezen" %}</span>
           {% endif %}
-          <time class="timeago" datetime="{{ radio.inventory_entries.last.timestamp|date:'c' }}"></time>
         </div>
-      {% else %}
-        <div class="text-muted small mb-2 text-center">Nog niet gescand</div>
-      {% endif %}
 
-  {% else %}
-
-    <div class="card m-2 shadow" style="background: repeating-linear-gradient(45deg, #ffc107, #ffc107 20px, #000 20px, #000 40px); border: none;">
-      <div class="card-body d-flex justify-content-center align-items-center">
-        <div class="bg-white p-1 border border-4 border-dark">
-          <span style="font-weight:bold; color:black; letter-spacing:1px;">
-            {% trans "DECOMMISSIONED" %}
-          </span>
-        </div>
+        {% if latest_scan %}
+          <div class="text-muted text-truncate">
+            {% trans "Gescand" %}: {{ latest_scan.inventory.vehicle_alpha_code }}{% if latest_scan.inventory.vector %} - {{ latest_scan.inventory.vector }}{% endif %} - {{ latest_scan.inventory.closed_at|date:"d/m/Y" }}
+          </div>
+        {% endif %}
       </div>
+    {% endwith %}
+
+    <hr>
+
+    <div class="text-muted small">
+      TEI:
+      <a href="{% url 'radio:detail' radio.pk %}" class="font-monospace text-reset text-decoration-none">
+        {{ radio.TEI|stringformat:"015d" }}
+      </a>
     </div>
-
-  {% endif %}
-
-<hr>
-
-<div class="text-muted small">
-  TEI: {{ radio.TEI|stringformat:"015d" }}
-</div>
-
-</div>
+  </div>
 
 
 </div>

@@ -254,16 +254,19 @@
               {% endif %}
             </div>
 
-            {% if radio.container_link %}
-              <div class="detail-label">{% trans "Voorziene plaats" %}</div>
+            {% if active_position_assignments %}
+              <div class="detail-label">{% trans "Position" %}</div>
               <div class="detail-value">
-                {{ radio.container_link.container }}: {{ radio.container_link.name }}
-                {% if radio.container_link.container.vector.vehicle %}
-                  <div class="text-muted small mt-1">
-                    {{ radio.container_link.container.vector.statusCode.status_icon_html }}
-                    {{ radio.container_link.container.vector.vehicle.call_sign }}
+                {% for assignment in active_position_assignments %}
+                  <div>
+                    <a href="{% url 'inventory:position_detail' assignment.position.pk %}" class="text-decoration-none">
+                      {{ assignment.position }}
+                    </a>
+                    <span class="badge {% if assignment.role == 'SUBSTITUTE' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                      {{ assignment.get_role_display }}
+                    </span>
                   </div>
-                {% endif %}
+                {% endfor %}
               </div>
             {% endif %}
 
@@ -276,21 +279,23 @@
               <div class="detail-label">{% trans "Vector" %}</div>
               <div class="detail-value">
                 {{ radio.vehicle.vector.statusCode.status_icon_html }}
-                {{ radio.vehicle.vector.name }}
+                {{ radio.vehicle.vector }}
               </div>
             {% endif %}
 
-            {% if radio.inventory_entries.exists %}
-              <div class="detail-label">{% trans "Laatst gezien" %}</div>
+            {% with latest_scan=radio.latest_fireplan_inventory_radio %}
+            {% if latest_scan %}
+              <div class="detail-label">{% trans "Laatste Fireplan-scan" %}</div>
               <div class="detail-value">
-                {{ radio.inventory_entries.latest.container }}
+                {{ latest_scan.inventory.vehicle_alpha_code }}
                 <div class="text-muted small">
-                  <time class="timeago" datetime="{{ radio.inventory_entries.latest.timestamp|date:'c' }}">
-                    {{ radio.inventory_entries.latest.timestamp|date:"d/m/Y H:i" }}
+                  <time class="timeago" datetime="{{ latest_scan.inventory.closed_at|date:'c' }}">
+                    {{ latest_scan.inventory.closed_at|date:"d/m/Y H:i" }}
                   </time>
                 </div>
               </div>
             {% endif %}
+            {% endwith %}
           </div>
         </div>
       </section>

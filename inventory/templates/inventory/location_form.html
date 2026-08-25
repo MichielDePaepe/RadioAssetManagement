@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Location" %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">{% trans "Location" %}</h1>
+  <a class="btn btn-outline-secondary" href="{% url 'inventory:location_list' %}">
+    <i class="bi bi-arrow-left me-1"></i>{% trans "Cancel" %}
+  </a>
+</div>
+
+<form method="post" novalidate>
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-8">
+      <label class="form-label" for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>
+      {{ form.name }}
+      {% for error in form.name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="col-md-4">
+      <label class="form-label" for="{{ form.location_type.id_for_label }}">{{ form.location_type.label }}</label>
+      {{ form.location_type }}
+      {% for error in form.location_type.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+    </div>
+  </div>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <label class="form-label" for="{{ form.service.id_for_label }}">{{ form.service.label }}</label>
+      {{ form.service }}
+      {% for error in form.service.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="{{ form.parent.id_for_label }}">{{ form.parent.label }}</label>
+      {{ form.parent }}
+      {% for error in form.parent.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+    </div>
+  </div>
+
+  <div class="form-check mb-3">
+    {{ form.active }}
+    <label class="form-check-label" for="{{ form.active.id_for_label }}">{{ form.active.label }}</label>
+    {% for error in form.active.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+  </div>
+
+  <div class="border rounded p-3 mb-3">
+    <h2 class="h5 mb-3">{% trans "Dashboard" %}</h2>
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.dashboard_vectors.id_for_label }}">{{ form.dashboard_vectors.label }}</label>
+        <div class="input-group input-group-sm mb-2">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input class="form-control" type="search" data-filter-select="{{ form.dashboard_vectors.id_for_label }}" placeholder="{% trans 'Zoek vector' %}">
+        </div>
+        {{ form.dashboard_vectors }}
+        {% for error in form.dashboard_vectors.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="{{ form.dashboard_locations.id_for_label }}">{{ form.dashboard_locations.label }}</label>
+        <div class="input-group input-group-sm mb-2">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input class="form-control" type="search" data-filter-select="{{ form.dashboard_locations.id_for_label }}" placeholder="{% trans 'Zoek locatie' %}">
+        </div>
+        {{ form.dashboard_locations }}
+        {% for error in form.dashboard_locations.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <button class="btn btn-primary" type="submit">
+      <i class="bi bi-check2 me-1"></i>{% trans "Save" %}
+    </button>
+    <a class="btn btn-outline-secondary" href="{% url 'inventory:location_list' %}">
+      {% trans "Cancel" %}
+    </a>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+  document.querySelectorAll("[data-filter-select]").forEach((input) => {
+    const select = document.getElementById(input.dataset.filterSelect);
+    if (!select) return;
+
+    const options = Array.from(select.options).map((option) => ({
+      option,
+      text: option.textContent.toLowerCase(),
+    }));
+
+    input.addEventListener("input", () => {
+      const query = input.value.trim().toLowerCase();
+      options.forEach(({ option, text }) => {
+        option.hidden = query && !option.selected && !text.includes(query);
+      });
+    });
+  });
+</script>
+{% endblock %}

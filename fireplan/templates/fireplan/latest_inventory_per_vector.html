@@ -26,7 +26,7 @@
                 <td>
                   {% if v %}
                     <a href="{% url 'fireplan:vector_inventory_history' v.resourceCode %}" class="fw-semibold text-decoration-none">
-                      {{ v.name|default:v.resourceCode }}
+                      {{ v }}
                     </a>
                     {% if v.name %}<span class="text-muted"> — {{ v.resourceCode }}</span>{% endif %}
                   {% else %}
@@ -81,7 +81,7 @@
             <td>
               {% if v %}
                 <a href="{% url 'fireplan:vector_inventory_history' v.resourceCode %}" class="fw-semibold text-decoration-none">
-                  {{ v.resourceCode }}
+                  {{ v }}
                 </a>
                 {% if v.name %}<span class="text-muted"> — {{ v.name }}</span>{% endif %}
               {% else %}

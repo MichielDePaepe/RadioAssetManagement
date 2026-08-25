@@ -28,7 +28,7 @@
     <h3 class="mb-1">{% trans "Radio's scannen" %}</h3>
     <div class="text-muted">
       {{ vehicle.number }}
-      {% if vector %} &middot; {{ vector.name|default:vector.resourceCode }}{% endif %}
+      {% if vector %} &middot; {{ vector }}{% endif %}
     </div>
   </div>
   <a class="btn btn-outline-secondary" href="{% url 'inventory:fireplan_inventory_start' %}">
@@ -63,7 +63,7 @@
   <div class="col-md-4">
     <div class="border rounded p-3 h-100">
       <div class="text-muted small">{% trans "Vector" %}</div>
-      <div class="fw-semibold">{% if vector %}{{ vector.name|default:vector.resourceCode }}{% else %}-{% endif %}</div>
+      <div class="fw-semibold">{% if vector %}{{ vector }}{% else %}-{% endif %}</div>
     </div>
   </div>
 </div>

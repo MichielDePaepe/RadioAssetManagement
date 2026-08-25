@@ -1,130 +1,112 @@
-from organization.models import *
-from rangefilter.filters import DateRangeFilter
-
-
 from django.contrib import admin
-from django.db.models import Q
-from django.utils import timezone
-
-from polymorphic.admin import (
-    PolymorphicParentModelAdmin,
-    PolymorphicChildModelAdmin,
-)
+from django.urls import reverse
+from django.utils.html import format_html
 
 from .models import *
 
 
-# ---------- Inlines ----------
-
-class RadioEndpointInline(admin.TabularInline):
-    model = RadioEndpoint
+class RadioPositionAssignmentInline(admin.TabularInline):
+    model = RadioPositionAssignment
     extra = 0
-    fields = ("name", "allows_multiple", "primary_radio")
-    autocomplete_fields = ("primary_radio",)
+    fields = ("role", "radio", "assigned_at", "ended_at", "replaces", "created_by", "note")
+    readonly_fields = ("assigned_at",)
+    autocomplete_fields = ("radio", "replaces", "created_by")
     show_change_link = True
 
 
-class RadioAssignmentInline(admin.TabularInline):
-    model = RadioAssignment
+class RadioPositionInline(admin.TabularInline):
+    model = RadioPosition
     extra = 0
-    fields = ("radio", "reason", "start_at", "end_at", "ticket", "replaces_radio")
-    readonly_fields = ("start_at",)
-    autocomplete_fields = ("radio", "ticket", "replaces_radio")
+    fields = ("name", "order", "active")
     show_change_link = True
 
-    def get_queryset(self, request):
-        # Show newest first
-        return super().get_queryset(request).order_by("-start_at")
+
+def radio_detail_link(radio):
+    url = reverse("radio:detail", kwargs={"pk": radio.pk})
+    return format_html('<a href="{}">{}</a>', url, radio.inventory_label)
 
 
-# ---------- Container admin (polymorphic) ----------
-
-@admin.register(VectorContainer)
-class VectorContainerAdmin(PolymorphicChildModelAdmin):
-    base_model = VectorContainer
-    inlines = (RadioEndpointInline,)
-    autocomplete_fields = ("vector",)
-    list_display = ("label", "vector")
-    search_fields = ("label", "vector__id", "vector__number", "vector__call_sign")  # adapt to your Vector fields
-
-
-@admin.register(LocationContainer)
-class LocationContainerAdmin(PolymorphicChildModelAdmin):
-    base_model = LocationContainer
-    inlines = (RadioEndpointInline,)
-    list_display = ("label", "location_type")
-    list_filter = ("location_type",)
-    search_fields = ("label",)
+@admin.register(Location)
+class LocationAdmin(admin.ModelAdmin):
+    list_display = ("name", "location_type", "service", "parent", "active")
+    list_filter = ("location_type", "active")
+    search_fields = ("name", "service__code", "service__description", "parent__name")
+    autocomplete_fields = ("service", "parent")
+    filter_horizontal = ("dashboard_vectors", "dashboard_locations")
+    fieldsets = (
+        (None, {
+            "fields": ("name", "location_type", "service", "parent", "active"),
+        }),
+        ("Dashboard", {
+            "fields": ("dashboard_vectors", "dashboard_locations"),
+        }),
+    )
+    inlines = (RadioPositionInline,)
 
 
-@admin.register(RadioContainer)
-class RadioContainerParentAdmin(PolymorphicParentModelAdmin):
-    base_model = RadioContainer
-    child_models = (VectorContainer, LocationContainer)
-    list_display = ("label", "polymorphic_ctype")
-    search_fields = ("label",)
-    inlines = (RadioEndpointInline,)
-
-
-# ---------- Endpoint admin ----------
-
-@admin.register(RadioEndpoint)
-class RadioEndpointAdmin(admin.ModelAdmin):
+@admin.register(RadioPosition)
+class RadioPositionAdmin(admin.ModelAdmin):
     list_display = (
         "name",
-        "container",
-        "primary_radio",
-        "current_radio",
-        "current_reason",
-        "current_since",
+        "parent_label",
+        "active",
+        "active_primary_radio",
+        "active_substitute_radio",
+        "operational_radio",
     )
-    list_filter = ("allows_multiple", "container__polymorphic_ctype")
-    search_fields = ("name", "container__label", "primary_radio__subscription__issi__number")
-    autocomplete_fields = ("container", "primary_radio")
-    inlines = (RadioAssignmentInline,)
-    readonly_fields = ("current_radio", "current_reason", "current_since")
+    list_filter = ("active",)
+    search_fields = (
+        "name",
+        "vector__resourceCode",
+        "vector__name",
+        "vehicle__number",
+        "vehicle__call_sign",
+        "location__name",
+    )
+    autocomplete_fields = ("vector", "vehicle", "location")
+    inlines = (RadioPositionAssignmentInline,)
 
-    def _current_assignment(self, obj):
-        return obj.current_assignment
+    def active_primary_radio(self, obj):
+        assignment = obj.active_primary
+        return radio_detail_link(assignment.radio) if assignment else None
 
-    def current_radio(self, obj):
-        a = self._current_assignment(obj)
-        return a.radio if a else None
+    def active_substitute_radio(self, obj):
+        assignment = obj.active_substitute
+        return radio_detail_link(assignment.radio) if assignment else None
 
-    def current_reason(self, obj):
-        a = self._current_assignment(obj)
-        return a.reason if a else None
-
-    def current_since(self, obj):
-        a = self._current_assignment(obj)
-        return a.start_at if a else None
-
-    current_radio.short_description = "Current radio"
-    current_reason.short_description = "Current reason"
-    current_since.short_description = "Current since"
+    def operational_radio(self, obj):
+        assignment = obj.operational_assignment
+        return radio_detail_link(assignment.radio) if assignment else None
 
 
-# ---------- Assignment admin ----------
+@admin.register(RadioPositionAssignment)
+class RadioPositionAssignmentAdmin(admin.ModelAdmin):
+    list_display = ("radio_label", "position", "role", "assigned_at", "ended_at", "replaces_label", "is_active")
+    list_filter = ("role", "ended_at")
+    search_fields = (
+        "radio__TEI",
+        "radio__subscription__issi__number",
+        "radio__subscription__issi__alias",
+        "position__name",
+        "position__location__name",
+        "position__vehicle__number",
+        "position__vector__name",
+    )
+    autocomplete_fields = ("radio", "position", "replaces", "created_by")
+    date_hierarchy = "assigned_at"
 
-@admin.register(RadioAssignment)
-class RadioAssignmentAdmin(admin.ModelAdmin):
-    list_display = ("radio", "endpoint", "reason", "start_at", "end_at", "ticket", "replaces_radio", "is_open")
-    list_filter = ("reason", "end_at")
-    search_fields = ("radio__subscription__issi__number", "endpoint__name", "endpoint__container__label")
-    autocomplete_fields = ("radio", "endpoint", "ticket", "replaces_radio")
-    date_hierarchy = "start_at"
+    def radio_label(self, obj):
+        return radio_detail_link(obj.radio)
 
-    def is_open(self, obj):
-        return obj.end_at is None
+    radio_label.short_description = "Radio"
+    radio_label.admin_order_field = "radio__subscription__issi__alias"
 
-    is_open.boolean = True
-    is_open.short_description = "Open"
+    def replaces_label(self, obj):
+        return radio_detail_link(obj.replaces.radio) if obj.replaces else None
 
-# ---------- Post admin ----------
+    replaces_label.short_description = "Replaces"
 
-@admin.register(Post)
-class PostAdmin(admin.ModelAdmin):
-    list_display = ("label", "service")
-    search_fields = ("label",)
-    autocomplete_fields = ("service",)
+    def is_active(self, obj):
+        return obj.ended_at is None
 
+    is_active.boolean = True

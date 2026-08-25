@@ -39,7 +39,7 @@
                   {% endif %}
                 </th>
               {% endfor %}
-              <th scope="col">{% trans "Laatste locatie" %}</th>
+              <th scope="col">{% trans "Laatste Fireplan-scan" %}</th>
               <th scope="col" class="text-end">{% trans "Actie" %}</th>
             </tr>
           </thead>
@@ -89,11 +89,14 @@
                   {% endif %}
                 </td>
                 <td>
-                  {% if radio.inventory_entries.exists %}
-                    {{ radio.inventory_entries.latest.container }}
+                  {% with latest_scan=radio.latest_fireplan_inventory_radio %}
+                  {% if latest_scan %}
+                    {{ latest_scan.inventory.vehicle_alpha_code }}
+                    <div class="text-muted small">{{ latest_scan.inventory.closed_at|date:"d/m/Y H:i" }}</div>
                   {% else %}
                     <span class="text-muted">-</span>
                   {% endif %}
+                  {% endwith %}
                 </td>
                 <td class="text-end text-nowrap">
                   <a href="{% url 'radio:detail' radio.pk %}" class="btn btn-outline-primary btn-sm" title="{% trans 'Radio openen' %}">

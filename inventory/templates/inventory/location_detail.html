@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ location }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ location }}</h1>
+    <div class="text-muted">{{ location.get_location_type_display }}</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'inventory:location_list' %}">
+      <i class="bi bi-arrow-left me-1"></i>{% trans "Locations" %}
+    </a>
+    <a class="btn btn-outline-primary" href="{% url 'inventory:location_edit' location.pk %}">
+      <i class="bi bi-pencil me-1"></i>{% trans "Edit" %}
+    </a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">{% trans "Verwacht" %}</div>
+      <div class="fs-4 fw-semibold">{{ counts.expected }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">{% trans "Aanwezig" %}</div>
+      <div class="fs-4 fw-semibold text-success">{{ counts.present }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">{% trans "Ontbrekend" %}</div>
+      <div class="fs-4 fw-semibold text-danger">{{ counts.missing }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small">{% trans "Hoort hier niet" %}</div>
+      <div class="fs-4 fw-semibold text-warning">{{ counts.unexpected }}</div>
+    </div>
+  </div>
+</div>
+
+<h2 class="h5">{% trans "In dit dashboard" %}</h2>
+<div class="table-responsive mb-4">
+  <table class="table table-sm align-middle">
+    <thead>
+      <tr>
+        <th>{% trans "Radiopositie" %}</th>
+        <th>{% trans "Radio hoort erin" %}</th>
+        <th>{% trans "Reserve" %}</th>
+        <th>{% trans "Status" %}</th>
+        <th>{% trans "Laatst gescand" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in dashboard_items %}
+        <tr class="table-light">
+          <th colspan="5">
+            {% if item.kind == "location" %}
+              <a class="text-decoration-none" href="{% url 'inventory:location_detail' item.object.pk %}">{{ item.label }}</a>
+            {% else %}
+              {{ item.label }}
+            {% endif %}
+          </th>
+        </tr>
+        {% for row in item.positions %}
+          <tr>
+            <td>
+              <a class="fw-semibold text-decoration-none" href="{% url 'inventory:position_detail' row.position.pk %}">{{ row.position.name }}</a>
+            </td>
+            <td>
+              {% if row.primary %}
+                <a href="{% url 'radio:detail' row.primary.radio.pk %}">{{ row.primary.radio.inventory_label }}</a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.substitute %}
+                <a href="{% url 'radio:detail' row.substitute.radio.pk %}">{{ row.substitute.radio.inventory_label }}</a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.status == "present" %}
+                <span class="badge text-bg-success">{% trans "Aanwezig" %}</span>
+              {% elif row.status == "elsewhere" %}
+                <span class="badge text-bg-warning">{% trans "Elders gescand" %}</span>
+              {% elif row.status == "missing" %}
+                <span class="badge text-bg-danger">{% trans "Niet gescand" %}</span>
+              {% else %}
+                <span class="badge text-bg-secondary">{% trans "Geen radio" %}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if row.latest_scan %}
+                {{ row.latest_scan.inventory.closed_at|date:"d/m/Y H:i" }}
+                <div class="text-muted small">{{ row.latest_scan.inventory.vector|default:row.latest_scan.inventory.vehicle_alpha_code }}</div>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="text-muted">{% trans "Geen radioposities." %}</td>
+          </tr>
+        {% endfor %}
+      {% empty %}
+        <tr>
+          <td colspan="5" class="text-muted">{% trans "Geen onderdelen gekoppeld." %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2 class="h5">{% trans "Radio's die hier niet thuis horen" %}</h2>
+<div class="list-group mb-4">
+  {% for row in unexpected_rows %}
+    <div class="list-group-item">
+      <div class="fw-semibold">
+        {% if row.radio %}
+          <a href="{% url 'radio:detail' row.radio.pk %}">{{ row.label }}</a>
+        {% else %}
+          <code>{{ row.label }}</code>
+        {% endif %}
+      </div>
+      <div class="text-muted small">
+        {{ row.vector }}
+        {% if row.inventory %} · {{ row.inventory.closed_at|date:"d/m/Y H:i" }}{% endif %}
+        {% if row.assignment %} · {% trans "verwacht bij" %} {{ row.assignment.position.parent_label }} / {{ row.assignment.position.name }}{% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="list-group-item text-muted">{% trans "Geen afwijkende radio's in de laatste scans." %}</div>
+  {% endfor %}
+</div>
+
+{% endblock %}

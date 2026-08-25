@@ -24,8 +24,50 @@ class Radio(models.Model):
         return self.tei_str
 
     @property
+    def active_position_assignment(self):
+        return (
+            self.position_assignments
+            .filter(ended_at__isnull=True)
+            .select_related(
+                "position",
+                "position__vector",
+                "position__vehicle",
+                "position__location",
+            )
+            .first()
+        )
+
+    @property
+    def latest_fireplan_inventory_radio(self):
+        from fireplan.models import FireplanInventoryRadio
+
+        prefetched = getattr(self, "_latest_fireplan_inventory_radios", None)
+        if prefetched is not None:
+            return prefetched[0] if prefetched else None
+
+        return (
+            FireplanInventoryRadio.objects
+            .filter(
+                models.Q(radio=self)
+                | models.Q(tei__in=[self.tei_str, str(self.TEI)]),
+                inventory__closed_at__isnull=False,
+            )
+            .select_related("inventory", "inventory__vector", "inventory__vehicle")
+            .order_by("-inventory__closed_at", "-inventory__synced_at", "-id")
+            .first()
+        )
+
+    @property
     def alias(self):
         return self.subscription.issi.alias if hasattr(self, 'subscription') else None
+
+    @property
+    def inventory_label(self):
+        if self.ISSI:
+            if self.alias:
+                return f"{self.alias} ({self.ISSI})"
+            return str(self.ISSI)
+        return self.tei_str
 
     @property
     def is_active(self):

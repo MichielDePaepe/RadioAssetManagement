@@ -64,6 +64,7 @@ class VehicleAdmin(admin.ModelAdmin):
 class VectorAdmin(admin.ModelAdmin):
     list_display = (
         "vehicle",
+        "display_name",
         "name",
         "abbreviation",
         "service",
@@ -77,7 +78,7 @@ class VectorAdmin(admin.ModelAdmin):
         "statusCode",
     )
 
-    search_fields = ("name", "abbreviation", "vehicle__number")
+    search_fields = ("display_name", "name", "abbreviation", "vehicle__number", "resourceCode")
 
     readonly_fields = (
         "vehicle",
@@ -147,10 +148,9 @@ class FireplanInventoryVectorFilter(admin.SimpleListFilter):
             Vector.objects
             .filter(inventories__isnull=False)
             .distinct()
-            .order_by("name")
-            .values_list("pk", "name")
+            .order_by("display_name", "name", "resourceCode")
         )
-        return [(pk, name or str(pk)) for pk, name in vectors]
+        return [(vector.pk, str(vector)) for vector in vectors]
 
     def queryset(self, request, queryset):
         if self.value():
@@ -171,6 +171,7 @@ class FireplanInventoryAdmin(admin.ModelAdmin):
         "vehicle_alpha_code",
         "done_by_full_name",
         "uuid",
+        "vector__display_name",
         "vector__name",
         "vector__abbreviation",
     )
@@ -180,7 +181,7 @@ class FireplanInventoryAdmin(admin.ModelAdmin):
     list_filter = (FireplanInventoryVectorFilter,)
 
     def vector_name(self, obj):
-        return obj.vector.name if obj.vector else "-"
+        return str(obj.vector) if obj.vector else "-"
     vector_name.short_description = "Vector"
 
 

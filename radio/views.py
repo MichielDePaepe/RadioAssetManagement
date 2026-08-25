@@ -13,7 +13,7 @@ from django.db import transaction
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.utils.translation import gettext as _
 from django.core.exceptions import PermissionDenied
-from django.db.models import Case, Count, IntegerField, Q, Value, When
+from django.db.models import Case, Count, IntegerField, Prefetch, Q, Value, When
 from django.utils.http import url_has_allowed_host_and_scheme
 from itertools import chain
 
@@ -29,10 +29,12 @@ logger = logging.getLogger(__name__)
 from .models import *
 from astrid.models import Request
 from fireplan.client import FireplanClient
+from fireplan.models import FireplanInventoryRadio
 from .forms import *
 from printer.models import *
 from .services.printing import RadioPrintingService
 from .services.image_service import ImageGenerator
+from inventory.models import RadioPositionAssignment
 
 SCANNER_KEYBOARD_TRANSLATION = str.maketrans({
     'a': 'q', 'A': 'Q', 'z': 'w', 'Z': 'W', 'q': 'a', 'Q': 'A',
@@ -269,11 +271,23 @@ class RadioListView(LoginRequiredMixin, ListView):
     paginate_by = 100
 
     def get_base_queryset(self):
+        latest_fireplan_radios = (
+            FireplanInventoryRadio.objects
+            .filter(inventory__closed_at__isnull=False)
+            .select_related("inventory", "inventory__vector", "inventory__vehicle")
+            .order_by("-inventory__closed_at", "-inventory__synced_at", "-id")
+        )
         return Radio.objects.select_related(
             "model",
             "subscription__issi",
             "subscription__issi__customer",
             "subscription__issi__discipline",
+        ).prefetch_related(
+            Prefetch(
+                "fireplan_inventory_radios",
+                queryset=latest_fireplan_radios,
+                to_attr="_latest_fireplan_inventory_radios",
+            ),
         ).annotate(
             direct_ticket_count=Count("tickets", distinct=True),
             old_radio_request_count=Count("requests_as_old", distinct=True),
@@ -561,6 +575,18 @@ class RadioDetailView(DetailView):
 
         context["tickets"] = all_tickets
         context["printers"] = Printer.objects.all()
+        context["active_position_assignments"] = (
+            RadioPositionAssignment.objects
+            .filter(radio=radio, ended_at__isnull=True)
+            .select_related(
+                "position",
+                "position__vector",
+                "position__vehicle",
+                "position__location",
+                "replaces",
+                "replaces__radio",
+            )
+        )
         return context
 
 

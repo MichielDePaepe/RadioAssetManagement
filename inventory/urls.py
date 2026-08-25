@@ -8,11 +8,19 @@ urlpatterns = [
     path("fireplan/vehicles/search/", vehicle_search, name="vehicle_search"),
     path("fireplan/<int:vehicle_id>/scan/", fireplan_inventory_scan, name="fireplan_inventory_scan"),
 
-    path("endpoints/", EndpointLookupView.as_view(), name="entpoint_lookup"),
-    
-    path("endpoints/<int:pk>/", EndpointDetailView.as_view(), name="endpoint_detail"),
-    path("endpoints/<int:pk>/switch/", EndpointSwitchRadioView.as_view(), name="endpoint_switch"),
+    path("locations/", LocationListView.as_view(), name="location_list"),
+    path("locations/new/", LocationCreateView.as_view(), name="location_create"),
+    path("locations/<int:pk>/", LocationDetailView.as_view(), name="location_detail"),
+    path("locations/<int:pk>/edit/", LocationUpdateView.as_view(), name="location_edit"),
 
-    path("endpoints/search/", endpoint_search, name="endpoint_search"),
+    path("positions/", RadioPositionListView.as_view(), name="position_list"),
+    path("positions/new/", RadioPositionCreateView.as_view(), name="position_create"),
+    path("positions/<int:pk>/", RadioPositionDetailView.as_view(), name="position_detail"),
+    path("positions/<int:pk>/edit/", RadioPositionUpdateView.as_view(), name="position_edit"),
+    path("positions/<int:pk>/delete/", RadioPositionDeleteView.as_view(), name="position_delete"),
+    path("positions/<int:pk>/primary/change/", ChangePrimaryView.as_view(), name="position_change_primary"),
+    path("positions/<int:pk>/substitute/assign/", AssignSubstituteView.as_view(), name="position_assign_substitute"),
+    path("positions/<int:pk>/substitute/release/", ReleaseSubstituteView.as_view(), name="position_release_substitute"),
+
     path("radios/search/", radio_search, name="radio_search"),
 ]

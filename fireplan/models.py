@@ -139,6 +139,7 @@ class Vector(models.Model):
     )
 
     name = models.CharField(max_length=100, blank=True)
+    display_name = models.CharField(max_length=100, blank=True)
     abbreviation = models.CharField(max_length=50, blank=True)
 
     service = models.ForeignKey(
@@ -165,7 +166,11 @@ class Vector(models.Model):
     orderServiceAbbreviation = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.resourceCode} ({self.name})"
+        if self.display_name:
+            return self.display_name
+        if self.name:
+            return self.name
+        return self.resourceCode
 
 
 class FireplanInventory(models.Model):

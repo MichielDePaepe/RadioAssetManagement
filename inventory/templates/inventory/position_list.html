@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Radio positions" %}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h3 mb-0">{% trans "Radio positions" %}</h1>
+  <div class="d-flex gap-2">
+    {% if status_filter == "inactive" %}
+      <a class="btn btn-outline-success" href="{% url 'inventory:position_list' %}{% if q %}?q={{ q|urlencode }}{% endif %}">
+        <i class="bi bi-check-circle me-1"></i>{% trans "Show active" %}
+      </a>
+    {% else %}
+      <a class="btn btn-outline-secondary" href="{% url 'inventory:position_list' %}?status=inactive{% if q %}&q={{ q|urlencode }}{% endif %}">
+        <i class="bi bi-eye-slash me-1"></i>{% trans "Show inactive" %}
+      </a>
+    {% endif %}
+    <a class="btn btn-outline-secondary" href="{% url 'inventory:location_list' %}">
+      <i class="bi bi-geo-alt me-1"></i>{% trans "Locations" %}
+    </a>
+    <a class="btn btn-primary" href="{% url 'inventory:position_create' %}">
+      <i class="bi bi-plus-circle me-1"></i>{% trans "New position" %}
+    </a>
+  </div>
+</div>
+
+<form class="mb-3" method="get">
+  {% if status_filter == "inactive" %}
+    <input type="hidden" name="status" value="inactive">
+  {% endif %}
+  <div class="input-group">
+    <input class="form-control" name="q" value="{{ q }}" placeholder="{% trans 'Search position, vehicle, vector or location' %}">
+    <button class="btn btn-outline-primary" type="submit">
+      <i class="bi bi-search me-1"></i>{% trans "Search" %}
+    </button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>{% trans "Location/vector" %}</th>
+        <th>{% trans "Position" %}</th>
+        <th>{% trans "Gelinkt voertuig" %}</th>
+        <th>{% trans "Primary" %}</th>
+        <th>{% trans "Substitute" %}</th>
+        <th>{% trans "Operational" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for position in positions %}
+        {% with primary=position.active_primary substitute=position.active_substitute operational=position.operational_assignment %}
+          <tr>
+            <td>{{ position.parent_label }}</td>
+            <td>
+              <a class="fw-semibold text-decoration-none" href="{% url 'inventory:position_detail' position.pk %}">
+                {{ position.name }}
+              </a>
+              {% if not position.active %}
+                <span class="badge bg-secondary ms-2">{% trans "Inactive" %}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if position.vector and position.vector.vehicle %}
+                {{ position.vector.vehicle }}
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if primary %}
+                <a href="{% url 'radio:detail' primary.radio.pk %}" class="text-reset text-decoration-none">
+                  {{ primary.radio.inventory_label }}
+                </a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if substitute %}
+                <a href="{% url 'radio:detail' substitute.radio.pk %}" class="text-reset text-decoration-none">
+                  {{ substitute.radio.inventory_label }}
+                </a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if operational %}
+                <span class="badge {% if operational.role == 'SUBSTITUTE' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                  {{ operational.get_role_display }}
+                </span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+          </tr>
+    {% endwith %}
+  {% empty %}
+    <tr>
+          <td colspan="6" class="text-center text-muted py-4">{% trans "No radio positions found." %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+  <nav class="mt-3" aria-label="{% trans 'Pagination' %}">
+    <ul class="pagination pagination-sm justify-content-end">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter == 'inactive' %}&status=inactive{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">
+            {% trans "Previous" %}
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">{% trans "Previous" %}</span></li>
+      {% endif %}
+
+      <li class="page-item disabled">
+        <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      </li>
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter == 'inactive' %}&status=inactive{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">
+            {% trans "Next" %}
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">{% trans "Next" %}</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+{% endblock %}
