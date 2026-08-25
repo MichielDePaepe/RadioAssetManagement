@@ -10,6 +10,8 @@ from django.core.exceptions import PermissionDenied
 
 from .forms import *
 from .models import *
+from .services.printing import TicketPrintingService
+from printer.models import Printer
 from radio.models import *
 from django.db.models import Q
 
@@ -29,10 +31,26 @@ class TicketDetailView(LoginRequiredMixin, DetailView):
         context["log_form"] = TicketLogForm(ticket=self.object)  # logformulier
         context["edit_form"] = TicketEditForm(instance=self.object, user=self.request.user)
         context["decommissioning_ticket"] = RadioDecommissioningTicket.objects.filter(pk=self.object.pk).first()
+        printers = Printer.objects.all()
+        context["printers"] = printers
+        context["printer_count"] = printers.count()
+        context["default_printer"] = printers.first()
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+
+        if "print_ticket_label" in request.POST:
+            printer_id = request.POST.get("printer_id")
+            try:
+                printer = Printer.objects.get(pk=printer_id)
+                message = TicketPrintingService(self.object, printer).print_ticket_number_label()
+                messages.success(request, message)
+            except Printer.DoesNotExist:
+                messages.error(request, "Selected printer does not exist.")
+            except Exception as e:
+                messages.error(request, f"Printing failed: {str(e)}")
+            return redirect(self.get_success_url())
 
         if "approve_decommissioning" in request.POST:
             if not request.user.has_perm("radio.can_approve_decommission_requests"):
