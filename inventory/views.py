@@ -26,10 +26,6 @@ POSITION_TEMPLATES = {
         "label": _("Chauffeur en convoyeur"),
         "positions": ["Chauffeur", "Convoyeur"],
     },
-    "driver_chief": {
-        "label": _("Chauffeur en chef"),
-        "positions": ["Chauffeur", "Chef"],
-    },
     "numbered_crew_atex": {
         "label": _("Genummerde ploeg en ATEX radio"),
         "positions": [
@@ -204,6 +200,21 @@ def _build_location_dashboard(location):
                 "assignment": radio.active_position_assignment if radio else None,
             })
 
+    for item in dashboard_items:
+        item_positions = item["positions"]
+        unexpected_count = 0
+        if item["kind"] == "vector":
+            unexpected_count = sum(
+                1 for row in unexpected_rows
+                if row["vector"].pk == item["object"].pk
+            )
+        item["counts"] = {
+            "expected": len(item_positions),
+            "present": sum(1 for row in item_positions if row["status"] == "present"),
+            "missing": sum(1 for row in item_positions if row["status"] in ("missing", "elsewhere")),
+            "unexpected": unexpected_count,
+        }
+
     counts = {
         "expected": len(expected_rows),
         "present": sum(1 for row in expected_rows if row["status"] == "present"),
@@ -248,6 +259,10 @@ class LocationListView(ListView):
         ctx["type_filter"] = getattr(self, "type_filter", "")
         ctx["location_types"] = Location.LocationType.choices
         ctx["public_post_dashboard_list"] = not self.request.user.is_authenticated
+        ctx["dashboard_counts_by_location"] = {
+            location.pk: _build_location_dashboard(location)["counts"]
+            for location in ctx["locations"]
+        }
         return ctx
 
 
@@ -684,6 +699,10 @@ def radio_search(request):
 
 class FireplanInventoryStartView(LoginRequiredMixin, TemplateView):
     template_name = "inventory/fireplan_inventory_start.html"
+
+
+class ScannerConfigurationView(LoginRequiredMixin, TemplateView):
+    template_name = "inventory/scanner_configuration.html"
 
 
 @login_required

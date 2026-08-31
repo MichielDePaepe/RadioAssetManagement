@@ -49,7 +49,16 @@
         <span class="fw-semibold">{{ location }}</span>
         <span class="text-muted ms-2">{{ location.get_location_type_display }}</span>
       </span>
-      <span class="badge bg-secondary">{{ location.radio_positions.count }}</span>
+      {% for location_id, counts in dashboard_counts_by_location.items %}
+        {% if location_id == location.pk %}
+          <span class="d-flex flex-wrap justify-content-end gap-1 small">
+            <span class="badge text-bg-secondary" title="{% trans 'Verwacht' %}">V {{ counts.expected }}</span>
+            <span class="badge text-bg-success" title="{% trans 'Aanwezig' %}">A {{ counts.present }}</span>
+            <span class="badge text-bg-danger" title="{% trans 'Ontbrekend' %}">O {{ counts.missing }}</span>
+            <span class="badge text-bg-warning" title="{% trans 'Hoort hier niet' %}">H {{ counts.unexpected }}</span>
+          </span>
+        {% endif %}
+      {% endfor %}
     </a>
   {% empty %}
     <div class="list-group-item text-muted">{% trans "No locations found." %}</div>

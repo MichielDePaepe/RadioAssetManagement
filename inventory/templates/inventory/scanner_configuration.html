@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block content %}
+<style>
+  .scanner-page {
+    max-width: 1120px;
+  }
+
+  .scanner-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--bs-border-color);
+  }
+
+  .scanner-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .scanner-mode-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 100%;
+    padding: 1.25rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    background: var(--bs-body-bg);
+  }
+
+  .scanner-mode-card.is-primary {
+    border-top: .35rem solid var(--bs-primary);
+  }
+
+  .scanner-mode-card.is-success {
+    border-top: .35rem solid var(--bs-success);
+  }
+
+  .scanner-mode-card.is-primary .scanner-detail i {
+    color: var(--bs-primary);
+  }
+
+  .scanner-mode-card.is-success .scanner-detail i {
+    color: var(--bs-success);
+  }
+
+  .scanner-mode-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+  }
+
+  .scanner-icon {
+    width: 2.4rem;
+    height: 2.4rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .5rem;
+    background: var(--bs-light);
+    color: var(--bs-primary);
+    font-size: 1.35rem;
+    flex: 0 0 auto;
+  }
+
+  .scanner-code-frame {
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: .5rem;
+    background: #fff;
+  }
+
+  .scanner-code {
+    width: 100%;
+    max-width: 42rem;
+    object-fit: contain;
+  }
+
+  .scanner-detail {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: .75rem;
+    align-items: start;
+    color: var(--bs-secondary-color);
+  }
+
+  .scanner-detail i {
+    margin-top: .1rem;
+  }
+
+  .scanner-subaction {
+    padding-top: 1rem;
+    border-top: 1px solid var(--bs-border-color);
+  }
+
+  .scanner-check {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .scanner-check-item {
+    display: flex;
+    gap: .75rem;
+    align-items: start;
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+  }
+
+  @media (max-width: 991.98px) {
+    .scanner-hero,
+    .scanner-mode-grid,
+    .scanner-check {
+      grid-template-columns: 1fr;
+    }
+
+    .scanner-hero {
+      align-items: start;
+    }
+  }
+
+  @media print {
+    .navbar,
+    .scanner-actions,
+    .scanner-check {
+      display: none !important;
+    }
+
+    .container-fluid {
+      max-width: none !important;
+      width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .scanner-page {
+      max-width: none;
+    }
+
+    .scanner-mode-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+
+<div class="scanner-page mx-auto">
+  <div class="scanner-hero mb-4">
+    <div>
+      <div class="text-muted small text-uppercase fw-semibold mb-1">{% trans "A&K A2BDS-BL1" %}</div>
+      <h1 class="h3 mb-1">{% trans "Scanner configureren" %}</h1>
+      <div class="text-muted">{% trans "Kies de verbinding en scan de bijhorende barcode." %}</div>
+    </div>
+    <div class="scanner-actions d-flex flex-wrap gap-2">
+      <button class="btn btn-outline-secondary" type="button" onclick="window.print()" title="{% trans 'Afdrukken' %}">
+        <i class="bi bi-printer me-1"></i>{% trans "Afdrukken" %}
+      </button>
+      <a class="btn btn-primary" href="{% url 'inventory:fireplan_inventory_start' %}">
+        <i class="bi bi-qr-code-scan me-1"></i>{% trans "Inventaris starten" %}
+      </a>
+    </div>
+  </div>
+
+  <div class="scanner-mode-grid mb-4">
+    <section class="scanner-mode-card is-success">
+      <div class="scanner-mode-title">
+        <div class="d-flex align-items-center gap-3">
+          <span class="scanner-icon text-success"><i class="bi bi-usb-drive"></i></span>
+          <div>
+            <h2 class="h5 mb-0">{% trans "Draadloos via USB-stick" %}</h2>
+            <div class="text-muted small">2.4 GHz HID</div>
+          </div>
+        </div>
+        <span class="badge text-bg-success">{% trans "Vaste post" %}</span>
+      </div>
+
+      <div class="scanner-code-frame">
+        <img class="scanner-code" src="{% static 'scanner_config/a2bds_usb_dongle_barcode.png' %}" alt="{% trans 'USB-dongle configuratiebarcode' %}">
+      </div>
+
+      <div class="scanner-detail">
+        <i class="bi bi-check2-circle"></i>
+        <div>{% trans "Gebruik deze modus voor een computer met de meegeleverde USB-dongle. Steek de dongle in en scan daarna de barcode." %}</div>
+      </div>
+    </section>
+
+    <section class="scanner-mode-card is-primary">
+      <div class="scanner-mode-title">
+        <div class="d-flex align-items-center gap-3">
+          <span class="scanner-icon"><i class="bi bi-bluetooth"></i></span>
+          <div>
+            <h2 class="h5 mb-0">{% trans "Bluetooth verbinden" %}</h2>
+            <div class="text-muted small">NT barcode scanner</div>
+          </div>
+        </div>
+        <span class="badge text-bg-primary">{% trans "Mobiel" %}</span>
+      </div>
+
+      <div class="scanner-code-frame">
+        <img class="scanner-code" src="{% static 'scanner_config/a2bds_bluetooth_connect_barcode.png' %}" alt="{% trans 'Bluetooth verbinden configuratiebarcode' %}">
+      </div>
+
+      <div class="scanner-detail">
+        <i class="bi bi-check2-circle"></i>
+        <div>{% trans "Scan deze barcode, open Bluetooth op het toestel en selecteer NT barcode scanner bij beschikbare apparaten." %}</div>
+      </div>
+
+      <div class="scanner-subaction">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <span class="scanner-icon text-secondary"><i class="bi bi-link-45deg"></i></span>
+          <div>
+            <h3 class="h6 mb-0">{% trans "Bluetooth ontkoppelen" %}</h3>
+            <div class="text-muted small">{% trans "Huidige koppeling wissen" %}</div>
+          </div>
+        </div>
+
+        <div class="scanner-code-frame">
+          <img class="scanner-code" src="{% static 'scanner_config/a2bds_bluetooth_disconnect_barcode.png' %}" alt="{% trans 'Bluetooth ontkoppelen configuratiebarcode' %}">
+        </div>
+
+        <div class="scanner-detail mt-3">
+          <i class="bi bi-info-circle text-secondary"></i>
+          <div>{% trans "Gebruik deze barcode wanneer de scanner nog met een ander toestel gekoppeld is. Verwijder de scanner daarna ook uit de Bluetooth-instellingen van het oude toestel." %}</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="scanner-check">
+    <div class="scanner-check-item">
+      <i class="bi bi-input-cursor-text text-primary"></i>
+      <div>
+        <div class="fw-semibold">{% trans "Test na het configureren" %}</div>
+        <div class="text-muted small">{% trans "Open een tekstveld en scan een gewone assetbarcode. Verschijnt de code, dan werkt de verbinding." %}</div>
+      </div>
+    </div>
+    <div class="scanner-check-item">
+      <i class="bi bi-arrow-left-right text-primary"></i>
+      <div>
+        <div class="fw-semibold">{% trans "Wisselen van toestel" %}</div>
+        <div class="text-muted small">{% trans "Ontkoppel eerst Bluetooth wanneer de scanner aan een ander toestel blijft hangen." %}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

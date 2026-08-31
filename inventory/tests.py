@@ -61,6 +61,17 @@ class FireplanInventoryFlowTests(TestCase):
         self.assertContains(response, "Actif")
         self.assertNotContains(response, "Vehicle alpha code")
 
+    def test_scanner_configuration_page_shows_switch_modes(self):
+        with override("nl"):
+            response = self.client.get(reverse("inventory:scanner_configuration"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "A&K A2BDS-BL1")
+        self.assertContains(response, "Scanner configureren")
+        self.assertContains(response, "Draadloos via USB-stick")
+        self.assertContains(response, "Bluetooth verbinden")
+        self.assertContains(response, "Bluetooth ontkoppelen")
+
     def test_closing_inventory_writes_fireplan_inventory_and_radios(self):
         with override("en"):
             response = self.client.post(
@@ -319,7 +330,7 @@ class ParentPositionListTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "AMB HELI 1")
         self.assertContains(response, "Chauffeur en convoyeur")
-        self.assertContains(response, "Chauffeur en chef")
+        self.assertNotContains(response, "Chauffeur en chef")
         self.assertContains(response, "Genummerde ploeg en ATEX radio")
         self.assertContains(response, "Zelf 1 positie toevoegen")
 
@@ -345,7 +356,7 @@ class ParentPositionListTests(TestCase):
         with override("en"):
             response = self.client.post(
                 reverse("inventory:parent_positions", args=["vector", self.vector.pk]),
-                {"template": "driver_chief"},
+                {"template": "numbered_crew_atex"},
             )
 
         self.assertEqual(response.status_code, 302)

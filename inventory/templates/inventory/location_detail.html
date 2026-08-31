@@ -81,7 +81,7 @@
         </tr>
         {% for row in item.positions %}
           <tr>
-            <td>
+            <td class="ps-4">
               {% if user.is_authenticated %}
                 <a class="fw-semibold text-decoration-none" href="{% url 'inventory:position_detail' row.position.pk %}">{{ row.position.name }}</a>
               {% else %}
