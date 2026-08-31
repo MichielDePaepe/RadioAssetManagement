@@ -19,6 +19,9 @@
     <a class="btn btn-outline-secondary" href="{% url 'inventory:location_list' %}">
       <i class="bi bi-geo-alt me-1"></i>{% trans "Locations" %}
     </a>
+    <a class="btn btn-outline-warning" href="{% url 'inventory:unassigned_subscription_radios' %}">
+      <i class="bi bi-exclamation-triangle me-1"></i>{% trans "Subscriptions without position" %}
+    </a>
     <a class="btn btn-primary" href="{% url 'inventory:position_create' %}">
       <i class="bi bi-plus-circle me-1"></i>{% trans "New position" %}
     </a>

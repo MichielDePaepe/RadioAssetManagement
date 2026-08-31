@@ -95,7 +95,7 @@ class VTEIRequestCreateViewTests(TestCase):
 
         response = self.client.get(reverse("astrid:request_detail", kwargs={"pk": request.pk}))
 
-        self.assertContains(response, "Print ticketlabel")
+        self.assertContains(response, "Print ticket label")
         self.assertContains(response, "ticketLabelPrinterModal")
         self.assertContains(response, "Printer 1")
         self.assertContains(response, "Printer 2")

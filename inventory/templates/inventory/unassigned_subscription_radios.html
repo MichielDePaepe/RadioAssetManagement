@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Subscriptions without position" %}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{% trans "Subscriptions without position" %}</h1>
+    <div class="text-muted">
+      {% blocktrans with unassigned=unassigned_subscription_count total=active_subscription_count %}{{ unassigned }} of {{ total }} active subscription radios have no active position.{% endblocktrans %}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'inventory:position_list' %}">
+      <i class="bi bi-geo-alt me-1"></i>{% trans "Radio positions" %}
+    </a>
+    <a class="btn btn-primary" href="{% url 'inventory:position_create' %}">
+      <i class="bi bi-plus-circle me-1"></i>{% trans "New position" %}
+    </a>
+  </div>
+</div>
+
+<form class="mb-3" method="get">
+  <div class="input-group">
+    <input class="form-control" name="q" value="{{ q }}" placeholder="{% trans 'Search ISSI, alias, customer or discipline' %}">
+    <button class="btn btn-outline-primary" type="submit">
+      <i class="bi bi-search me-1"></i>{% trans "Search" %}
+    </button>
+  </div>
+</form>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>{% trans "Radio" %}</th>
+        <th>{% trans "ISSI" %}</th>
+        <th>{% trans "Alias" %}</th>
+        <th>{% trans "Customer" %}</th>
+        <th>{% trans "Discipline" %}</th>
+        <th>{% trans "Type radio" %}</th>
+        <th class="text-end">{% trans "Action" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for radio in radios %}
+        <tr>
+          <td>
+            <a class="fw-semibold text-decoration-none" href="{% url 'radio:detail' radio.pk %}">
+              {{ radio.tei_str }}
+            </a>
+          </td>
+          <td>{{ radio.subscription.issi.number }}</td>
+          <td>
+            {% if radio.subscription.issi.alias %}
+              {{ radio.subscription.issi.alias }}
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if radio.subscription.issi.customer %}
+              {{ radio.subscription.issi.customer }}
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if radio.subscription.issi.discipline %}
+              {{ radio.subscription.issi.discipline }}
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+          <td>{{ radio.model|default:"-" }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'inventory:position_list' %}">
+              <i class="bi bi-pin-map me-1"></i>{% trans "Choose position" %}
+            </a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted py-4">
+            {% trans "All active subscription radios have an active position." %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if is_paginated %}
+  <nav class="mt-3" aria-label="{% trans 'Pagination' %}">
+    <ul class="pagination pagination-sm justify-content-end">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}">
+            {% trans "Previous" %}
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">{% trans "Previous" %}</span></li>
+      {% endif %}
+
+      <li class="page-item disabled">
+        <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      </li>
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}">
+            {% trans "Next" %}
+          </a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">{% trans "Next" %}</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+{% endblock %}

@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils.translation import override
 
 from fireplan.models import FireplanInventory, FireplanInventoryRadio, Vector, Vehicle
-from radio.models import Radio, RadioModel, TEIRange
+from radio.models import ISSI, Radio, RadioModel, Subscription, TEIRange
 from .models import Location, RadioPosition, RadioPositionAssignment
 from .services import assign_substitute, change_primary, release_primary, release_substitute
 
@@ -210,3 +210,198 @@ class RadioPositionViewTests(TestCase):
         with override("en"):
             self.assertRedirects(response, reverse("inventory:location_detail", args=[self.location.pk]))
         self.assertFalse(RadioPosition.objects.filter(pk=self.position.pk).exists())
+
+
+class UnassignedSubscriptionRadioListTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="inventory-control",
+            password="secret",
+        )
+        self.client.force_login(self.user)
+        self.radio_model = RadioModel.objects.create(name="Portable")
+        TEIRange.objects.create(
+            model=self.radio_model,
+            min_tei=750000000001000,
+            max_tei=750000000001999,
+        )
+        self.location = Location.objects.create(
+            name="Post Centrum",
+            location_type=Location.LocationType.POST,
+        )
+        self.position = RadioPosition.objects.create(
+            location=self.location,
+            name="Kast 01",
+        )
+
+    def create_subscribed_radio(self, tei, issi, alias="", active=True, dmo_only=False, decommissioned=False):
+        radio = Radio.objects.create(TEI=tei, decommissioned=decommissioned)
+        issi = ISSI.objects.create(number=issi, alias=alias)
+        Subscription.objects.create(
+            radio=radio,
+            issi=issi,
+            active=active,
+            DMO_only=dmo_only,
+        )
+        return radio
+
+    def test_lists_active_subscription_radios_without_position(self):
+        unassigned = self.create_subscribed_radio(750000000001001, 123001, alias="A100")
+        assigned = self.create_subscribed_radio(750000000001002, 123002, alias="A101")
+        self.create_subscribed_radio(750000000001003, 123003, active=False)
+        self.create_subscribed_radio(750000000001004, 123004, dmo_only=True)
+        self.create_subscribed_radio(750000000001005, 123005, decommissioned=True)
+        change_primary(self.position, assigned)
+
+        with override("en"):
+            response = self.client.get(reverse("inventory:unassigned_subscription_radios"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, unassigned.tei_str)
+        self.assertNotContains(response, assigned.tei_str)
+        self.assertNotContains(response, "750000000001003")
+        self.assertNotContains(response, "750000000001004")
+        self.assertNotContains(response, "750000000001005")
+        self.assertContains(response, "1 of 2 active subscription radios have no active position.")
+
+    def test_search_filters_unassigned_subscription_radios(self):
+        matching = self.create_subscribed_radio(750000000001006, 123006, alias="ALPHA")
+        other = self.create_subscribed_radio(750000000001007, 123007, alias="BRAVO")
+
+        with override("en"):
+            response = self.client.get(
+                reverse("inventory:unassigned_subscription_radios"),
+                {"q": "ALPHA"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, matching.tei_str)
+        self.assertNotContains(response, other.tei_str)
+
+
+class ParentPositionListTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="parent-position-admin",
+            password="secret",
+        )
+        self.client.force_login(self.user)
+        self.location = Location.objects.create(
+            name="Post Centrum",
+            location_type=Location.LocationType.POST,
+        )
+        self.vehicle = Vehicle.objects.create(number="AMB HELI 1")
+        self.vector = Vector.objects.create(
+            resourceCode="AMBHELI1",
+            display_name="AMB HELI 1",
+            vehicle=self.vehicle,
+        )
+
+    def test_location_parent_page_shows_positions_and_add_link(self):
+        RadioPosition.objects.create(location=self.location, name="Kast 01", order=1)
+
+        with override("en"):
+            response = self.client.get(
+                reverse("inventory:parent_positions", args=["location", self.location.pk])
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Kast 01")
+        self.assertContains(response, f"?location={self.location.pk}")
+        self.assertNotContains(response, "Create positions from template")
+
+    def test_vector_parent_page_offers_templates_when_empty(self):
+        with override("en"):
+            response = self.client.get(
+                reverse("inventory:parent_positions", args=["vector", self.vector.pk])
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "AMB HELI 1")
+        self.assertContains(response, "Chauffeur en convoyeur")
+        self.assertContains(response, "Chauffeur en chef")
+        self.assertContains(response, "Genummerde ploeg en ATEX radio")
+        self.assertContains(response, "Zelf 1 positie toevoegen")
+
+    def test_template_creates_positions_for_vector(self):
+        with override("en"):
+            response = self.client.post(
+                reverse("inventory:parent_positions", args=["vector", self.vector.pk]),
+                {"template": "driver_convoyeur"},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            response["Location"].endswith(f"/inventory/parents/vector/{self.vector.pk}/positions/")
+        )
+        self.assertEqual(
+            list(self.vector.radio_positions.order_by("order").values_list("name", flat=True)),
+            ["Chauffeur", "Convoyeur"],
+        )
+
+    def test_template_is_not_applied_when_positions_already_exist(self):
+        RadioPosition.objects.create(vector=self.vector, name="Existing", order=1)
+
+        with override("en"):
+            response = self.client.post(
+                reverse("inventory:parent_positions", args=["vector", self.vector.pk]),
+                {"template": "driver_chief"},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.vector.radio_positions.count(), 1)
+
+
+class PublicLocationDashboardTests(TestCase):
+    def setUp(self):
+        self.location = Location.objects.create(
+            name="Post Centrum",
+            location_type=Location.LocationType.POST,
+        )
+        self.vehicle = Vehicle.objects.create(number="AMB HELI 1")
+        self.vector = Vector.objects.create(
+            resourceCode="AMBHELI1",
+            display_name="AMB HELI 1",
+            vehicle=self.vehicle,
+        )
+        self.location.dashboard_vectors.add(self.vector)
+        self.position = RadioPosition.objects.create(
+            vector=self.vector,
+            name="Chauffeur",
+            order=1,
+        )
+
+    def test_post_dashboard_is_public_but_not_clickable_or_editable(self):
+        with override("en"):
+            response = self.client.get(
+                reverse("inventory:location_detail", args=[self.location.pk])
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Post Centrum")
+        self.assertContains(response, "AMB HELI 1")
+        self.assertContains(response, "Chauffeur")
+        self.assertNotContains(response, reverse("inventory:location_edit", args=[self.location.pk]))
+        self.assertNotContains(response, reverse("inventory:location_list"))
+        self.assertNotContains(
+            response,
+            reverse("inventory:parent_positions", args=["vector", self.vector.pk]),
+        )
+        self.assertNotContains(response, reverse("inventory:position_detail", args=[self.position.pk]))
+
+    def test_post_dashboard_menu_list_is_public_without_management_controls(self):
+        Location.objects.create(
+            name="Dispatch",
+            location_type=Location.LocationType.DISPATCH,
+        )
+
+        with override("en"):
+            response = self.client.get(reverse("inventory:location_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Post dashboards")
+        self.assertContains(response, "Post Centrum")
+        self.assertNotContains(response, "Dispatch")
+        self.assertNotContains(response, reverse("inventory:location_create"))
+        self.assertNotContains(response, "New location")
+        self.assertNotContains(response, "All")

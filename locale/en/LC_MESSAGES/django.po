@@ -214,17 +214,13 @@ msgstr "Radio does not work"
 #: helpdesk/templates/helpdesk/ticket_detail.html:272
 #: helpdesk/templates/helpdesk/ticket_detail.html:280
 #: helpdesk/templates/helpdesk/ticket_detail.html:286
-#, fuzzy
-#| msgid "Nieuw ticket"
 msgid "Print ticketlabel"
-msgstr "New ticket"
+msgstr "Print ticket label"
 
 #: astrid/templates/astrid/request_detail.html:288
 #: helpdesk/templates/helpdesk/ticket_detail.html:302
-#, fuzzy
-#| msgid "Ticket info"
 msgid "Ticketlabel printen"
-msgstr "Ticket info"
+msgstr "Print ticket label"
 
 #: astrid/templates/astrid/request_detail.html:289
 #: helpdesk/templates/helpdesk/ticket_detail.html:303
@@ -238,7 +234,7 @@ msgstr "Close"
 #: helpdesk/templates/helpdesk/ticket_detail.html:306
 #: radio/templates/radio/detail.html:316
 msgid "Printer"
-msgstr ""
+msgstr "Printer"
 
 #: astrid/templates/astrid/request_detail.html:300
 #: helpdesk/templates/helpdesk/ticket_detail.html:314

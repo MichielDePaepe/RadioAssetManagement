@@ -13,7 +13,10 @@ urlpatterns = [
     path("locations/<int:pk>/", LocationDetailView.as_view(), name="location_detail"),
     path("locations/<int:pk>/edit/", LocationUpdateView.as_view(), name="location_edit"),
 
+    path("parents/<str:parent_type>/<str:pk>/positions/", ParentPositionListView.as_view(), name="parent_positions"),
+
     path("positions/", RadioPositionListView.as_view(), name="position_list"),
+    path("positions/unassigned-subscriptions/", UnassignedSubscriptionRadioListView.as_view(), name="unassigned_subscription_radios"),
     path("positions/new/", RadioPositionCreateView.as_view(), name="position_create"),
     path("positions/<int:pk>/", RadioPositionDetailView.as_view(), name="position_detail"),
     path("positions/<int:pk>/edit/", RadioPositionUpdateView.as_view(), name="position_edit"),

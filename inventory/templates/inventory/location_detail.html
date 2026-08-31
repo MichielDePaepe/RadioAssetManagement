@@ -9,14 +9,16 @@
     <h1 class="h3 mb-1">{{ location }}</h1>
     <div class="text-muted">{{ location.get_location_type_display }}</div>
   </div>
-  <div class="d-flex gap-2">
-    <a class="btn btn-outline-secondary" href="{% url 'inventory:location_list' %}">
-      <i class="bi bi-arrow-left me-1"></i>{% trans "Locations" %}
-    </a>
-    <a class="btn btn-outline-primary" href="{% url 'inventory:location_edit' location.pk %}">
-      <i class="bi bi-pencil me-1"></i>{% trans "Edit" %}
-    </a>
-  </div>
+  {% if user.is_authenticated %}
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-secondary" href="{% url 'inventory:location_list' %}">
+        <i class="bi bi-arrow-left me-1"></i>{% trans "Locations" %}
+      </a>
+      <a class="btn btn-outline-primary" href="{% url 'inventory:location_edit' location.pk %}">
+        <i class="bi bi-pencil me-1"></i>{% trans "Edit" %}
+      </a>
+    </div>
+  {% endif %}
 </div>
 
 <div class="row g-3 mb-4">
@@ -63,27 +65,47 @@
         <tr class="table-light">
           <th colspan="5">
             {% if item.kind == "location" %}
-              <a class="text-decoration-none" href="{% url 'inventory:location_detail' item.object.pk %}">{{ item.label }}</a>
+              {% if user.is_authenticated %}
+                <a class="text-decoration-none" href="{% url 'inventory:parent_positions' 'location' item.object.pk %}">{{ item.label }}</a>
+              {% else %}
+                {{ item.label }}
+              {% endif %}
             {% else %}
-              {{ item.label }}
+              {% if user.is_authenticated %}
+                <a class="text-decoration-none" href="{% url 'inventory:parent_positions' 'vector' item.object.pk %}">{{ item.label }}</a>
+              {% else %}
+                {{ item.label }}
+              {% endif %}
             {% endif %}
           </th>
         </tr>
         {% for row in item.positions %}
           <tr>
             <td>
-              <a class="fw-semibold text-decoration-none" href="{% url 'inventory:position_detail' row.position.pk %}">{{ row.position.name }}</a>
+              {% if user.is_authenticated %}
+                <a class="fw-semibold text-decoration-none" href="{% url 'inventory:position_detail' row.position.pk %}">{{ row.position.name }}</a>
+              {% else %}
+                <span class="fw-semibold">{{ row.position.name }}</span>
+              {% endif %}
             </td>
             <td>
               {% if row.primary %}
-                <a href="{% url 'radio:detail' row.primary.radio.pk %}">{{ row.primary.radio.inventory_label }}</a>
+                {% if user.is_authenticated %}
+                  <a href="{% url 'radio:detail' row.primary.radio.pk %}">{{ row.primary.radio.inventory_label }}</a>
+                {% else %}
+                  {{ row.primary.radio.inventory_label }}
+                {% endif %}
               {% else %}
                 <span class="text-muted">-</span>
               {% endif %}
             </td>
             <td>
               {% if row.substitute %}
-                <a href="{% url 'radio:detail' row.substitute.radio.pk %}">{{ row.substitute.radio.inventory_label }}</a>
+                {% if user.is_authenticated %}
+                  <a href="{% url 'radio:detail' row.substitute.radio.pk %}">{{ row.substitute.radio.inventory_label }}</a>
+                {% else %}
+                  {{ row.substitute.radio.inventory_label }}
+                {% endif %}
               {% else %}
                 <span class="text-muted">-</span>
               {% endif %}
@@ -128,7 +150,11 @@
     <div class="list-group-item">
       <div class="fw-semibold">
         {% if row.radio %}
-          <a href="{% url 'radio:detail' row.radio.pk %}">{{ row.label }}</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'radio:detail' row.radio.pk %}">{{ row.label }}</a>
+          {% else %}
+            {{ row.label }}
+          {% endif %}
         {% else %}
           <code>{{ row.label }}</code>
         {% endif %}

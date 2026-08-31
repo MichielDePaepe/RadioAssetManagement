@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ parent_object }} - {% trans "Radio positions" %}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ parent_object }}</h1>
+    <div class="text-muted">
+      {% if parent_type == "vector" %}
+        {% trans "Vector radio positions" %}
+      {% else %}
+        {% trans "Location radio positions" %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    {% if parent_type == "location" %}
+      <a class="btn btn-outline-secondary" href="{% url 'inventory:location_detail' parent_object.pk %}">
+        <i class="bi bi-arrow-left me-1"></i>{% trans "Dashboard" %}
+      </a>
+    {% else %}
+      <a class="btn btn-outline-secondary" href="{% url 'inventory:position_list' %}">
+        <i class="bi bi-arrow-left me-1"></i>{% trans "Positions" %}
+      </a>
+    {% endif %}
+    <a class="btn btn-primary" href="{{ create_url }}">
+      <i class="bi bi-plus-circle me-1"></i>{% trans "Add position" %}
+    </a>
+  </div>
+</div>
+
+{% if show_templates %}
+  <div class="border rounded p-3 mb-4">
+    <div class="fw-semibold mb-2">{% trans "Create positions from template" %}</div>
+    <div class="d-flex flex-wrap gap-2">
+      <a class="btn btn-primary" href="{{ create_url }}">
+        <i class="bi bi-plus-circle me-1"></i>{% trans "Zelf 1 positie toevoegen" %}
+      </a>
+      {% for key, template in templates.items %}
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="template" value="{{ key }}">
+          <button class="btn btn-outline-primary" type="submit">
+            <i class="bi bi-magic me-1"></i>{{ template.label }}
+          </button>
+        </form>
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>{% trans "Order" %}</th>
+        <th>{% trans "Position" %}</th>
+        <th>{% trans "Primary" %}</th>
+        <th>{% trans "Substitute" %}</th>
+        <th>{% trans "Operational" %}</th>
+        <th class="text-end">{% trans "Action" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for position in positions %}
+        {% with primary=position.active_primary substitute=position.active_substitute operational=position.operational_assignment %}
+          <tr>
+            <td>{{ position.order }}</td>
+            <td>
+              <a class="fw-semibold text-decoration-none" href="{% url 'inventory:position_detail' position.pk %}">
+                {{ position.name }}
+              </a>
+            </td>
+            <td>
+              {% if primary %}
+                <a href="{% url 'radio:detail' primary.radio.pk %}" class="text-reset text-decoration-none">
+                  {{ primary.radio.inventory_label }}
+                </a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if substitute %}
+                <a href="{% url 'radio:detail' substitute.radio.pk %}" class="text-reset text-decoration-none">
+                  {{ substitute.radio.inventory_label }}
+                </a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if operational %}
+                <span class="badge {% if operational.role == 'SUBSTITUTE' %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                  {{ operational.get_role_display }}
+                </span>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'inventory:position_detail' position.pk %}">
+                <i class="bi bi-pencil-square me-1"></i>{% trans "Manage" %}
+              </a>
+            </td>
+          </tr>
+        {% endwith %}
+      {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">{% trans "No radio positions found." %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

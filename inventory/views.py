@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -14,11 +14,35 @@ from django.utils.translation import gettext as _
 from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import ListView, DetailView, FormView, TemplateView, CreateView, UpdateView, DeleteView
 
-from fireplan.models import FireplanInventory, FireplanInventoryRadio, Vehicle
+from fireplan.models import FireplanInventory, FireplanInventoryRadio, Vector, Vehicle
 from radio.models import Radio
 from .models import Location, RadioPosition, RadioPositionAssignment
 from .forms import LocationForm, PositionAssignmentForm, RadioPositionForm
 from .services import assign_substitute, change_primary, release_primary, release_substitute
+
+
+POSITION_TEMPLATES = {
+    "driver_convoyeur": {
+        "label": _("Chauffeur en convoyeur"),
+        "positions": ["Chauffeur", "Convoyeur"],
+    },
+    "driver_chief": {
+        "label": _("Chauffeur en chef"),
+        "positions": ["Chauffeur", "Chef"],
+    },
+    "numbered_crew_atex": {
+        "label": _("Genummerde ploeg en ATEX radio"),
+        "positions": [
+            "Nr 1",
+            "Nr 2",
+            "Nr 3",
+            "Nr 4",
+            "Nr 5 - Chauffeur",
+            "Nr 6 - Chef",
+            "ATEX radio",
+        ],
+    },
+}
 
 
 def _radio_label(radio):
@@ -197,7 +221,7 @@ def _build_location_dashboard(location):
     }
 
 
-class LocationListView(LoginRequiredMixin, ListView):
+class LocationListView(ListView):
     model = Location
     template_name = "inventory/location_list.html"
     context_object_name = "locations"
@@ -205,6 +229,8 @@ class LocationListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         qs = Location.objects.select_related("service", "parent").order_by("name")
         self.type_filter = (self.request.GET.get("type") or "").strip()
+        if not self.request.user.is_authenticated:
+            self.type_filter = Location.LocationType.POST
         if self.type_filter:
             qs = qs.filter(location_type=self.type_filter)
         query = (self.request.GET.get("q") or "").strip()
@@ -221,6 +247,7 @@ class LocationListView(LoginRequiredMixin, ListView):
         ctx = super().get_context_data(**kwargs)
         ctx["type_filter"] = getattr(self, "type_filter", "")
         ctx["location_types"] = Location.LocationType.choices
+        ctx["public_post_dashboard_list"] = not self.request.user.is_authenticated
         return ctx
 
 
@@ -242,7 +269,7 @@ class LocationUpdateView(LoginRequiredMixin, UpdateView):
         return reverse("inventory:location_detail", kwargs={"pk": self.object.pk})
 
 
-class LocationDetailView(LoginRequiredMixin, DetailView):
+class LocationDetailView(DetailView):
     model = Location
     template_name = "inventory/location_detail.html"
     context_object_name = "location"
@@ -256,6 +283,86 @@ class LocationDetailView(LoginRequiredMixin, DetailView):
         )
         ctx.update(_build_location_dashboard(self.object))
         return ctx
+
+
+class ParentPositionListView(LoginRequiredMixin, TemplateView):
+    template_name = "inventory/parent_position_list.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        self.parent_type = kwargs["parent_type"]
+        if self.parent_type == "vector":
+            self.parent_object = get_object_or_404(
+                Vector.objects.select_related("vehicle", "service"),
+                pk=kwargs["pk"],
+            )
+        elif self.parent_type == "location":
+            self.parent_object = get_object_or_404(
+                Location.objects.select_related("service", "parent"),
+                pk=kwargs["pk"],
+            )
+        else:
+            raise ValueError("Unsupported position parent type.")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_positions(self):
+        filters = {"active": True}
+        if self.parent_type == "vector":
+            filters["vector"] = self.parent_object
+        else:
+            filters["location"] = self.parent_object
+        return (
+            RadioPosition.objects
+            .filter(**filters)
+            .select_related("vector", "vector__vehicle", "vehicle", "location")
+            .prefetch_related("assignments__radio__subscription__issi", "assignments__radio__model")
+            .order_by("order", "name")
+        )
+
+    def get_create_url(self):
+        if self.parent_type == "vector":
+            return f"{reverse('inventory:position_create')}?vector={self.parent_object.pk}"
+        return f"{reverse('inventory:position_create')}?location={self.parent_object.pk}"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        positions = self.get_positions()
+        ctx["parent_type"] = self.parent_type
+        ctx["parent_object"] = self.parent_object
+        ctx["positions"] = positions
+        ctx["position_count"] = positions.count()
+        ctx["templates"] = POSITION_TEMPLATES
+        ctx["show_templates"] = ctx["position_count"] == 0
+        ctx["create_url"] = self.get_create_url()
+        return ctx
+
+    def post(self, request, *args, **kwargs):
+        if self.get_positions().exists():
+            messages.warning(request, _("Templates can only be applied when no positions exist yet."))
+            return redirect("inventory:parent_positions", parent_type=self.parent_type, pk=self.parent_object.pk)
+
+        template_key = request.POST.get("template")
+        template = POSITION_TEMPLATES.get(template_key)
+        if not template:
+            messages.error(request, _("Unknown position template."))
+            return redirect("inventory:parent_positions", parent_type=self.parent_type, pk=self.parent_object.pk)
+
+        with transaction.atomic():
+            for index, name in enumerate(template["positions"], start=1):
+                kwargs = {
+                    "name": name,
+                    "order": index,
+                }
+                if self.parent_type == "vector":
+                    kwargs["vector"] = self.parent_object
+                else:
+                    kwargs["location"] = self.parent_object
+                RadioPosition.objects.create(**kwargs)
+
+        messages.success(
+            request,
+            _("Position template '%(template)s' applied.") % {"template": template["label"]},
+        )
+        return redirect("inventory:parent_positions", parent_type=self.parent_type, pk=self.parent_object.pk)
 
 
 class RadioPositionListView(LoginRequiredMixin, ListView):
@@ -302,10 +409,71 @@ class RadioPositionListView(LoginRequiredMixin, ListView):
         return ctx
 
 
+class UnassignedSubscriptionRadioListView(LoginRequiredMixin, ListView):
+    model = Radio
+    template_name = "inventory/unassigned_subscription_radios.html"
+    context_object_name = "radios"
+    paginate_by = 100
+
+    def get_queryset(self):
+        active_assignments = RadioPositionAssignment.objects.filter(
+            radio=OuterRef("pk"),
+            ended_at__isnull=True,
+        )
+        qs = (
+            Radio.objects
+            .select_related(
+                "model",
+                "subscription__issi",
+                "subscription__issi__customer",
+                "subscription__issi__discipline",
+            )
+            .annotate(has_active_position=Exists(active_assignments))
+            .filter(
+                subscription__active=True,
+                subscription__DMO_only=False,
+                decommissioned=False,
+                has_active_position=False,
+            )
+            .order_by("subscription__issi__alias", "subscription__issi__number", "TEI")
+        )
+
+        query = (self.request.GET.get("q") or "").strip()
+        if query:
+            filters = (
+                Q(subscription__issi__alias__icontains=query)
+                | Q(subscription__issi__customer__name__icontains=query)
+                | Q(subscription__issi__discipline__name__icontains=query)
+            )
+            if query.isdigit():
+                filters |= Q(TEI=int(query)) | Q(subscription__issi__number=int(query))
+            qs = qs.filter(filters)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["q"] = (self.request.GET.get("q") or "").strip()
+        ctx["active_subscription_count"] = Radio.objects.filter(
+            subscription__active=True,
+            subscription__DMO_only=False,
+            decommissioned=False,
+        ).count()
+        ctx["unassigned_subscription_count"] = self.get_queryset().count()
+        return ctx
+
+
 class RadioPositionCreateView(LoginRequiredMixin, CreateView):
     model = RadioPosition
     form_class = RadioPositionForm
     template_name = "inventory/position_form.html"
+
+    def get_initial(self):
+        initial = super().get_initial()
+        for parent_field in ("vector", "vehicle", "location"):
+            value = self.request.GET.get(parent_field)
+            if value:
+                initial[parent_field] = value
+        return initial
 
     def get_success_url(self):
         return reverse("inventory:position_detail", kwargs={"pk": self.object.pk})
