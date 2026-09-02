@@ -272,7 +272,11 @@
 
             {% if radio.vehicle %}
               <div class="detail-label">{% trans "Voertuig" %}</div>
-              <div class="detail-value">{{ radio.vehicle }}</div>
+              <div class="detail-value">
+                <a href="{% url 'inventory:vehicle_radio_detail' radio.vehicle.pk %}" class="text-decoration-none">
+                  {{ radio.vehicle }}
+                </a>
+              </div>
             {% endif %}
 
             {% if radio.vehicle.vector %}

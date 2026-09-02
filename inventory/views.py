@@ -477,6 +477,94 @@ class UnassignedSubscriptionRadioListView(LoginRequiredMixin, ListView):
         return ctx
 
 
+class VehicleRadioListView(LoginRequiredMixin, ListView):
+    model = Vehicle
+    template_name = "inventory/vehicle_radio_list.html"
+    context_object_name = "vehicles"
+    paginate_by = 100
+
+    def get_queryset(self):
+        qs = (
+            Vehicle.objects
+            .select_related(
+                "radio",
+                "radio__model",
+                "issi",
+                "vector",
+                "vector__statusCode",
+            )
+            .order_by("number")
+        )
+        self.status_filter = (self.request.GET.get("status") or "active").strip()
+        if self.status_filter == "all":
+            pass
+        else:
+            self.status_filter = "active"
+            qs = qs.exclude(status=2)
+
+        query = (self.request.GET.get("q") or "").strip()
+        if query:
+            filters = (
+                Q(number__icontains=query)
+                | Q(call_sign__icontains=query)
+                | Q(plate__icontains=query)
+                | Q(utilisation__icontains=query)
+                | Q(vector__name__icontains=query)
+                | Q(vector__abbreviation__icontains=query)
+                | Q(radio__subscription__issi__alias__icontains=query)
+            )
+            if query.isdigit():
+                filters |= Q(radio__TEI=int(query)) | Q(radio__subscription__issi__number=int(query))
+            qs = qs.filter(filters)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["q"] = (self.request.GET.get("q") or "").strip()
+        ctx["status_filter"] = getattr(self, "status_filter", "active")
+        return ctx
+
+
+class VehicleRadioDetailView(LoginRequiredMixin, DetailView):
+    model = Vehicle
+    template_name = "inventory/vehicle_radio_detail.html"
+    context_object_name = "vehicle"
+
+    def get_queryset(self):
+        return Vehicle.objects.all()
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        action = request.POST.get("vehicle_action")
+        radio_pk = request.POST.get("radio")
+
+        try:
+            if action == "set_radio":
+                if not radio_pk:
+                    raise ValidationError(_("A radio needs to be selected."))
+                radio = get_object_or_404(Radio.objects.select_related("model"), pk=int(radio_pk))
+                if Vehicle.objects.filter(radio=radio).exclude(pk=self.object.pk).exists():
+                    raise ValidationError(_("This radio is already linked to another vehicle."))
+                self.object.radio = radio
+                self.object.issi = None
+                self.object.clean()
+                self.object.save(update_fields=["radio", "issi"])
+                messages.success(request, _("Radio linked to vehicle."))
+            elif action == "remove_radio":
+                self.object.radio = None
+                self.object.clean()
+                self.object.save(update_fields=["radio"])
+                messages.success(request, _("Radio removed from vehicle."))
+            else:
+                raise ValidationError(_("Invalid vehicle action."))
+        except (TypeError, ValueError):
+            messages.error(request, _("A radio needs to be selected."))
+        except ValidationError as exc:
+            messages.error(request, str(exc))
+
+        return redirect("inventory:vehicle_radio_detail", pk=self.object.pk)
+
+
 class RadioPositionCreateView(LoginRequiredMixin, CreateView):
     model = RadioPosition
     form_class = RadioPositionForm

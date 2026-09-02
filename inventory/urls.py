@@ -8,6 +8,8 @@ urlpatterns = [
     path("scanner-configuratie/", ScannerConfigurationView.as_view(), name="scanner_configuration"),
     path("fireplan/vehicles/search/", vehicle_search, name="vehicle_search"),
     path("fireplan/<int:vehicle_id>/scan/", fireplan_inventory_scan, name="fireplan_inventory_scan"),
+    path("vehicles/", VehicleRadioListView.as_view(), name="vehicle_radio_list"),
+    path("vehicles/<int:pk>/", VehicleRadioDetailView.as_view(), name="vehicle_radio_detail"),
 
     path("locations/", LocationListView.as_view(), name="location_list"),
     path("locations/new/", LocationCreateView.as_view(), name="location_create"),

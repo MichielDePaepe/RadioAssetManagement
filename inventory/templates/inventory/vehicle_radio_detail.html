@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load radio_selector_tags static i18n %}
+
+{% block title %}{{ vehicle.call_sign|default:vehicle.number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h3 mb-1">{{ vehicle.call_sign|default:vehicle.number }}</h1>
+    <div class="text-muted">{{ vehicle.number }}</div>
+  </div>
+  <a class="btn btn-outline-secondary" href="{% url 'inventory:vehicle_radio_list' %}">
+    <i class="bi bi-arrow-left me-1"></i>{% trans "Voertuigen" %}
+  </a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-5">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small text-uppercase fw-semibold mb-2">{% trans "Voertuig" %}</div>
+      <dl class="row mb-0">
+        <dt class="col-sm-4">{% trans "Nummerplaat" %}</dt>
+        <dd class="col-sm-8">{{ vehicle.plate|default:"-" }}</dd>
+        <dt class="col-sm-4">{% trans "Gebruik" %}</dt>
+        <dd class="col-sm-8">{{ vehicle.utilisation|default:"-" }}</dd>
+        <dt class="col-sm-4">{% trans "Vector" %}</dt>
+        <dd class="col-sm-8">
+          {% if vehicle.vector %}
+            {{ vehicle.vector }}
+          {% else %}
+            <span class="text-muted">-</span>
+          {% endif %}
+        </dd>
+        <dt class="col-sm-4">{% trans "Status" %}</dt>
+        <dd class="col-sm-8">
+          {% if vehicle.vector and vehicle.vector.statusCode %}
+            {{ vehicle.vector.statusCode }}
+          {% else %}
+            {{ vehicle.get_status_display|default:"-" }}
+          {% endif %}
+        </dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="border rounded p-3 h-100">
+      <div class="text-muted small text-uppercase fw-semibold mb-2">{% trans "Radio" %}</div>
+      {% if vehicle.radio %}
+        <div class="text-center">
+          <div class="radio-card" data-tei="{{ vehicle.radio.tei_str }}">
+            <div class="spinner-border m-3" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      {% elif vehicle.issi %}
+        <div class="alert alert-warning mb-3">
+          {% blocktrans with issi=vehicle.issi.number %}Dit voertuig is momenteel rechtstreeks gekoppeld aan ISSI {{ issi }}. Als je een radio toevoegt, wordt die ISSI-koppeling vervangen.{% endblocktrans %}
+        </div>
+      {% else %}
+        <div class="text-muted">{% trans "Geen radio gekoppeld." %}</div>
+      {% endif %}
+
+      <div class="mt-3 d-flex flex-wrap gap-2">
+        {% trans "Radio toevoegen/wijzigen" as set_radio_label %}
+        {% radio_selector_button btn_type="btn-primary btn-sm" extra_class="vehicle-radio-action" action="set_radio" label=set_radio_label %}
+        {% if vehicle.radio %}
+          <button class="btn btn-sm btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#removeVehicleRadioModal">
+            <i class="bi bi-x-circle me-1"></i>{% trans "Radio verwijderen" %}
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<form id="vehicle-radio-action-form" method="post" class="d-none">
+  {% csrf_token %}
+  <input type="hidden" name="vehicle_action" id="vehicle-action-input">
+  <input type="hidden" name="radio" id="vehicle-radio-input">
+</form>
+
+{% radio_selector_modal %}
+
+{% if vehicle.radio %}
+<div class="modal fade" id="removeVehicleRadioModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="vehicle_action" value="remove_radio">
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans "Radio verwijderen" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Sluiten' %}"></button>
+      </div>
+      <div class="modal-body">
+        {% blocktrans with vehicle=vehicle.call_sign|default:vehicle.number radio=vehicle.radio.inventory_label %}Radio {{ radio }} verwijderen van voertuig {{ vehicle }}?{% endblocktrans %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+        <button type="submit" class="btn btn-danger">
+          <i class="bi bi-x-circle me-1"></i>{% trans "Radio verwijderen" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<script>
+  function radio_selector_callback(btn, data) {
+    const actionInput = document.getElementById("vehicle-action-input");
+    const radioInput = document.getElementById("vehicle-radio-input");
+    const form = document.getElementById("vehicle-radio-action-form");
+
+    actionInput.value = btn.dataset.action;
+    radioInput.value = data.tei || data.TEI;
+    form.submit();
+  }
+</script>
+{% endblock %}
+
+{% block extra_script %}
+  <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
+  <script src="{% static 'js/radio_card.js' %}"></script>
+{% endblock %}

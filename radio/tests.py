@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils.translation import override
 
 from helpdesk.models import Ticket, TicketStatus, TicketType
+from fireplan.models import Vehicle
 from printer.models import Printer
 
 from .services.image_service import ImageGenerator
@@ -222,6 +223,17 @@ class DecommissionedLabelTests(TestCase):
 
         self.assertContains(response, "decommissioned_label")
         self.assertContains(response, "Decommissioned-label")
+
+    def test_detail_links_vehicle_to_inventory_vehicle_page(self):
+        vehicle = Vehicle.objects.create(number="A106 - Test", radio=self.radio)
+        self.client.force_login(self.user)
+
+        with override("nl"):
+            response = self.client.get(reverse("radio:detail", kwargs={"pk": self.radio.pk}))
+            vehicle_url = reverse("inventory:vehicle_radio_detail", args=[vehicle.pk])
+
+        self.assertContains(response, vehicle_url)
+        self.assertContains(response, "A106 - Test")
 
     @patch("radio.views.RadioPrintingService")
     def test_prints_decommissioned_label(self, print_service):

@@ -101,6 +101,116 @@ class FireplanInventoryFlowTests(TestCase):
         self.assertIsNone(inventory_radio.item_uuid)
 
 
+class VehicleRadioViewTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="vehicle-radio",
+            password="secret",
+        )
+        self.client.force_login(self.user)
+
+        radio_model = RadioModel.objects.create(name="Mobile")
+        TEIRange.objects.create(
+            model=radio_model,
+            min_tei=750000000000000,
+            max_tei=750000000000999,
+        )
+        self.radio = Radio.objects.create(TEI=750000000000201)
+        self.other_radio = Radio.objects.create(TEI=750000000000202)
+        self.vehicle = Vehicle.objects.create(number="A106 - Test", plate="TEST-1")
+        self.vector = Vector.objects.create(
+            resourceCode="A106",
+            vehicle=self.vehicle,
+            name="Ambulance 106",
+        )
+
+    def test_vehicle_radio_list_shows_vehicle_and_radio(self):
+        self.vehicle.radio = self.radio
+        self.vehicle.save(update_fields=["radio"])
+
+        with override("en"):
+            detail_url = reverse("inventory:vehicle_radio_detail", args=[self.vehicle.pk])
+            response = self.client.get(reverse("inventory:vehicle_radio_list"), {"q": "A106"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "A106")
+        self.assertContains(response, self.radio.tei_str)
+        self.assertContains(response, detail_url)
+
+    def test_vehicle_detail_can_link_radio_from_selector_value(self):
+        with override("en"):
+            response = self.client.post(
+                reverse("inventory:vehicle_radio_detail", args=[self.vehicle.pk]),
+                {
+                    "vehicle_action": "set_radio",
+                    "radio": str(self.radio.pk),
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.vehicle.refresh_from_db()
+        self.assertEqual(self.vehicle.radio, self.radio)
+
+    def test_vehicle_detail_renders_radio_selector(self):
+        with override("nl"):
+            response = self.client.get(reverse("inventory:vehicle_radio_detail", args=[self.vehicle.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Radio toevoegen/wijzigen")
+        self.assertContains(response, "open-radio-selector-modal")
+
+    def test_vehicle_detail_replaces_direct_issi_when_linking_radio(self):
+        issi = ISSI.objects.create(number=2345678, alias="A106")
+        self.vehicle.issi = issi
+        self.vehicle.save(update_fields=["issi"])
+
+        with override("en"):
+            self.client.post(
+                reverse("inventory:vehicle_radio_detail", args=[self.vehicle.pk]),
+                {
+                    "vehicle_action": "set_radio",
+                    "radio": str(self.radio.pk),
+                },
+            )
+
+        self.vehicle.refresh_from_db()
+        self.assertEqual(self.vehicle.radio, self.radio)
+        self.assertIsNone(self.vehicle.issi)
+
+    def test_vehicle_detail_rejects_radio_linked_to_another_vehicle(self):
+        other_vehicle = Vehicle.objects.create(number="B201", radio=self.radio)
+
+        with override("en"):
+            response = self.client.post(
+                reverse("inventory:vehicle_radio_detail", args=[self.vehicle.pk]),
+                {
+                    "vehicle_action": "set_radio",
+                    "radio": str(self.radio.pk),
+                },
+                follow=True,
+            )
+
+        self.vehicle.refresh_from_db()
+        other_vehicle.refresh_from_db()
+        self.assertIsNone(self.vehicle.radio)
+        self.assertEqual(other_vehicle.radio, self.radio)
+        self.assertContains(response, "already linked")
+
+    def test_vehicle_detail_can_remove_radio(self):
+        self.vehicle.radio = self.radio
+        self.vehicle.save(update_fields=["radio"])
+
+        with override("en"):
+            response = self.client.post(
+                reverse("inventory:vehicle_radio_detail", args=[self.vehicle.pk]),
+                {"vehicle_action": "remove_radio"},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.vehicle.refresh_from_db()
+        self.assertIsNone(self.vehicle.radio_id)
+
+
 class RadioPositionAssignmentTests(TestCase):
     def setUp(self):
         radio_model = RadioModel.objects.create(name="Portable")
