@@ -162,4 +162,3 @@ class Request(Ticket):
             ("has_access_to_myastrid", _("Heeft toegang tot MyAstrid")),
             ("can_verify_requests", _("Kan een aanvraag valideren")),
         ]
-

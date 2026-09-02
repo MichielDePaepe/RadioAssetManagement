@@ -9,8 +9,9 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
-from django.http import HttpResponseBadRequest, HttpResponseForbidden
-from django.db.models import Q
+from django.http import HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
+from django.db.models import CharField, Q
+from django.db.models.functions import Cast
 
 
 from django.db import transaction
@@ -146,14 +147,24 @@ class VTEIRequestCreateView(TemplateView):
             or request.POST.get("request_type") == Request.RequestType.VISSI_VTEI
         )
 
+    def _is_vissi(self, request):
+        return (
+            self.mode_request_type == Request.RequestType.VISSI
+            or request.POST.get("request_type") == Request.RequestType.VISSI
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         radio_id = self.request.GET.get("radio")
         is_vissi_vtei = self._is_vissi_vtei(self.request)
+        is_vissi = self._is_vissi(self.request)
         context["is_vissi_vtei"] = is_vissi_vtei
+        context["is_vissi"] = is_vissi
         context["request_type"] = (
             Request.RequestType.VISSI_VTEI
             if is_vissi_vtei
+            else Request.RequestType.VISSI
+            if is_vissi
             else Request.RequestType.VTEI
         )
         context["preselected_radio"] = None
@@ -169,12 +180,17 @@ class VTEIRequestCreateView(TemplateView):
             request_type = (
                 Request.RequestType.VISSI_VTEI
                 if self._is_vissi_vtei(request)
+                else Request.RequestType.VISSI
+                if self._is_vissi(request)
                 else Request.RequestType.VTEI
             )
             old_radio_pk = request.POST.get("old-radio")
-            new_radio_pk = request.POST.get("new-radio")
+            new_radio_pk = old_radio_pk if request_type == Request.RequestType.VISSI else request.POST.get("new-radio")
 
-            if not (old_radio_pk and new_radio_pk):
+            if request_type == Request.RequestType.VISSI:
+                if not old_radio_pk:
+                    raise Exception(_("A radio needs to be selected."))
+            elif not (old_radio_pk and new_radio_pk):
                 raise Exception(_("Both an old and a new radio need to be selected."))
 
             old_radio = Radio.objects.get(pk=int(old_radio_pk))
@@ -183,13 +199,16 @@ class VTEIRequestCreateView(TemplateView):
             if not old_radio.is_active:
                 raise Exception(_("The radio selected as old radio has no subscription."))
 
-            if new_radio.is_active:
+            if request_type != Request.RequestType.VISSI and new_radio.is_active:
                 raise Exception(_("The radio selected as new radio already has a subscription."))
 
             # Controleer of er al een open request bestaat
+            radio_conflict_query = Q(radio=old_radio) | Q(old_radio=old_radio)
+            if request_type != Request.RequestType.VISSI:
+                radio_conflict_query |= Q(radio=new_radio) | Q(old_radio=new_radio)
+
             conflict = Request.objects.filter(
-                (Q(radio=old_radio) | Q(old_radio=old_radio) |
-                 Q(radio=new_radio) | Q(old_radio=new_radio)),
+                radio_conflict_query,
                 ticket_type__code="ASTRID_REQUEST"
             ).exclude(status__code="CLOSED").first()
 
@@ -204,13 +223,18 @@ class VTEIRequestCreateView(TemplateView):
             description = request.POST.get("request_description", "")
             new_issi = old_radio.subscription.issi
 
-            if request_type == Request.RequestType.VISSI_VTEI:
+            if request_type in {Request.RequestType.VISSI, Request.RequestType.VISSI_VTEI}:
                 new_issi_val = request.POST.get("new-issi")
 
                 if not new_issi_val:
                     raise Exception(_("A new ISSI needs to be provided."))
 
-                new_issi = ISSI.objects.get(pk=int(new_issi_val))
+                try:
+                    new_issi_number = int(new_issi_val)
+                except ValueError:
+                    raise Exception(_("ISSI must be a number."))
+
+                new_issi, _created = ISSI.objects.get_or_create(number=new_issi_number)
 
                 if hasattr(new_issi, "subscription"):
                     url = reverse("radio:detail", kwargs={"pk": new_issi.subscription.radio.pk})
@@ -257,6 +281,35 @@ class VTEIRequestCreateView(TemplateView):
 
 class VISSIVTEIRequestCreateView(VTEIRequestCreateView):
     mode_request_type = Request.RequestType.VISSI_VTEI
+
+
+class VISSIRequestCreateView(VTEIRequestCreateView):
+    mode_request_type = Request.RequestType.VISSI
+
+
+class ISSISuggestionView(View):
+    def get(self, request):
+        query = (request.GET.get("q") or "").strip()
+        if len(query) < 2:
+            return JsonResponse({"results": []})
+
+        results = []
+        issis = (
+            ISSI.objects
+            .annotate(number_text=Cast("number", output_field=CharField()))
+            .filter(Q(alias__icontains=query) | Q(number_text__icontains=query))
+            .order_by("number")[:10]
+        )
+        for issi in issis:
+            is_active = hasattr(issi, "subscription")
+            results.append({
+                "number": str(issi.number),
+                "alias": issi.alias or "",
+                "label": str(issi),
+                "is_active": is_active,
+            })
+
+        return JsonResponse({"results": results})
 
 
 
@@ -431,4 +484,3 @@ class RequestDetailView(DetailView):
             return redirect(request.path)
 
         return redirect("astrid:request_overview")
-

@@ -35,7 +35,20 @@
   <div class="row mt-3">
     <div class="col">
       <label for="request-description">{% trans "ISSI" %}</label>
-      <input class="form-control" id="issi" name="issi" placeholder="{% trans 'ISSI die geactiveerd moet worden' %}">
+      <div class="position-relative">
+        <input class="form-control"
+               id="issi"
+               name="issi"
+               placeholder="{% trans 'ISSI die geactiveerd moet worden' %}"
+               autocomplete="off"
+               data-issi-typeahead
+               data-suggestions-url="{% url 'astrid:issi_suggestions' %}"
+               data-suggestions-target="issi-suggestions"
+               data-active-label="{% trans 'Actief' %}">
+        <div class="issi-suggestions list-group position-absolute w-100 shadow-sm d-none"
+             id="issi-suggestions"
+             style="z-index: 1050;"></div>
+      </div>
     </div>
   </div>
 
@@ -76,5 +89,6 @@
   <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
   <script src="{% static 'js/radio_card.js' %}"></script>
+  <script src="{% static 'js/issi_typeahead.js' %}"></script>
 
 {% endblock %}

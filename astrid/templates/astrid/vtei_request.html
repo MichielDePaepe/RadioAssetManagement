@@ -6,6 +6,8 @@
 <h1 class="mb-3">
   {% if is_vissi_vtei %}
     {% trans "VTEI & VISSI aanvragen" %}
+  {% elif is_vissi %}
+    {% trans "VISSI aanvragen" %}
   {% else %}
     {% trans "VTEI aanvragen" %}
   {% endif %}
@@ -16,6 +18,10 @@
     {% if is_vissi_vtei %}
       {% blocktranslate %}
       VTEI & VISSI is een aanvraag om het abonnement van een radio over te zetten op een nieuwe radio met een nieuw ISSI op de nieuwe radio.
+      {% endblocktranslate %}
+    {% elif is_vissi %}
+      {% blocktranslate %}
+      VISSI is een aanvraag om de ISSI van een radio te wijzigen terwijl dezelfde radio en TEI behouden blijven.
       {% endblocktranslate %}
     {% else %}
       {% blocktranslate %}
@@ -32,7 +38,13 @@
 
     <div class="col radio-widget">
       <div class="border rounded p-2 h-100 d-flex flex-column position-relative">
-        <h5 class="text-center mb-3">{% trans "Oude radio" %}</h5>
+        <h5 class="text-center mb-3">
+          {% if is_vissi %}
+            {% trans "Radio" %}
+          {% else %}
+            {% trans "Oude radio" %}
+          {% endif %}
+        </h5>
         <div class="overflow-auto text-center">
           <div class="radio-card" id="old-radio-card">
             {% if ticket %}
@@ -47,6 +59,7 @@
              value="{% if ticket %}{{ ticket.radio.pk }}{% endif %}">
     </div>
 
+    {% if not is_vissi %}
     <div class="col radio-widget">
       <div class="border rounded p-2 h-100 d-flex flex-column position-relative">
         <h5 class="text-center mb-3">{% trans "Nieuwe radio" %}</h5>
@@ -58,13 +71,27 @@
       </div>
       <input type="hidden" name="new-radio" class="hidden-radio-input">
     </div>
+    {% endif %}
   </div>
 
-  {% if is_vissi_vtei %}
+  {% if is_vissi or is_vissi_vtei %}
   <div class="row mt-3">
     <div class="col">
       <label for="new-issi">{% trans "Nieuwe ISSI" %}</label>
-      <input class="form-control" id="new-issi" name="new-issi" placeholder="{% trans 'Nieuwe ISSI voor de nieuwe radio' %}">
+      <div class="position-relative">
+        <input class="form-control"
+               id="new-issi"
+               name="new-issi"
+               placeholder="{% if is_vissi %}{% trans 'Nieuwe ISSI voor deze radio' %}{% else %}{% trans 'Nieuwe ISSI voor de nieuwe radio' %}{% endif %}"
+               autocomplete="off"
+               data-issi-typeahead
+               data-suggestions-url="{% url 'astrid:issi_suggestions' %}"
+               data-suggestions-target="new-issi-suggestions"
+               data-active-label="{% trans 'Actief' %}">
+        <div class="issi-suggestions list-group position-absolute w-100 shadow-sm d-none"
+             id="new-issi-suggestions"
+             style="z-index: 1050;"></div>
+      </div>
     </div>
   </div>
   {% endif %}
@@ -115,5 +142,6 @@
   <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.locales.min.js"></script>
   <script src="{% static 'js/radio_card.js' %}"></script>
+  <script src="{% static 'js/issi_typeahead.js' %}"></script>
 
 {% endblock %}

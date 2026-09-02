@@ -6,7 +6,9 @@ app_name = 'astrid'
 
 urlpatterns = [
     path('request/vtei', VTEIRequestCreateView.as_view(), name='vtei_request'),
+    path('request/vissi', VISSIRequestCreateView.as_view(), name='vissi_request'),
     path('request/vissi-vtei', VISSIVTEIRequestCreateView.as_view(), name='vissi_vtei_request'),
+    path('issi/suggestions', ISSISuggestionView.as_view(), name='issi_suggestions'),
 
     path('request/activation', ActivationRequestCreateView.as_view(), name='activation_request'),
 
