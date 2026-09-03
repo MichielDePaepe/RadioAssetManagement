@@ -39,10 +39,11 @@ class TicketLogForm(forms.ModelForm):
 class TicketEditForm(forms.ModelForm):
     class Meta:
         model = Ticket
-        fields = ["ticket_type", "priority", "siamu_ticket", "assigned_to"]
+        fields = ["ticket_type", "priority", "external_reference", "siamu_ticket", "assigned_to"]
         widgets = {
             "ticket_type": forms.Select(attrs={"class": "form-select"}),
             "priority": forms.Select(attrs={"class": "form-select"}),
+            "external_reference": forms.TextInput(attrs={"class": "form-control", "placeholder": "Extern referentie"}),
             "siamu_ticket": forms.TextInput(attrs={"class": "form-control", "placeholder": "SIAMU-nummer"}),
             "assigned_to": forms.Select(attrs={"class": "form-select"}),
         }
@@ -57,7 +58,7 @@ class TicketEditForm(forms.ModelForm):
         # Controle op rechten
         if user:
             if not user.has_perm("helpdesk.can_edit_ticket_fields"):
-                for f in ["ticket_type", "priority", "siamu_ticket"]:
+                for f in ["ticket_type", "priority", "external_reference", "siamu_ticket"]:
                     self.fields[f].widget.attrs["readonly"] = True
                     self.fields[f].widget.attrs["disabled"] = True
 

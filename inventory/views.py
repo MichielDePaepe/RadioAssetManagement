@@ -531,7 +531,44 @@ class VehicleRadioDetailView(LoginRequiredMixin, DetailView):
     context_object_name = "vehicle"
 
     def get_queryset(self):
-        return Vehicle.objects.all()
+        return (
+            Vehicle.objects
+            .select_related(
+                "radio",
+                "radio__model",
+                "radio__subscription__issi",
+                "issi",
+                "vector",
+                "vector__statusCode",
+            )
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        vector = getattr(self.object, "vector", None)
+        position_filter = Q(vehicle=self.object)
+        if vector:
+            position_filter |= Q(vector=vector)
+
+        expected_positions = []
+        positions = (
+            RadioPosition.objects
+            .filter(active=True)
+            .filter(position_filter)
+            .select_related("vector", "vehicle", "location")
+            .prefetch_related("assignments__radio__subscription__issi", "assignments__radio__model")
+            .order_by("vector__display_name", "vector__name", "vehicle__number", "order", "name")
+        )
+        for position in positions:
+            primary = position.active_primary
+            substitute = position.active_substitute
+            expected_positions.append({
+                "position": position,
+                "assignment": substitute or primary,
+            })
+
+        ctx["expected_positions"] = expected_positions
+        return ctx
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()

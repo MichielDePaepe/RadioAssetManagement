@@ -3,14 +3,16 @@ from unittest.mock import patch
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import escape
 from django.utils.translation import override
+from datetime import timedelta
 
 from printer.models import Printer
 from radio.templatetags.radio_selector_tags import render_radio_links
 from radio.models import ISSI, Radio, RadioModel, Subscription, TEIRange
 
-from .models import Ticket, TicketStatus, TicketType
+from .models import Ticket, TicketLog, TicketStatus, TicketType
 from .services.printing import TicketPrintingService
 
 
@@ -134,3 +136,84 @@ class TicketLabelPrintTests(TestCase):
         self.assertRedirects(response, detail_url)
         printing_service.assert_called_once_with(self.ticket, printer)
         printing_service.return_value.print_ticket_number_label.assert_called_once_with()
+
+
+class HelpdeskDashboardTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="dashboard-user", password="secret")
+        self.other_user = User.objects.create_user(username="other-user", password="secret")
+        model = RadioModel.objects.create(name="Dashboard radio")
+        TEIRange.objects.create(
+            model=model,
+            min_tei=750000000001000,
+            max_tei=750000000001999,
+        )
+        self.radio = Radio.objects.create(TEI=750000000001001)
+        self.open_status, _ = TicketStatus.objects.get_or_create(
+            code="NEW",
+            defaults={"name": "Nieuw", "default": True},
+        )
+        self.closed_status, _ = TicketStatus.objects.get_or_create(
+            code="CLOSED",
+            defaults={"name": "Gesloten"},
+        )
+        self.ticket_type, _ = TicketType.objects.get_or_create(
+            code="INCIDENT",
+            defaults={"name": "Incident"},
+        )
+
+    def create_ticket(self, title, **overrides):
+        defaults = {
+            "radio": self.radio,
+            "ticket_type": self.ticket_type,
+            "status": self.open_status,
+            "title": title,
+            "description": "Test",
+            "created_by": self.user,
+        }
+        defaults.update(overrides)
+        return Ticket.objects.create(**defaults)
+
+    def test_dashboard_shows_user_ticket_workload(self):
+        self.client.force_login(self.user)
+        assigned = self.create_ticket(
+            "Mijn defecte radio",
+            assigned_to=self.user,
+            priority=Ticket.TicketPriority.HIGH,
+        )
+        stale = self.create_ticket("Oude opvolging", assigned_to=self.user)
+        Ticket.objects.filter(pk=stale.pk).update(updated_at=timezone.now() - timedelta(days=8))
+        self.create_ticket("Ticket van collega", assigned_to=self.other_user)
+        self.create_ticket("Gesloten ticket", assigned_to=self.user, status=self.closed_status)
+        self.create_ticket("Nog te verdelen", assigned_to=None)
+
+        TicketLog.objects.create(
+            ticket=assigned,
+            user=self.other_user,
+            status_after=self.open_status,
+            note="Onderdeel besteld",
+        )
+
+        with override("nl"):
+            response = self.client.get(reverse("helpdesk:dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["metrics"]["assigned_open"], 2)
+        self.assertEqual(response.context["metrics"]["high_priority"], 1)
+        self.assertEqual(response.context["metrics"]["stale"], 1)
+        self.assertEqual(response.context["metrics"]["unassigned"], 1)
+        self.assertContains(response, "Mijn defecte radio")
+        self.assertContains(response, "Oude opvolging")
+        self.assertContains(response, "Onderdeel besteld")
+        self.assertNotContains(response, "Gesloten ticket")
+
+    def test_ticket_list_can_filter_to_current_user_assignments(self):
+        self.client.force_login(self.user)
+        self.create_ticket("Mijn ticket", assigned_to=self.user)
+        self.create_ticket("Niet mijn ticket", assigned_to=self.other_user)
+
+        with override("nl"):
+            response = self.client.get(reverse("helpdesk:ticket_list"), {"assigned": "me"})
+
+        self.assertContains(response, "Mijn ticket")
+        self.assertNotContains(response, "Niet mijn ticket")

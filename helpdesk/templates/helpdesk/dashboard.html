@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+{% block content %}
+{% load i18n radio_selector_tags %}
+
+<style>
+  .helpdesk-dashboard .metric-card {
+    border: 1px solid rgba(0, 0, 0, .08);
+    border-radius: .5rem;
+    min-height: 7rem;
+  }
+
+  .helpdesk-dashboard .metric-icon {
+    width: 2.35rem;
+    height: 2.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: .45rem;
+  }
+
+  .helpdesk-dashboard .ticket-title {
+    max-width: 34rem;
+  }
+
+  .helpdesk-dashboard .table td,
+  .helpdesk-dashboard .table th {
+    vertical-align: middle;
+  }
+</style>
+
+<div class="container-fluid mt-4 helpdesk-dashboard">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+      <h1 class="mb-1">{% trans "Mijn helpdesk" %}</h1>
+      <div class="text-muted">
+        {% trans "Ingelogd als" %} {{ request.user.get_full_name|default:request.user.username }}
+      </div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'helpdesk:ticket_new' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>{% trans "Nieuw ticket" %}
+      </a>
+      <a href="{% url 'helpdesk:ticket_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-list-ul me-1"></i>{% trans "Alle tickets" %}
+      </a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-2">
+      <div class="card metric-card">
+        <div class="card-body">
+          <span class="metric-icon bg-primary-subtle text-primary mb-2"><i class="bi bi-person-check"></i></span>
+          <div class="fs-3 fw-semibold">{{ metrics.assigned_open }}</div>
+          <div class="text-muted small">{% trans "Aan mij toegewezen" %}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="card metric-card">
+        <div class="card-body">
+          <span class="metric-icon bg-danger-subtle text-danger mb-2"><i class="bi bi-exclamation-octagon"></i></span>
+          <div class="fs-3 fw-semibold">{{ metrics.high_priority }}</div>
+          <div class="text-muted small">{% trans "Hoge prioriteit" %}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="card metric-card">
+        <div class="card-body">
+          <span class="metric-icon bg-warning-subtle text-warning mb-2"><i class="bi bi-clock-history"></i></span>
+          <div class="fs-3 fw-semibold">{{ metrics.stale }}</div>
+          <div class="text-muted small">{% trans "Geen update 7 dagen" %}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="card metric-card">
+        <div class="card-body">
+          <span class="metric-icon bg-info-subtle text-info mb-2"><i class="bi bi-send"></i></span>
+          <div class="fs-3 fw-semibold">{{ metrics.created_by_me }}</div>
+          <div class="text-muted small">{% trans "Door mij aangemaakt" %}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="card metric-card">
+        <div class="card-body">
+          <span class="metric-icon bg-secondary-subtle text-secondary mb-2"><i class="bi bi-person-dash"></i></span>
+          <div class="fs-3 fw-semibold">{{ metrics.unassigned }}</div>
+          <div class="text-muted small">{% trans "Niet toegewezen" %}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="card metric-card">
+        <div class="card-body">
+          <span class="metric-icon bg-success-subtle text-success mb-2"><i class="bi bi-inboxes"></i></span>
+          <div class="fs-3 fw-semibold">{{ metrics.all_open }}</div>
+          <div class="text-muted small">{% trans "Open totaal" %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h4 mb-0">{% trans "Mijn open tickets" %}</h2>
+        <a href="{% url 'helpdesk:ticket_list' %}?assigned=me" class="btn btn-outline-secondary btn-sm">
+          <i class="bi bi-arrow-right me-1"></i>{% trans "Open lijst" %}
+        </a>
+      </div>
+      <div class="table-responsive border rounded">
+        <table class="table table-hover table-sm mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th class="text-nowrap">#</th>
+              <th>{% trans "Titel" %}</th>
+              <th>{% trans "Status" %}</th>
+              <th>{% trans "Prioriteit" %}</th>
+              <th>{% trans "Laatst bijgewerkt" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ticket in assigned_tickets %}
+              <tr>
+                <td>
+                  {% if ticket.ticket_type.code == "ASTRID_REQUEST" %}
+                    <a href="{% url 'astrid:request_detail' ticket.pk %}">#{{ ticket.id }}</a>
+                  {% else %}
+                    <a href="{% url 'helpdesk:ticket_detail' ticket.pk %}">#{{ ticket.id }}</a>
+                  {% endif %}
+                </td>
+                <td class="ticket-title">{{ ticket.title|render_radio_links }}</td>
+                <td><span class="badge bg-light text-dark border">{{ ticket.status.name }}</span></td>
+                <td>
+                  {% if ticket.priority == "high" %}
+                    <span class="badge bg-danger">{{ ticket.get_priority_display }}</span>
+                  {% elif ticket.priority == "medium" %}
+                    <span class="badge bg-warning text-dark">{{ ticket.get_priority_display }}</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ ticket.get_priority_display }}</span>
+                  {% endif %}
+                </td>
+                <td class="text-nowrap">
+                  <time class="timeago" datetime="{{ ticket.updated_at|date:'c' }}">{{ ticket.updated_at|date:"d/m/Y H:i" }}</time>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">{% trans "Geen open tickets aan jou toegewezen." %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="row g-4 mt-1">
+        <div class="col-xl-6">
+          <h2 class="h5 mb-2">{% trans "Hoge prioriteit" %}</h2>
+          <div class="list-group">
+            {% for ticket in high_priority_tickets %}
+              <a href="{% url 'helpdesk:ticket_detail' ticket.pk %}" class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between gap-2">
+                  <span class="fw-semibold">#{{ ticket.id }} {{ ticket.title|render_radio_links }}</span>
+                  <span class="badge bg-danger align-self-start">{{ ticket.status.name }}</span>
+                </div>
+                <small class="text-muted">{{ ticket.updated_at|date:"d/m/Y H:i" }}</small>
+              </a>
+            {% empty %}
+              <div class="list-group-item text-muted">{% trans "Geen hoge-prioriteit tickets." %}</div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-xl-6">
+          <h2 class="h5 mb-2">{% trans "Opvolging nodig" %}</h2>
+          <div class="list-group">
+            {% for ticket in stale_tickets %}
+              <a href="{% url 'helpdesk:ticket_detail' ticket.pk %}" class="list-group-item list-group-item-action">
+                <div class="d-flex justify-content-between gap-2">
+                  <span class="fw-semibold">#{{ ticket.id }} {{ ticket.title|render_radio_links }}</span>
+                  <span class="badge bg-warning text-dark align-self-start">{{ ticket.updated_at|date:"d/m" }}</span>
+                </div>
+                <small class="text-muted">{{ ticket.status.name }}</small>
+              </a>
+            {% empty %}
+              <div class="list-group-item text-muted">{% trans "Geen tickets ouder dan 7 dagen zonder update." %}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <h2 class="h4 mb-2">{% trans "Statusverdeling" %}</h2>
+      <div class="list-group mb-4">
+        {% for status in status_breakdown %}
+          <a href="{% url 'helpdesk:ticket_list' %}?status={{ status.status_id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <span>{{ status.status__name }}</span>
+            <span class="badge bg-primary rounded-pill">{{ status.total }}</span>
+          </a>
+        {% empty %}
+          <div class="list-group-item text-muted">{% trans "Nog geen open tickets in jouw wachtrij." %}</div>
+        {% endfor %}
+      </div>
+
+      <h2 class="h4 mb-2">{% trans "Recente activiteit" %}</h2>
+      <div class="list-group mb-4">
+        {% for log in recent_logs %}
+          <a href="{% url 'helpdesk:ticket_detail' log.ticket.pk %}" class="list-group-item list-group-item-action">
+            <div class="d-flex justify-content-between gap-2">
+              <span class="fw-semibold">#{{ log.ticket.id }} {{ log.ticket.title|truncatechars:44 }}</span>
+              <small class="text-muted text-nowrap">{{ log.timestamp|date:"d/m H:i" }}</small>
+            </div>
+            <div class="small text-muted">
+              {% if log.user %}{{ log.user }}{% else %}{% trans "System" %}{% endif %}
+              {% if log.status_after %}<span class="mx-1">·</span>{{ log.status_after }}{% endif %}
+            </div>
+            {% if log.note %}
+              <div class="small mt-1">{{ log.note|truncatechars:90 }}</div>
+            {% endif %}
+          </a>
+        {% empty %}
+          <div class="list-group-item text-muted">{% trans "Nog geen activiteit op jouw tickets." %}</div>
+        {% endfor %}
+      </div>
+
+      <h2 class="h4 mb-2">{% trans "Niet toegewezen" %}</h2>
+      <div class="list-group mb-4">
+        {% for ticket in unassigned_tickets %}
+          <a href="{% url 'helpdesk:ticket_detail' ticket.pk %}" class="list-group-item list-group-item-action">
+            <div class="d-flex justify-content-between gap-2">
+              <span class="fw-semibold">#{{ ticket.id }} {{ ticket.title|truncatechars:48 }}</span>
+              <span class="badge bg-light text-dark border align-self-start">{{ ticket.status.name }}</span>
+            </div>
+            <small class="text-muted">{{ ticket.ticket_type.name }}</small>
+          </a>
+        {% empty %}
+          <div class="list-group-item text-muted">{% trans "Alle open tickets zijn toegewezen." %}</div>
+        {% endfor %}
+      </div>
+
+      <h2 class="h4 mb-2">{% trans "Door mij aangemaakt" %}</h2>
+      <div class="list-group">
+        {% for ticket in created_by_me_tickets %}
+          <a href="{% url 'helpdesk:ticket_detail' ticket.pk %}" class="list-group-item list-group-item-action">
+            <div class="d-flex justify-content-between gap-2">
+              <span class="fw-semibold">#{{ ticket.id }} {{ ticket.title|truncatechars:48 }}</span>
+              <span class="badge bg-light text-dark border align-self-start">{{ ticket.status.name }}</span>
+            </div>
+            <small class="text-muted">
+              {% if ticket.assigned_to %}
+                {% trans "Bij" %} {{ ticket.assigned_to.get_full_name|default:ticket.assigned_to.username }}
+              {% else %}
+                {% trans "Nog niet toegewezen" %}
+              {% endif %}
+            </small>
+          </a>
+        {% empty %}
+          <div class="list-group-item text-muted">{% trans "Geen open tickets door jou aangemaakt." %}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_script %}
+<script src="https://cdn.jsdelivr.net/npm/timeago.js@4.0.2/dist/timeago.full.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const lang = "{{ request.LANGUAGE_CODE|default:'en' }}".split('-')[0];
+  timeago.render(document.querySelectorAll('.timeago'), lang);
+});
+</script>
+{% endblock %}

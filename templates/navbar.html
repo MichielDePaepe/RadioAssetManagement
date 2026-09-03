@@ -170,6 +170,9 @@
               <i class="bi bi-life-preserver"></i> Helpdesk
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="helpdeskDropdown">
+              <li><a class="dropdown-item" href="{% url 'helpdesk:dashboard' %}">
+                <i class="bi bi-speedometer2"></i> {% trans "Mijn dashboard" %}
+              </a></li>
               <li><a class="dropdown-item" href="{% url 'helpdesk:ticket_list' %}">
                 <i class="bi bi-list-ul"></i> {% trans "Ticket overview" %}
               </a></li>

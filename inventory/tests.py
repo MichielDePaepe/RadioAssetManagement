@@ -61,6 +61,19 @@ class FireplanInventoryFlowTests(TestCase):
         self.assertContains(response, "Actif")
         self.assertNotContains(response, "Vehicle alpha code")
 
+    def test_scan_page_has_camera_feedback_overlay(self):
+        with override("nl"):
+            response = self.client.get(
+                reverse("inventory:fireplan_inventory_scan", args=[self.vehicle.pk])
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="cameraScanFeedback"')
+        self.assertContains(response, "showCameraFeedback")
+        self.assertContains(response, "isLocalTestServer")
+        self.assertContains(response, "camera-scanning")
+        self.assertContains(response, "camera-active")
+
     def test_scanner_configuration_page_shows_switch_modes(self):
         with override("nl"):
             response = self.client.get(reverse("inventory:scanner_configuration"))
@@ -158,6 +171,40 @@ class VehicleRadioViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Radio toevoegen/wijzigen")
         self.assertContains(response, "open-radio-selector-modal")
+
+    def test_vehicle_detail_links_to_inventory_scan(self):
+        with override("nl"):
+            scan_url = reverse("inventory:fireplan_inventory_scan", args=[self.vehicle.pk])
+            response = self.client.get(reverse("inventory:vehicle_radio_detail", args=[self.vehicle.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, scan_url)
+        self.assertContains(response, "Inventarisscan")
+
+    def test_vehicle_detail_shows_expected_vector_radios_using_substitute(self):
+        primary_position = RadioPosition.objects.create(
+            vector=self.vector,
+            name="Chauffeur",
+            order=1,
+        )
+        substitute_radio = Radio.objects.create(TEI=750000000000203)
+        change_primary(primary_position, self.radio)
+        assign_substitute(primary_position, substitute_radio)
+        RadioPosition.objects.create(
+            vector=self.vector,
+            name="Convoyeur",
+            order=2,
+        )
+
+        with override("nl"):
+            response = self.client.get(reverse("inventory:vehicle_radio_detail", args=[self.vehicle.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Verwachte radio")
+        self.assertContains(response, "Chauffeur")
+        self.assertContains(response, "Convoyeur")
+        self.assertContains(response, substitute_radio.tei_str)
+        self.assertNotContains(response, self.radio.tei_str)
 
     def test_vehicle_detail_replaces_direct_issi_when_linking_radio(self):
         issi = ISSI.objects.create(number=2345678, alias="A106")

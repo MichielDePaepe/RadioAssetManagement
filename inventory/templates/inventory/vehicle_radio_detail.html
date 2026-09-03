@@ -9,9 +9,14 @@
     <h1 class="h3 mb-1">{{ vehicle.call_sign|default:vehicle.number }}</h1>
     <div class="text-muted">{{ vehicle.number }}</div>
   </div>
-  <a class="btn btn-outline-secondary" href="{% url 'inventory:vehicle_radio_list' %}">
-    <i class="bi bi-arrow-left me-1"></i>{% trans "Voertuigen" %}
-  </a>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-primary" href="{% url 'inventory:fireplan_inventory_scan' vehicle.pk %}">
+      <i class="bi bi-upc-scan me-1"></i>{% trans "Inventarisscan" %}
+    </a>
+    <a class="btn btn-outline-secondary" href="{% url 'inventory:vehicle_radio_list' %}">
+      <i class="bi bi-arrow-left me-1"></i>{% trans "Voertuigen" %}
+    </a>
+  </div>
 </div>
 
 <div class="row g-3 mb-4">
@@ -73,6 +78,72 @@
       </div>
     </div>
   </div>
+</div>
+
+<div class="border rounded p-3 mb-4">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <div class="text-muted small text-uppercase fw-semibold">{% trans "Verwachte radio's" %}</div>
+      <div class="small text-muted">
+        {% if vehicle.vector %}
+          {% blocktrans with vector=vehicle.vector %}Gebaseerd op actieve posities voor {{ vector }} en dit voertuig.{% endblocktrans %}
+        {% else %}
+          {% trans "Gebaseerd op actieve posities voor dit voertuig." %}
+        {% endif %}
+      </div>
+    </div>
+    {% if vehicle.vector %}
+      <a class="btn btn-sm btn-outline-secondary" href="{% url 'inventory:parent_positions' 'vector' vehicle.vector.pk %}">
+        <i class="bi bi-list-check me-1"></i>{% trans "Posities beheren" %}
+      </a>
+    {% endif %}
+  </div>
+
+  {% if expected_positions %}
+    <div class="table-responsive">
+      <table class="table table-sm table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th>{% trans "Positie" %}</th>
+            <th>{% trans "Radio" %}</th>
+            <th>{% trans "TEI" %}</th>
+            <th>{% trans "Model" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in expected_positions %}
+            <tr>
+              <td>
+                <a class="text-reset text-decoration-none" href="{% url 'inventory:position_detail' row.position.pk %}">
+                  {{ row.position.name }}
+                </a>
+                {% if row.position.vehicle_id %}
+                  <div class="small text-muted">{{ row.position.vehicle.call_sign|default:row.position.vehicle.number }}</div>
+                {% elif row.position.vector_id and vehicle.vector and row.position.vector_id != vehicle.vector.pk %}
+                  <div class="small text-muted">{{ row.position.vector }}</div>
+                {% endif %}
+              </td>
+              {% if row.assignment %}
+                <td>
+                  <a class="text-reset text-decoration-none" href="{% url 'radio:detail' row.assignment.radio.pk %}">
+                    {{ row.assignment.radio.inventory_label }}
+                  </a>
+                </td>
+                <td>{{ row.assignment.radio.tei_str }}</td>
+                <td>{{ row.assignment.radio.model|default:"-" }}</td>
+              {% else %}
+                <td colspan="3" class="text-muted">{% trans "Geen radio toegewezen." %}</td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% elif vehicle.vector %}
+    <div class="text-muted">{% trans "Geen actieve radioposities gevonden voor deze vector." %}</div>
+  {% else %}
+    <div class="text-muted">{% trans "Dit voertuig is niet gekoppeld aan een vector." %}</div>
+  {% endif %}
 </div>
 
 <form id="vehicle-radio-action-form" method="post" class="d-none">
