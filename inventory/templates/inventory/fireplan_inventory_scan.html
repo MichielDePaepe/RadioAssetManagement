@@ -181,6 +181,19 @@
     </div>
   </div>
   <input id="scannerInput" type="text" autofocus>
+  <form id="manualRadioSearchForm" class="mt-3">
+    <label for="manualRadioSearch" class="form-label small text-muted mb-1">{% trans "Radio manueel zoeken" %}</label>
+    <div class="input-group">
+      <input id="manualRadioSearch"
+             class="form-control"
+             type="search"
+             autocomplete="off"
+             placeholder="{% trans 'Alias, ISSI of QR-code' %}">
+      <button class="btn btn-outline-primary" type="submit">
+        <i class="bi bi-search me-1"></i>{% trans "Toevoegen" %}
+      </button>
+    </div>
+  </form>
   <div id="cameraPanel" class="mt-3" style="display:none;">
     <div id="cameraViewport">
       <video id="cameraVideo"
@@ -210,16 +223,14 @@
         <tr>
           <th>{% trans "Alias" %}</th>
           <th>{% trans "ISSI" %}</th>
-          <th>{% trans "TEI" %}</th>
           <th>{% trans "Model" %}</th>
-          <th>{% trans "Fireplan ID" %}</th>
           <th>{% trans "Status" %}</th>
           <th class="text-end">{% trans "Acties" %}</th>
         </tr>
       </thead>
       <tbody id="radioRows">
         <tr id="emptyRow">
-          <td colspan="7" class="text-muted text-center py-4">{% trans "Nog geen radio's gescand." %}</td>
+          <td colspan="5" class="text-muted text-center py-4">{% trans "Nog geen radio's gescand." %}</td>
         </tr>
       </tbody>
     </table>
@@ -242,6 +253,8 @@
   const closeButton = document.getElementById("closeButton");
   const message = document.getElementById("scanMessage");
   const scannerToggle = document.getElementById("scannerToggle");
+  const manualRadioSearchForm = document.getElementById("manualRadioSearchForm");
+  const manualRadioSearch = document.getElementById("manualRadioSearch");
   const cameraToggle = document.getElementById("cameraToggle");
   const cameraPanel = document.getElementById("cameraPanel");
   const cameraVideo = document.getElementById("cameraVideo");
@@ -289,6 +302,10 @@
     message.className = "alert mt-3 mb-0 alert-" + kind;
     message.textContent = text;
     message.style.display = "block";
+  }
+
+  function csrfToken() {
+    return document.querySelector("[name=csrfmiddlewaretoken]")?.value || "";
   }
 
   function showCameraFeedback(kind) {
@@ -349,9 +366,7 @@
     tr.innerHTML = `
       <td>${escapeText(radio.alias || "-")}</td>
       <td>${escapeText(radio.issi || "-")}</td>
-      <td><code>${escapeText(radio.tei)}</code></td>
       <td>${escapeText(radio.model || "-")}</td>
-      <td>${escapeText(radio.fireplan_id || "-")}</td>
       <td><span class="badge ${statusClass(radio.status)}">${escapeText(radio.status)}</span></td>
       <td class="text-end">
         <button class="btn btn-sm btn-outline-danger" type="button" title="{% trans 'Verwijderen' %}">
@@ -362,7 +377,7 @@
     tr.querySelector("button").addEventListener("click", () => removeRadio(tei));
     rows.appendChild(tr);
     syncPayload();
-    setMessage("success", `Radio ${tei} toegevoegd.`);
+    setMessage("success", "Radio toegevoegd.");
     return "success";
   }
 
@@ -408,6 +423,19 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ scanned_line: scannedLine }),
+    });
+    return response.json();
+  }
+
+  async function lookupRadio(value) {
+    const formData = new FormData();
+    formData.append("type", "auto");
+    formData.append("value", value);
+
+    const response = await fetch("{% url 'radio:lookup' %}", {
+      method: "POST",
+      headers: { "X-CSRFToken": csrfToken() },
+      body: formData,
     });
     return response.json();
   }
@@ -529,6 +557,25 @@
       stopHandScanner();
     } else {
       startHandScanner();
+    }
+  });
+  manualRadioSearch.addEventListener("pointerdown", stopHandScanner);
+  manualRadioSearch.addEventListener("focus", stopHandScanner);
+  manualRadioSearchForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const value = manualRadioSearch.value.trim();
+    if (!value) {
+      setMessage("warning", "{% trans 'Vul een zoekwaarde in.' %}");
+      return;
+    }
+
+    try {
+      addRadio(await lookupRadio(value));
+      manualRadioSearch.value = "";
+      manualRadioSearch.focus();
+    } catch (err) {
+      console.error(err);
+      setMessage("danger", "{% trans 'Radio kon niet gezocht worden.' %}");
     }
   });
   cameraToggle.addEventListener("click", startCameraScanning);

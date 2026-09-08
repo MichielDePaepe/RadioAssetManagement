@@ -13,30 +13,32 @@ from dateutil import parser
 
 
 def _vehicle_defaults_from_fireplan_record(rec):
+    number = rec.get("alphacode", "") or ""
+    parsed_letter, parsed_number = _split_vehicle_name(number)
+    status = rec.get("statut", rec.get("status"))
+    if isinstance(status, str):
+        status = {
+            "Actif": VehicleStatus.ACTIF,
+            "Rebuté": VehicleStatus.REBUTE,
+            "Préparation": VehicleStatus.PREPARATION,
+        }.get(status)
+
     return {
-        "number": rec.get("alphacode", "") or "",
-        "num_letter": rec.get("numLettre", "") or "",
-        "num_value": rec.get("num", 0) or 0,
+        "number": number,
+        "num_letter": (rec.get("numLettre") or parsed_letter)[:5],
+        "num_value": rec.get("num", parsed_number) or 0,
         "plate": rec.get("plate", "") or "",
-        "utilisation": rec.get("utilisation", "") or "",
+        "utilisation": (rec.get("utilisation") or rec.get("use") or "")[:200],
         "chassis": rec.get("chassis", "") or "",
-        "status": rec.get("statut", None),
+        "status": status,
     }
 
 
 def sync_fireplan_fleet():
     fp = FireplanClient()   # login gebeurt automatisch
 
-    path = "/fr/api/charroi/view"
-
-    payload = {
-        "page": 1,
-        "size": 5000,
-        "sortby": "number",
-        "sortdesc": False,
-    }
-
-    r = fp.post(path, json=payload)
+    path = "/fr/api/charroi/vehicle/active/list"
+    r = fp.get(path)
     r.raise_for_status()
 
     data = r.json()

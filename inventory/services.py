@@ -76,13 +76,10 @@ def assign_substitute(position, radio, user=None, note=""):
         None,
     )
 
-    if not active_primary:
-        raise ValidationError(_("A substitute can only be assigned when the position has an active primary radio."))
-
     if active_substitute:
         raise ValidationError(_("This position already has an active substitute radio."))
 
-    if active_primary.radio_id == radio.pk:
+    if active_primary and active_primary.radio_id == radio.pk:
         raise ValidationError(_("The substitute radio must be different from the primary radio."))
 
     if _radio_has_active_assignment(radio):

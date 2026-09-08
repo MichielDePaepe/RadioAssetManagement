@@ -74,6 +74,22 @@ class FireplanInventoryFlowTests(TestCase):
         self.assertContains(response, "camera-scanning")
         self.assertContains(response, "camera-active")
 
+    def test_scan_page_has_manual_radio_search(self):
+        with override("nl"):
+            response = self.client.get(
+                reverse("inventory:fireplan_inventory_scan", args=[self.vehicle.pk])
+            )
+            lookup_url = reverse("radio:lookup")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="manualRadioSearchForm"')
+        self.assertContains(response, "Radio manueel zoeken")
+        self.assertContains(response, lookup_url)
+        self.assertContains(response, 'formData.append("type", "auto")')
+        self.assertContains(response, '<td colspan="5"', html=False)
+        self.assertNotContains(response, "<th>TEI</th>")
+        self.assertNotContains(response, "<th>Fireplan ID</th>")
+
     def test_scanner_configuration_page_shows_switch_modes(self):
         with override("nl"):
             response = self.client.get(reverse("inventory:scanner_configuration"))
@@ -297,6 +313,23 @@ class RadioPositionAssignmentTests(TestCase):
         self.assertIsNone(substitute.ended_at)
         self.assertEqual(substitute.replaces, primary)
         self.assertEqual(self.position.operational_radio, self.substitute_radio)
+
+    def test_substitute_can_be_assigned_without_primary(self):
+        substitute = assign_substitute(self.position, self.substitute_radio)
+
+        self.assertIsNone(substitute.ended_at)
+        self.assertIsNone(substitute.replaces)
+        self.assertEqual(self.position.operational_radio, self.substitute_radio)
+
+    def test_changing_primary_closes_substitute_without_primary(self):
+        substitute = assign_substitute(self.position, self.substitute_radio)
+
+        primary = change_primary(self.position, self.primary_radio)
+        substitute.refresh_from_db()
+
+        self.assertIsNotNone(substitute.ended_at)
+        self.assertIsNone(primary.ended_at)
+        self.assertEqual(self.position.operational_radio, self.primary_radio)
 
     def test_radio_cannot_have_two_active_assignments(self):
         change_primary(self.position, self.primary_radio)

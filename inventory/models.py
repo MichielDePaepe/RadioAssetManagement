@@ -216,7 +216,7 @@ class RadioPositionAssignment(models.Model):
             models.CheckConstraint(
                 check=(
                     Q(role="PRIMARY", replaces__isnull=True)
-                    | Q(role="SUBSTITUTE", replaces__isnull=False)
+                    | Q(role="SUBSTITUTE")
                 ),
                 name="assignment_replaces_by_role",
             ),
@@ -245,16 +245,15 @@ class RadioPositionAssignment(models.Model):
         super().clean()
 
         if self.role == self.Role.SUBSTITUTE:
-            if not self.replaces_id:
-                raise ValidationError(_("A substitute assignment must replace an active primary assignment."))
-            if self.replaces.role != self.Role.PRIMARY:
-                raise ValidationError(_("A substitute assignment can only replace a primary assignment."))
-            if self.replaces.position_id != self.position_id:
-                raise ValidationError(_("A substitute assignment must replace a primary assignment on the same position."))
-            if self.replaces.ended_at is not None:
-                raise ValidationError(_("A substitute assignment must replace an active primary assignment."))
-            if self.replaces.radio_id == self.radio_id:
-                raise ValidationError(_("A substitute radio must be different from the primary radio."))
+            if self.replaces_id:
+                if self.replaces.role != self.Role.PRIMARY:
+                    raise ValidationError(_("A substitute assignment can only replace a primary assignment."))
+                if self.replaces.position_id != self.position_id:
+                    raise ValidationError(_("A substitute assignment must replace a primary assignment on the same position."))
+                if self.replaces.ended_at is not None:
+                    raise ValidationError(_("A substitute assignment must replace an active primary assignment."))
+                if self.replaces.radio_id == self.radio_id:
+                    raise ValidationError(_("A substitute radio must be different from the primary radio."))
         elif self.replaces_id:
             raise ValidationError(_("Only substitute assignments can replace another assignment."))
 
