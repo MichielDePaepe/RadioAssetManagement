@@ -11,6 +11,7 @@ class Request(Ticket):
         VISSI = "VISSI", _("VISSI")
         VISSI_VTEI = "VISSI & VTEI", _("VISSI & VTEI")
         ACTIVATION = "ACTIVATION", _("Activation")
+        DEACTIVATION = "DEACTIVATION", _("Desactivatie")
 
     old_radio = models.ForeignKey("radio.Radio", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_old")
     old_issi = models.ForeignKey("radio.ISSI", on_delete=models.SET_NULL, null=True, blank=True, related_name="requests_as_old")
@@ -37,6 +38,9 @@ class Request(Ticket):
             title = f"VISSI & VTEI - from {self.old_radio.tei_str} {self.old_radio.model}, ISSI {self.old_issi} to {self.new_radio.tei_str} {self.new_radio.model}, ISSI {self.new_issi}"
         elif self.request_type == self.RequestType.ACTIVATION:
             title = f"Activation - {self.new_radio.tei_str} {self.new_radio.model} with ISSI {self.new_issi}"
+
+        elif self.request_type == self.RequestType.DEACTIVATION:
+            title = f"Desactivatie - {self.radio.tei_str} {self.radio.model}, ISSI {self.old_issi}"
 
         self.title = title
 

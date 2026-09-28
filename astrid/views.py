@@ -381,6 +381,40 @@ class ActivationRequestCreateView(TemplateView):
 
 
 
+class DeactivationRequestCreateView(LoginRequiredMixin, TemplateView):
+    template_name = "astrid/deactivation_request.html"
+
+    def post(self, request):
+        try:
+            radio_pk = int(request.POST.get("radio", ""))
+        except (TypeError, ValueError):
+            messages.error(request, _("Selecteer een radio."))
+            return redirect(request.path)
+        with transaction.atomic():
+            radio = get_object_or_404(Radio.objects.select_for_update(), pk=radio_pk)
+            if not radio.is_active:
+                messages.error(request, _("De geselecteerde radio heeft geen actief abonnement."))
+                return redirect(request.path)
+            subscription = radio.subscription
+            conflict = Request.objects.filter(
+                Q(radio=radio) | Q(old_radio=radio)
+                | Q(old_issi=subscription.issi) | Q(new_issi=subscription.issi)
+            ).exclude(status__code="CLOSED").first()
+            if conflict:
+                messages.error(request, _("Er bestaat al een open ASTRID-aanvraag voor deze radio of ISSI."))
+                return redirect("astrid:request_detail", pk=conflict.pk)
+            status, _created = TicketStatus.objects.get_or_create(code="NEW", defaults={"name": "New"})
+            obj = Request.objects.create(
+                request_type=Request.RequestType.DEACTIVATION,
+                radio=radio, old_radio=radio, old_issi=subscription.issi,
+                status=status, created_by=request.user,
+                description=request.POST.get("request_description", "").strip(),
+            )
+            obj.add_log(user=request.user, note=_("Desactivatie aangevraagd."))
+        messages.success(request, _("Desactivatieaanvraag aangemaakt."))
+        return redirect("astrid:request_detail", pk=obj.pk)
+
+
 class RequestOverviewView(TemplateView):
     template_name = "astrid/request_overview.html"
 
@@ -410,6 +444,9 @@ class RequestDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         obj = self.get_object()
+
+        if obj.request_type == Request.RequestType.DEACTIVATION and "print_ticket_label" not in request.POST:
+            return self.post_deactivation(request, obj.pk)
 
         if "print_ticket_label" in request.POST:
             printer_id = request.POST.get("printer_id")
@@ -484,3 +521,54 @@ class RequestDetailView(DetailView):
             return redirect(request.path)
 
         return redirect("astrid:request_overview")
+
+
+    def post_deactivation(self, request, pk):
+        steps = {
+            "astrid_request_submitted": ("NEW", "astrid.has_access_to_myastrid", {"request_submitted", "refused"}),
+            "feedback_from_astrid": ("IN_PROGRESS", "astrid.has_access_to_myastrid", {"processed", "refused"}),
+            "validate_deactivation": ("WAITING_VERIFICATION", "astrid.can_verify_requests", {"radio_inactive", "radio_active"}),
+        }
+        step = steps.get(request.POST.get("type"))
+        if not step:
+            return HttpResponseBadRequest("Invalid action")
+        expected_status, permission, actions = step
+        if not request.user.has_perm(permission):
+            raise PermissionDenied
+        action = request.POST.get("action")
+        if action not in actions:
+            return HttpResponseBadRequest("Invalid action")
+        note = (request.POST.get("note") or "").strip()
+        with transaction.atomic():
+            obj = Request.objects.select_for_update().get(pk=pk)
+            if obj.status.code != expected_status:
+                messages.error(request, _("De aanvraag is intussen gewijzigd. Vernieuw de pagina."))
+                return redirect(request.path)
+            if action in {"refused", "radio_active", "radio_inactive"} and not note:
+                messages.error(request, _("Vul een opmerking of reden in."))
+                return redirect(request.path)
+            if action == "request_submitted":
+                reference = (request.POST.get("astrid_ticket") or "").strip()
+                if not reference or len(reference) > 100:
+                    messages.error(request, _("Vul een geldig ASTRID-ticketnummer in (maximaal 100 tekens)."))
+                    return redirect(request.path)
+                obj.external_reference = reference
+                obj.save()
+                obj.start_execution(user=request.user, note=_("Desactivatie ingediend bij ASTRID.") + (" " + note if note else ""))
+            elif action == "processed":
+                obj.mark_waiting_verification(user=request.user, note=_("Desactivatie verwerkt door ASTRID; wacht op validatie.") + (" " + note if note else ""))
+            elif action == "refused":
+                obj.mark_closed(user=request.user, note=_("Desactivatie geweigerd: ") + note)
+            elif action == "radio_active":
+                obj.add_log(user=request.user, note=_("Validatie mislukt: radio nog steeds actief. ") + note)
+            elif action == "radio_inactive":
+                Radio.objects.select_for_update().get(pk=obj.radio_id)
+                subscription = Subscription.objects.select_for_update().filter(radio_id=obj.radio_id).first()
+                if subscription and subscription.issi_id != obj.old_issi_id:
+                    messages.error(request, _("Het abonnement is gewijzigd sinds de aanvraag. Controleer de radio en ISSI."))
+                    return redirect(request.path)
+                if subscription:
+                    subscription.delete()
+                obj.mark_closed(user=request.user, note=_("Gevalideerd: radio niet meer actief; abonnement verwijderd. ") + note)
+        messages.success(request, _("Desactivatieaanvraag bijgewerkt."))
+        return redirect(request.path)

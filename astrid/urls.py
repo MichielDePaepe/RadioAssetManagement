@@ -10,6 +10,8 @@ urlpatterns = [
     path('request/vissi-vtei', VISSIVTEIRequestCreateView.as_view(), name='vissi_vtei_request'),
     path('issi/suggestions', ISSISuggestionView.as_view(), name='issi_suggestions'),
 
+    path('request/deactivation', DeactivationRequestCreateView.as_view(), name='deactivation_request'),
+
     path('request/activation', ActivationRequestCreateView.as_view(), name='activation_request'),
 
     path('request/<int:pk>', RequestDetailView.as_view(), name='request_detail'),

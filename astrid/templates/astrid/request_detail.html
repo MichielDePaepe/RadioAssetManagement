@@ -5,7 +5,7 @@
 
 <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start gap-2 mb-3">
   <h1 class="mb-0">
-    {% blocktrans with type=object.request_type id=object.id %}
+    {% blocktrans with type=object.get_request_type_display id=object.id %}
       {{ type }} request #{{ id }}
     {% endblocktrans %}
   </h1>
@@ -36,6 +36,13 @@
 <hr>
 
 <div class="container-fluid" style="max-width: 600px;">
+
+  {% if object.request_type == "DEACTIVATION" %}
+    <p><strong>{% trans "Status" %}:</strong> {{ object.status }}</p>
+    {% if object.status.code == "WAITING_VERIFICATION" %}
+      <div class="alert alert-info">{% trans "Controleer op de radio of het abonnement effectief stopgezet is. Bevestig dit met groen om het abonnement te verwijderen. Bij rood blijft de aanvraag open." %}</div>
+    {% endif %}
+  {% endif %}
 
   <div class="mb-2 d-flex align-items-start">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">{% trans "Description" %}:</strong>
@@ -87,7 +94,7 @@
   <!-- TEI nieuwe radio -->
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">
-      {% if object.request_type == "VISSI" %}
+      {% if object.request_type == "VISSI" or object.request_type == "DEACTIVATION" %}
         {% trans "TEI" %}:
       {% else %}
         {% trans "TEI nieuwe radio" %}:
@@ -131,7 +138,7 @@
   <!-- ISSI -->
   <div class="mb-2 d-flex align-items-center">
     <strong class="me-2 flex-shrink-0" style="width: 40%;">
-      {% if object.request_type == "VTEI" %}
+      {% if object.request_type == "VTEI" or object.request_type == "DEACTIVATION" %}
         ISSI:
       {% else %}
         {% trans "Nieuwe ISSI" %}:
@@ -140,8 +147,8 @@
     <div class="position-relative flex-grow-1">
       <input type="text"
              class="form-control copy-field"
-             value="{{ object.new_issi.number }}"
-             data-copy-value="{{ object.new_issi.number }}"
+             value="{% if object.request_type == "DEACTIVATION" %}{{ object.old_issi.number }}{% else %}{{ object.new_issi.number }}{% endif %}"
+             data-copy-value="{% if object.request_type == "DEACTIVATION" %}{{ object.old_issi.number }}{% else %}{{ object.new_issi.number }}{% endif %}"
              readonly>
       <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
          style="cursor:pointer"></i>
@@ -154,8 +161,8 @@
     <div class="position-relative flex-grow-1">
       <input type="text"
              class="form-control copy-field"
-             value="{{ object.new_issi.alias }}"
-             data-copy-value="{{ object.new_issi.alias }}"
+             value="{% if object.request_type == "DEACTIVATION" %}{{ object.old_issi.alias }}{% else %}{{ object.new_issi.alias }}{% endif %}"
+             data-copy-value="{% if object.request_type == "DEACTIVATION" %}{{ object.old_issi.alias }}{% else %}{{ object.new_issi.alias }}{% endif %}"
              readonly>
       <i class="fa fa-copy position-absolute top-50 end-0 translate-middle-y me-2 text-muted"
          style="cursor:pointer"></i>
@@ -246,7 +253,7 @@
 
       <!-- Buttons -->
       <div class="mb-2 d-flex gap-2">
-        <button class="btn btn-success mt-3 flex-grow-1" type="submit" name="action" value="precessed">
+        <button class="btn btn-success mt-3 flex-grow-1" type="submit" name="action" value="{% if object.request_type == 'DEACTIVATION' %}processed{% else %}precessed{% endif %}">
           {% trans "Aanvraag verwerkt" %}
         </button>
         <button class="btn btn-danger mt-3 flex-grow-1" type="submit" name="action" value="refused">
@@ -256,7 +263,7 @@
 
     {% elif object.status.code == "WAITING_VERIFICATION" and perms.astrid.can_verify_requests%}
 
-      <input type="hidden" name="type" value="validate_activation">
+      <input type="hidden" name="type" value="{% if object.request_type == 'DEACTIVATION' %}validate_deactivation{% else %}validate_activation{% endif %}">
 
       <!-- Nieuwe opmerking -->
       <div class="mb-2 d-flex">
@@ -268,11 +275,11 @@
 
       <!-- Buttons -->
       <div class="mb-2 d-flex gap-2">
-        <button class="btn btn-success mt-3 flex-grow-1" type="submit" name="action" value="radio_is_working">
-          {% trans "Radio is working" %}
+        <button class="btn btn-success mt-3 flex-grow-1" type="submit" name="action" value="{% if object.request_type == 'DEACTIVATION' %}radio_inactive{% else %}radio_is_working{% endif %}">
+          {% if object.request_type == "DEACTIVATION" %}{% trans "Radio niet meer actief" %}{% else %}{% trans "Radio is working" %}{% endif %}
         </button>
-        <button class="btn btn-danger mt-3 flex-grow-1" type="submit" name="action" value="radio_is_not_working">
-          {% trans "Radio does not work" %}
+        <button class="btn btn-danger mt-3 flex-grow-1" type="submit" name="action" value="{% if object.request_type == 'DEACTIVATION' %}radio_active{% else %}radio_is_not_working{% endif %}">
+          {% if object.request_type == "DEACTIVATION" %}{% trans "Radio nog steeds actief" %}{% else %}{% trans "Radio does not work" %}{% endif %}
         </button>
       </div>
 

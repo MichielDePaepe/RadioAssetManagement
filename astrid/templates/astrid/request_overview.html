@@ -28,7 +28,7 @@
                 {% elif request.status.code == 'WAITING_VERIFICATION' %}table-warning{% endif %}
             ">
                 <td><a href="{% url 'astrid:request_detail' pk=request.pk %}">#{{ request.id }}</a></td>
-                <td>{{ request.request_type }}</td>
+                <td>{{ request.get_request_type_display }}</td>
                 <td>
                     {% if request.old_radio %}
                         <a href="{% url 'radio:detail' pk=request.old_radio.pk %}">{{ request.old_radio.tei_str }}</a>
@@ -38,7 +38,7 @@
                 </td>
                 <td>{{ request.old_issi|default_if_none:"-" }}</td>
                 <td>
-                    {% if request.old_radio %}
+                    {% if request.new_radio and request.request_type != "DEACTIVATION" %}
                         <a href="{% url 'radio:detail' pk=request.new_radio.pk %}">{{ request.new_radio.tei_str }}</a>
                     {% else %}
                         -
