@@ -187,7 +187,7 @@ document.getElementById("scan-btn").addEventListener("click", e => {
 });
 
 // --- Smartphone camera QR scanner ---
-const cameraControls = document.getElementById("radio-selector-camera-controls");
+const cameraControlsWrapper = document.getElementById("radio-selector-camera-controls");
 const cameraButton = document.getElementById("camera-scan-btn");
 const cameraPanel = document.getElementById("radio-selector-camera-panel");
 const cameraVideo = document.getElementById("radio-selector-camera-video");
@@ -201,20 +201,20 @@ let cameraResultPending = false;
 let lastCameraValue = "";
 let lastCameraValueAt = 0;
 
-function isSmartphone() {
-  const touchPhone = window.matchMedia("(pointer: coarse) and (max-width: 768px)").matches;
-  const userAgentPhone = /Android|iPhone|iPod|Windows Phone/i.test(navigator.userAgent);
-  return touchPhone || userAgentPhone;
+function isPhoneOrTablet() {
+  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  const userAgentPhoneOrTablet = /Android|iPhone|iPad|iPod|Windows Phone|Tablet/i.test(navigator.userAgent);
+  const touchMacTablet = /Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1;
+  return coarsePointer || userAgentPhoneOrTablet || touchMacTablet;
 }
 
 function canShowCameraScanner() {
-  const localHost = ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
-  const forced = new URLSearchParams(window.location.search).get("camera") === "1";
-  return isSmartphone() || localHost || forced;
+  const debugEnabled = {{ debug|yesno:"true,false" }};
+  return isPhoneOrTablet() || debugEnabled;
 }
 
 if (canShowCameraScanner()) {
-  cameraControls.style.display = "inline-flex";
+  cameraControlsWrapper.style.display = "inline-flex";
 }
 
 cameraButton.addEventListener("click", startCameraScanning);

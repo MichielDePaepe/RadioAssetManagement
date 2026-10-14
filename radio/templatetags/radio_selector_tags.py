@@ -1,6 +1,7 @@
 import re
 
 from django import template
+from django.conf import settings
 from django.urls import reverse
 from django.utils.html import conditional_escape, escape, format_html
 from django.utils.safestring import mark_safe
@@ -67,6 +68,7 @@ def radio_selector_modal(
         'static': static,
         'auto_confirm': auto_confirm,
         'callback': callback,
+        'debug': settings.DEBUG,
     }
 
 
