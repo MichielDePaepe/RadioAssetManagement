@@ -871,6 +871,18 @@ msgstr ""
 msgid "QR-detectie met de camera wordt niet ondersteund door deze browser."
 msgstr ""
 
+msgid "Zaklamp: uit"
+msgstr "Zaklamp: uit"
+
+msgid "Zaklamp: aan"
+msgstr "Zaklamp: aan"
+
+msgid "Zaklamp wordt niet ondersteund door deze camera."
+msgstr "Zaklamp wordt niet ondersteund door deze camera."
+
+msgid "Scan kon niet verwerkt worden."
+msgstr "Scan kon niet verwerkt worden."
+
 #: inventory/templates/inventory/fireplan_inventory_scan.html:318
 #: radio/templates/radio/selector/modal_body.html:254
 #, fuzzy

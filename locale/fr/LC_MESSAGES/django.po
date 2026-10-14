@@ -880,6 +880,18 @@ msgstr ""
 msgid "QR-detectie met de camera wordt niet ondersteund door deze browser."
 msgstr ""
 
+msgid "Zaklamp: uit"
+msgstr "Lampe torche : éteinte"
+
+msgid "Zaklamp: aan"
+msgstr "Lampe torche : allumée"
+
+msgid "Zaklamp wordt niet ondersteund door deze camera."
+msgstr "Cette caméra ne prend pas en charge la lampe torche."
+
+msgid "Scan kon niet verwerkt worden."
+msgstr "Le scan n’a pas pu être traité."
+
 #: inventory/templates/inventory/fireplan_inventory_scan.html:318
 #: radio/templates/radio/selector/modal_body.html:254
 #, fuzzy

@@ -13,7 +13,7 @@
 
 <!-- Java Script -->
 <script src="{% static 'js/scanner.js' %}"></script>
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://unpkg.com/@zxing/browser@0.2.1"></script>
 
 <script>
 // --- Scanner initialization ---
@@ -192,12 +192,14 @@ const cameraButton = document.getElementById("camera-scan-btn");
 const cameraPanel = document.getElementById("radio-selector-camera-panel");
 const cameraVideo = document.getElementById("radio-selector-camera-video");
 const cameraStopButton = document.getElementById("camera-stop-btn");
-let cameraStream = null;
-let cameraScanTimer = null;
-let cameraDetector = null;
-let cameraCanvas = null;
-let cameraCanvasContext = null;
-let cameraScanInProgress = false;
+const cameraTorchButton = document.getElementById("radio-selector-camera-torch");
+let cameraReader = null;
+let cameraControls = null;
+let cameraStartToken = 0;
+let cameraTorchEnabled = false;
+let cameraResultPending = false;
+let lastCameraValue = "";
+let lastCameraValueAt = 0;
 
 function isSmartphone() {
   const touchPhone = window.matchMedia("(pointer: coarse) and (max-width: 768px)").matches;
@@ -229,27 +231,51 @@ async function startCameraScanning() {
     return;
   }
 
-  const hasBarcodeDetector = Boolean(window.BarcodeDetector);
-  const hasJsQrFallback = typeof window.jsQR === "function";
-  if (!hasBarcodeDetector && !hasJsQrFallback) {
+  if (!window.ZXingBrowser?.BrowserQRCodeReader) {
     setSelectorError("{% trans 'QR-detectie met de camera wordt niet ondersteund door deze browser.' %}");
     return;
   }
 
+  const startToken = ++cameraStartToken;
   try {
-    cameraDetector = hasBarcodeDetector ? new BarcodeDetector({ formats: ["qr_code"] }) : null;
-    cameraCanvas = document.createElement("canvas");
-    cameraCanvasContext = cameraCanvas.getContext("2d", { willReadFrequently: true });
-    cameraStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: "environment" } },
-      audio: false
-    });
-    cameraVideo.srcObject = cameraStream;
+    cameraReader = new ZXingBrowser.BrowserQRCodeReader();
     cameraPanel.closest(".radio-selector-shell")?.classList.add("radio-selector-camera-mode");
     cameraPanel.style.display = "block";
     cameraButton.style.display = "none";
-    await cameraVideo.play();
-    scheduleCameraScan();
+    cameraControls = await cameraReader.decodeFromConstraints({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
+    }, cameraVideo, (result, error) => {
+      if (!result || cameraResultPending) return;
+      const scannedLine = result.getText();
+      const now = Date.now();
+      if (scannedLine === lastCameraValue && now - lastCameraValueAt <= 2000) return;
+      lastCameraValue = scannedLine;
+      lastCameraValueAt = now;
+      cameraResultPending = true;
+      submitScannedLine(scannedLine)
+        .then(data => {
+          if (data.status === "ok" || data.status === "success") {
+            stopCameraScanning();
+            handleScanResponse(data);
+          } else {
+            setSelectorError(data.message);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          setSelectorError("{% trans 'Scan kon niet verwerkt worden.' %}");
+        })
+        .finally(() => {
+          cameraResultPending = false;
+        });
+    });
+    if (startToken !== cameraStartToken) {
+      cameraControls.stop();
+      cameraControls = null;
+      return;
+    }
+    cameraTorchButton.disabled = typeof cameraControls.switchTorch !== "function";
   } catch (err) {
     setSelectorError("{% trans 'Camera kon niet gestart worden.' %}");
     console.error(err);
@@ -258,18 +284,17 @@ async function startCameraScanning() {
 }
 
 function stopCameraScanning() {
-  if (cameraScanTimer) {
-    clearTimeout(cameraScanTimer);
-    cameraScanTimer = null;
-  }
-  cameraScanInProgress = false;
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(track => track.stop());
-    cameraStream = null;
-  }
-  cameraVideo.srcObject = null;
-  cameraCanvas = null;
-  cameraCanvasContext = null;
+  cameraStartToken += 1;
+  if (cameraControls) cameraControls.stop();
+  cameraControls = null;
+  cameraReader = null;
+  cameraTorchEnabled = false;
+  cameraResultPending = false;
+  cameraTorchButton.disabled = true;
+  cameraTorchButton.setAttribute("aria-pressed", "false");
+  cameraTorchButton.classList.remove("btn-warning");
+  cameraTorchButton.classList.add("btn-outline-secondary");
+  cameraTorchButton.querySelector("span").textContent = "{% trans 'Zaklamp: uit' %}";
   cameraPanel.closest(".radio-selector-shell")?.classList.remove("radio-selector-camera-mode");
   cameraPanel.style.display = "none";
   if (canShowCameraScanner()) {
@@ -277,54 +302,24 @@ function stopCameraScanning() {
   }
 }
 
-function scheduleCameraScan() {
-  if (!cameraStream) return;
-  cameraScanTimer = setTimeout(scanCameraFrame, 300);
-}
-
-async function scanCameraFrame() {
-  if (!cameraStream || cameraScanInProgress) return;
-  cameraScanInProgress = true;
-
+cameraTorchButton.addEventListener("click", async () => {
+  if (typeof cameraControls?.switchTorch !== "function") return;
+  const nextState = !cameraTorchEnabled;
   try {
-    const codes = await detectQrCodes(cameraVideo);
-    if (codes.length) {
-      const scannedLine = codes[0].rawValue;
-      const data = await submitScannedLine(scannedLine);
-      if (data.status === "ok" || data.status === "success") {
-        stopCameraScanning();
-        handleScanResponse(data);
-        return;
-      }
-      setSelectorError(data.message);
-    }
+    await cameraControls.switchTorch(nextState);
+    cameraTorchEnabled = nextState;
+    cameraTorchButton.setAttribute("aria-pressed", String(nextState));
+    cameraTorchButton.classList.toggle("btn-warning", nextState);
+    cameraTorchButton.classList.toggle("btn-outline-secondary", !nextState);
+    cameraTorchButton.querySelector("span").textContent = nextState
+      ? "{% trans 'Zaklamp: aan' %}"
+      : "{% trans 'Zaklamp: uit' %}";
   } catch (err) {
     console.error(err);
-  } finally {
-    cameraScanInProgress = false;
-    scheduleCameraScan();
+    cameraTorchButton.disabled = true;
+    setSelectorError("{% trans 'Zaklamp wordt niet ondersteund door deze camera.' %}");
   }
-}
-
-async function detectQrCodes(video) {
-  if (cameraDetector) {
-    return cameraDetector.detect(video);
-  }
-
-  if (!cameraCanvasContext || !video.videoWidth || !video.videoHeight || typeof window.jsQR !== "function") {
-    return [];
-  }
-
-  cameraCanvas.width = video.videoWidth;
-  cameraCanvas.height = video.videoHeight;
-  cameraCanvasContext.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
-  const imageData = cameraCanvasContext.getImageData(0, 0, cameraCanvas.width, cameraCanvas.height);
-  const code = window.jsQR(imageData.data, imageData.width, imageData.height, {
-    inversionAttempts: "dontInvert",
-  });
-
-  return code ? [{ rawValue: code.data }] : [];
-}
+});
 
 async function submitScannedLine(scannedLine) {
   const res = await fetch("{% url 'radio:scan' %}", {
