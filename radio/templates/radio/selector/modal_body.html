@@ -242,14 +242,13 @@ async function startCameraScanning() {
 
   const startToken = ++cameraStartToken;
   try {
-    cameraReader = new ZXingBrowser.BrowserQRCodeReader();
+    cameraReader = new ZXingBrowser.BrowserQRCodeReader(undefined, {
+      delayBetweenScanAttempts: 100,
+    });
     cameraPanel.closest(".radio-selector-shell")?.classList.add("radio-selector-camera-mode");
     cameraPanel.style.display = "block";
     cameraButton.style.display = "none";
-    cameraControls = await cameraReader.decodeFromConstraints({
-      video: { facingMode: { ideal: "environment" } },
-      audio: false
-    }, cameraVideo, (result, error) => {
+    cameraControls = await startZxingDecoder((result, error) => {
       if (!result || cameraResultPending) return;
       const scannedLine = result.getText();
       const now = Date.now();
@@ -332,6 +331,14 @@ cameraTorchButton.addEventListener("click", async () => {
 
 async function initializeCameraZoom() {
   cameraZoomTrack = cameraVideo.srcObject?.getVideoTracks?.()[0] || null;
+  const focusModes = cameraZoomTrack?.getCapabilities?.().focusMode || [];
+  if (focusModes.includes("continuous")) {
+    try {
+      await cameraZoomTrack.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+    } catch (err) {
+      console.debug("Continuous autofocus is unavailable.", err);
+    }
+  }
   const zoom = cameraZoomTrack?.getCapabilities?.().zoom;
   const minimum = typeof zoom?.min === "number" ? zoom.min : 1;
   const maximum = typeof zoom?.max === "number" ? zoom.max : 3;
@@ -343,6 +350,26 @@ async function initializeCameraZoom() {
     cameraZoomSteps.unshift(cameraZoomLevel);
   }
   await applyCameraZoom(cameraZoomLevel);
+}
+
+async function startZxingDecoder(onDecode) {
+  const preferredConstraints = {
+    video: {
+      facingMode: { ideal: "environment" },
+      width: { min: 1280, ideal: 1920 },
+      height: { min: 720, ideal: 1080 },
+    },
+    audio: false,
+  };
+  try {
+    return await cameraReader.decodeFromConstraints(preferredConstraints, cameraVideo, onDecode);
+  } catch (err) {
+    if (!["OverconstrainedError", "ConstraintNotSatisfiedError"].includes(err?.name)) throw err;
+    return cameraReader.decodeFromConstraints({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false,
+    }, cameraVideo, onDecode);
+  }
 }
 
 async function applyCameraZoom(level) {

@@ -69,7 +69,7 @@
     position: absolute;
     width: 2rem;
     height: 2rem;
-    border-color: #a7ed52;
+    border-color: var(--bs-primary);
     border-style: solid;
     border-width: 0;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45));
@@ -146,9 +146,9 @@
   }
 
   .qr-camera-control.is-on {
-    border-color: #a7ed52;
-    background: #a7ed52;
-    color: #202420;
+    border-color: var(--bs-primary);
+    background: var(--bs-primary);
+    color: #fff;
   }
 
   #cameraScanFeedback {
@@ -301,9 +301,6 @@
         <span class="bottom-left"></span><span class="bottom-right"></span>
       </div>
       <div class="qr-camera-controls">
-        <button id="cameraTorch" class="qr-camera-control" type="button" title="{% trans 'Zaklamp wordt niet ondersteund door deze camera.' %}" aria-label="{% trans 'Zaklamp aanzetten' %}" aria-pressed="false" disabled>
-          <i class="bi bi-lightning-charge-fill"></i><span>{% trans "Zaklamp" %}</span>
-        </button>
         <button id="cameraZoom" class="qr-camera-control" type="button" title="{% trans 'Zoom aanpassen' %}" aria-label="{% trans 'Zoom aanpassen' %}">
           <i class="bi bi-zoom-in"></i><span class="zoom-value">1,3×</span>
         </button>
@@ -314,9 +311,14 @@
         </span>
       </div>
     </div>
-    <button id="cameraStop" class="btn btn-outline-secondary w-100 mt-2" type="button">
-      <i class="bi bi-stop-circle me-1"></i>{% trans "Stop camera" %}
-    </button>
+    <div class="d-flex gap-2 mt-2">
+      <button id="cameraStop" class="btn btn-outline-secondary flex-fill" type="button">
+        <i class="bi bi-stop-circle me-1"></i>{% trans "Stop camera" %}
+      </button>
+      <button id="cameraTorch" class="btn btn-outline-secondary flex-fill" type="button" title="{% trans 'Zaklamp wordt niet ondersteund door deze camera.' %}" aria-label="{% trans 'Zaklamp aanzetten' %}" aria-pressed="false" disabled>
+        <i class="bi bi-lightning-charge-fill me-1"></i>{% trans "Zaklamp" %}
+      </button>
+    </div>
   </div>
   <div id="scanMessage" class="alert mt-3 mb-0" style="display:none;"></div>
 </div>
@@ -567,16 +569,15 @@
 
     const startToken = ++cameraStartToken;
     try {
-      cameraReader = new ZXingBrowser.BrowserQRCodeReader();
+      cameraReader = new ZXingBrowser.BrowserQRCodeReader(undefined, {
+        delayBetweenScanAttempts: 100,
+      });
       cameraPanel.style.display = "block";
       cameraPanel.classList.add("camera-active");
       document.body.classList.add("camera-scanning");
       cameraToggle.classList.remove("btn-outline-primary");
       cameraToggle.classList.add("btn-danger");
-      cameraControls = await cameraReader.decodeFromConstraints({
-        video: { facingMode: { ideal: "environment" } },
-        audio: false,
-      }, cameraVideo, (result, error) => {
+      cameraControls = await startZxingDecoder((result, error) => {
         if (!result || cameraRequestPending) return;
         const scannedLine = result.getText();
         const now = Date.now();
@@ -659,6 +660,14 @@
 
   async function initializeCameraZoom() {
     cameraZoomTrack = cameraVideo.srcObject?.getVideoTracks?.()[0] || null;
+    const focusModes = cameraZoomTrack?.getCapabilities?.().focusMode || [];
+    if (focusModes.includes("continuous")) {
+      try {
+        await cameraZoomTrack.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+      } catch (err) {
+        console.debug("Continuous autofocus is unavailable.", err);
+      }
+    }
     const zoom = cameraZoomTrack?.getCapabilities?.().zoom;
     const minimum = typeof zoom?.min === "number" ? zoom.min : 1;
     const maximum = typeof zoom?.max === "number" ? zoom.max : 3;
@@ -670,6 +679,26 @@
       cameraZoomSteps.unshift(cameraZoomLevel);
     }
     await applyCameraZoom(cameraZoomLevel);
+  }
+
+  async function startZxingDecoder(onDecode) {
+    const preferredConstraints = {
+      video: {
+        facingMode: { ideal: "environment" },
+        width: { min: 1280, ideal: 1920 },
+        height: { min: 720, ideal: 1080 },
+      },
+      audio: false,
+    };
+    try {
+      return await cameraReader.decodeFromConstraints(preferredConstraints, cameraVideo, onDecode);
+    } catch (err) {
+      if (!["OverconstrainedError", "ConstraintNotSatisfiedError"].includes(err?.name)) throw err;
+      return cameraReader.decodeFromConstraints({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      }, cameraVideo, onDecode);
+    }
   }
 
   async function applyCameraZoom(level) {
