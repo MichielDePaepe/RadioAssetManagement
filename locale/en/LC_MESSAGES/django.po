@@ -883,6 +883,18 @@ msgstr "This camera does not support a flashlight."
 msgid "Scan kon niet verwerkt worden."
 msgstr "The scan could not be processed."
 
+msgid "Zaklamp"
+msgstr "Flashlight"
+
+msgid "Zaklamp aanzetten"
+msgstr "Turn on flashlight"
+
+msgid "Zaklamp uitzetten"
+msgstr "Turn off flashlight"
+
+msgid "Zoom aanpassen"
+msgstr "Adjust zoom"
+
 #: inventory/templates/inventory/fireplan_inventory_scan.html:318
 #: radio/templates/radio/selector/modal_body.html:254
 #, fuzzy

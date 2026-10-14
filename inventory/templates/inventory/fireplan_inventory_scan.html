@@ -51,8 +51,104 @@
     background: #111;
   }
 
-  #cameraViewport {
+  .qr-camera-viewport {
     position: relative;
+    overflow: hidden;
+    border-radius: var(--bs-border-radius);
+    background: #111;
+  }
+
+  .qr-scan-frame {
+    position: absolute;
+    inset: 13%;
+    pointer-events: none;
+    box-shadow: 0 0 0 999px rgba(0, 0, 0, .2);
+  }
+
+  .qr-scan-frame span {
+    position: absolute;
+    width: 2rem;
+    height: 2rem;
+    border-color: #a7ed52;
+    border-style: solid;
+    border-width: 0;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .45));
+  }
+
+  .qr-scan-frame .top-left {
+    top: 0;
+    left: 0;
+    border-top-width: 4px;
+    border-left-width: 4px;
+    border-top-left-radius: 1.1rem;
+  }
+
+  .qr-scan-frame .top-right {
+    top: 0;
+    right: 0;
+    border-top-width: 4px;
+    border-right-width: 4px;
+    border-top-right-radius: 1.1rem;
+  }
+
+  .qr-scan-frame .bottom-left {
+    bottom: 0;
+    left: 0;
+    border-bottom-width: 4px;
+    border-left-width: 4px;
+    border-bottom-left-radius: 1.1rem;
+  }
+
+  .qr-scan-frame .bottom-right {
+    right: 0;
+    bottom: 0;
+    border-right-width: 4px;
+    border-bottom-width: 4px;
+    border-bottom-right-radius: 1.1rem;
+  }
+
+  .qr-camera-controls {
+    position: absolute;
+    right: .75rem;
+    bottom: .75rem;
+    z-index: 2;
+    display: flex;
+    gap: .5rem;
+  }
+
+  .qr-camera-control {
+    display: flex;
+    width: 5.25rem;
+    height: 5.25rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .1rem;
+    border: 2px solid rgba(255, 255, 255, .15);
+    border-radius: 1.25rem;
+    background: rgba(35, 39, 38, .92);
+    color: #fff;
+    font-size: .85rem;
+    line-height: 1.1;
+  }
+
+  .qr-camera-control i {
+    font-size: 1.6rem;
+  }
+
+  .qr-camera-control .zoom-value {
+    font-size: .8rem;
+    opacity: .85;
+  }
+
+  .qr-camera-control:disabled {
+    opacity: .55;
+  }
+
+  .qr-camera-control.is-on {
+    border-color: #a7ed52;
+    background: #a7ed52;
+    color: #202420;
   }
 
   #cameraScanFeedback {
@@ -195,11 +291,23 @@
     </div>
   </form>
   <div id="cameraPanel" class="mt-3" style="display:none;">
-    <div id="cameraViewport">
+    <div id="cameraViewport" class="qr-camera-viewport">
       <video id="cameraVideo"
              class="w-100 border rounded"
              muted
              playsinline></video>
+      <div class="qr-scan-frame" aria-hidden="true">
+        <span class="top-left"></span><span class="top-right"></span>
+        <span class="bottom-left"></span><span class="bottom-right"></span>
+      </div>
+      <div class="qr-camera-controls">
+        <button id="cameraTorch" class="qr-camera-control" type="button" title="{% trans 'Zaklamp wordt niet ondersteund door deze camera.' %}" aria-label="{% trans 'Zaklamp aanzetten' %}" aria-pressed="false" disabled>
+          <i class="bi bi-lightning-charge-fill"></i><span>{% trans "Zaklamp" %}</span>
+        </button>
+        <button id="cameraZoom" class="qr-camera-control" type="button" title="{% trans 'Zoom aanpassen' %}" aria-label="{% trans 'Zoom aanpassen' %}">
+          <i class="bi bi-zoom-in"></i><span class="zoom-value">1,3×</span>
+        </button>
+      </div>
       <div id="cameraScanFeedback" aria-live="polite" aria-atomic="true">
         <span class="feedback-icon">
           <i class="bi bi-check-lg"></i>
@@ -208,9 +316,6 @@
     </div>
     <button id="cameraStop" class="btn btn-outline-secondary w-100 mt-2" type="button">
       <i class="bi bi-stop-circle me-1"></i>{% trans "Stop camera" %}
-    </button>
-    <button id="cameraTorch" class="btn btn-outline-secondary w-100 mt-2" type="button" title="{% trans 'Zaklamp wordt niet ondersteund door deze camera.' %}" aria-pressed="false" disabled>
-      <i class="bi bi-lightbulb me-1"></i><span>{% trans "Zaklamp: uit" %}</span>
     </button>
   </div>
   <div id="scanMessage" class="alert mt-3 mb-0" style="display:none;"></div>
@@ -265,6 +370,7 @@
   const cameraFeedbackIcon = cameraFeedback.querySelector("i");
   const cameraStop = document.getElementById("cameraStop");
   const cameraTorch = document.getElementById("cameraTorch");
+  const cameraZoom = document.getElementById("cameraZoom");
   const radios = new Map();
   let cameraReader = null;
   let cameraControls = null;
@@ -272,6 +378,9 @@
   let cameraTorchEnabled = false;
   let cameraFeedbackTimer = null;
   let cameraRequestPending = false;
+  let cameraZoomTrack = null;
+  let cameraZoomLevel = 1.3;
+  let cameraZoomSteps = [1.3, 1.5, 1.8, 2.2, 2.6, 3];
   let lastCameraValue = "";
   let lastCameraValueAt = 0;
 
@@ -492,7 +601,9 @@
         cameraControls = null;
         return;
       }
+      await initializeCameraZoom();
       cameraTorch.disabled = typeof cameraControls.switchTorch !== "function";
+      if (!cameraTorch.disabled) cameraTorch.title = "{% trans 'Zaklamp aanzetten' %}";
     } catch (err) {
       console.error(err);
       setMessage("danger", "{% trans 'Camera kon niet gestart worden.' %}");
@@ -506,12 +617,17 @@
     cameraControls = null;
     cameraReader = null;
     cameraRequestPending = false;
+    cameraZoomTrack = null;
+    cameraZoomLevel = 1.3;
+    cameraZoomSteps = [1.3, 1.5, 1.8, 2.2, 2.6, 3];
+    cameraVideo.style.transform = "";
+    cameraZoom.querySelector(".zoom-value").textContent = "1,3×";
     cameraTorchEnabled = false;
     cameraTorch.disabled = true;
     cameraTorch.setAttribute("aria-pressed", "false");
-    cameraTorch.classList.remove("btn-warning");
-    cameraTorch.classList.add("btn-outline-secondary");
-    cameraTorch.querySelector("span").textContent = "{% trans 'Zaklamp: uit' %}";
+    cameraTorch.classList.remove("is-on");
+    cameraTorch.title = "{% trans 'Zaklamp wordt niet ondersteund door deze camera.' %}";
+    cameraTorch.setAttribute("aria-label", "{% trans 'Zaklamp aanzetten' %}");
     if (cameraFeedbackTimer) {
       clearTimeout(cameraFeedbackTimer);
       cameraFeedbackTimer = null;
@@ -531,16 +647,51 @@
       await cameraControls.switchTorch(nextState);
       cameraTorchEnabled = nextState;
       cameraTorch.setAttribute("aria-pressed", String(nextState));
-      cameraTorch.classList.toggle("btn-warning", nextState);
-      cameraTorch.classList.toggle("btn-outline-secondary", !nextState);
-      cameraTorch.querySelector("span").textContent = nextState
-        ? "{% trans 'Zaklamp: aan' %}"
-        : "{% trans 'Zaklamp: uit' %}";
+      cameraTorch.classList.toggle("is-on", nextState);
+      cameraTorch.title = nextState ? "{% trans 'Zaklamp uitzetten' %}" : "{% trans 'Zaklamp aanzetten' %}";
+      cameraTorch.setAttribute("aria-label", cameraTorch.title);
     } catch (err) {
       console.error(err);
       cameraTorch.disabled = true;
       setMessage("warning", "{% trans 'Zaklamp wordt niet ondersteund door deze camera.' %}");
     }
+  });
+
+  async function initializeCameraZoom() {
+    cameraZoomTrack = cameraVideo.srcObject?.getVideoTracks?.()[0] || null;
+    const zoom = cameraZoomTrack?.getCapabilities?.().zoom;
+    const minimum = typeof zoom?.min === "number" ? zoom.min : 1;
+    const maximum = typeof zoom?.max === "number" ? zoom.max : 3;
+    cameraZoomSteps = [1.3, 1.5, 1.8, 2.2, 2.6, 3]
+      .filter(level => level >= minimum && level <= maximum);
+    cameraZoomLevel = Math.min(maximum, Math.max(minimum, 1.3));
+    if (!cameraZoomSteps.length) cameraZoomSteps = [cameraZoomLevel];
+    if (!cameraZoomSteps.some(level => Math.abs(level - cameraZoomLevel) < .01)) {
+      cameraZoomSteps.unshift(cameraZoomLevel);
+    }
+    await applyCameraZoom(cameraZoomLevel);
+  }
+
+  async function applyCameraZoom(level) {
+    if (cameraZoomTrack?.applyConstraints && cameraZoomTrack.getCapabilities?.().zoom) {
+      try {
+        await cameraZoomTrack.applyConstraints({ advanced: [{ zoom: level }] });
+        cameraVideo.style.transform = "";
+      } catch (err) {
+        console.debug("Hardware camera zoom is unavailable; using preview zoom.", err);
+        cameraZoomTrack = null;
+        cameraVideo.style.transform = `scale(${level})`;
+      }
+    } else {
+      cameraVideo.style.transform = `scale(${level})`;
+    }
+    cameraZoomLevel = level;
+    cameraZoom.querySelector(".zoom-value").textContent = `${level.toFixed(1).replace(".", ",")}×`;
+  }
+
+  cameraZoom.addEventListener("click", async () => {
+    const nextLevel = cameraZoomSteps.find(level => level > cameraZoomLevel + .01) ?? cameraZoomSteps[0];
+    await applyCameraZoom(nextLevel);
   });
 
   scannerToggle.addEventListener("click", () => {

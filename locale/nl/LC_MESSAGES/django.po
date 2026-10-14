@@ -883,6 +883,18 @@ msgstr "Zaklamp wordt niet ondersteund door deze camera."
 msgid "Scan kon niet verwerkt worden."
 msgstr "Scan kon niet verwerkt worden."
 
+msgid "Zaklamp"
+msgstr "Zaklamp"
+
+msgid "Zaklamp aanzetten"
+msgstr "Zaklamp aanzetten"
+
+msgid "Zaklamp uitzetten"
+msgstr "Zaklamp uitzetten"
+
+msgid "Zoom aanpassen"
+msgstr "Zoom aanpassen"
+
 #: inventory/templates/inventory/fireplan_inventory_scan.html:318
 #: radio/templates/radio/selector/modal_body.html:254
 #, fuzzy

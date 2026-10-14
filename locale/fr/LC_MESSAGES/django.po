@@ -892,6 +892,18 @@ msgstr "Cette caméra ne prend pas en charge la lampe torche."
 msgid "Scan kon niet verwerkt worden."
 msgstr "Le scan n’a pas pu être traité."
 
+msgid "Zaklamp"
+msgstr "Lampe torche"
+
+msgid "Zaklamp aanzetten"
+msgstr "Allumer la lampe torche"
+
+msgid "Zaklamp uitzetten"
+msgstr "Éteindre la lampe torche"
+
+msgid "Zoom aanpassen"
+msgstr "Ajuster le zoom"
+
 #: inventory/templates/inventory/fireplan_inventory_scan.html:318
 #: radio/templates/radio/selector/modal_body.html:254
 #, fuzzy
